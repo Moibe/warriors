@@ -4,6 +4,13 @@
   // It also stands in for the prompt line: while a destination or a target is
   // being picked the same window explains what the game is waiting for, so the
   // player never has to look elsewhere to know what a click will do.
+  //
+  // Layout rule for this window: **nothing here may change size on hover.**
+  // The window is anchored to the bottom of the screen, so any growth pushes
+  // the buttons upward — out from under a stationary cursor — which fires
+  // mouseleave, shrinks it back, fires mouseenter, and flickers forever. Hence
+  // the fixed panel width and the description slot that is always present and
+  // always the same height, empty or not.
 
   import { FACING_NAMES, type Facing } from '../grid';
   import { JOBS, type Ability } from '../jobs';
@@ -34,80 +41,107 @@
   const abilities = $derived(JOBS[unit.job].abilities);
   let hovered = $state<Ability | null>(null);
 
+  // A turn change can swap the menu out from under the pointer; the stale
+  // description would otherwise survive into the next unit's window.
+  $effect(() => {
+    void unit.id;
+    void phase;
+    hovered = null;
+  });
+
+  const rangeLabel = $derived.by(() => {
+    const a = hovered;
+    if (!a) return '';
+    const span = a.minRange > 0 ? `${a.minRange}–${a.range}` : `${a.range}`;
+    return `alcance ${span}${a.aoe ? ` · área ${a.aoe}` : ''}`;
+  });
+
   const FACINGS: Facing[] = ['n', 'e', 's', 'w'];
 </script>
 
 <Window title={phase === 'facing' ? 'Orientación' : 'Órdenes'}>
-  {#if phase === 'command'}
-    <div class="list">
-      <button class="cmd" disabled={unit.hasMoved} onclick={onMove}>
-        <span class="key">1</span>
-        <span class="text">Mover</span>
-        <span class="cost">{unit.move} cas.</span>
-      </button>
-
-      {#each abilities as a, i (a.id)}
-        <button
-          class="cmd"
-          disabled={unit.hasActed || a.mp > unit.mp}
-          onclick={() => onAbility(a)}
-          onmouseenter={() => (hovered = a)}
-          onmouseleave={() => (hovered = null)}
-        >
-          <span class="key">{i + 2}</span>
-          <span class="text">{a.name}</span>
-          <span class="cost">
-            {#if a.mp}<b class:short={a.mp > unit.mp}>{a.mp} PM</b>{:else}—{/if}
-          </span>
+  <div class="panel">
+    {#if phase === 'command'}
+      <div class="list">
+        <button class="cmd" disabled={unit.hasMoved} onclick={onMove}>
+          <span class="key">1</span>
+          <span class="text">Mover</span>
+          <span class="cost">{unit.move} cas.</span>
         </button>
-      {/each}
 
-      <button class="cmd wait" onclick={onWait}>
-        <span class="key">0</span>
-        <span class="text">Esperar</span>
-        <span class="cost">fin</span>
-      </button>
-    </div>
+        {#each abilities as a, i (a.id)}
+          <button
+            class="cmd"
+            disabled={unit.hasActed || a.mp > unit.mp}
+            onclick={() => onAbility(a)}
+            onmouseenter={() => (hovered = a)}
+            onmouseleave={() => (hovered = null)}
+          >
+            <span class="key">{i + 2}</span>
+            <span class="text">{a.name}</span>
+            <span class="cost">
+              {#if a.mp}<b class:short={a.mp > unit.mp}>{a.mp} PM</b>{:else}—{/if}
+            </span>
+          </button>
+        {/each}
 
-    {#if hovered}
-      <p class="hint desc">
-        <b>{hovered.name}</b> · alcance {hovered.minRange > 0 ? hovered.minRange + '–' : ''}{hovered.range}{hovered.aoe
-          ? ' · área ' + hovered.aoe
-          : ''}<br />
-        {hovered.desc}
-      </p>
-    {:else}
-      <p class="hint">Elige una orden. <kbd>Esc</kbd> cancela.</p>
+        <button class="cmd wait" onclick={onWait}>
+          <span class="key">0</span>
+          <span class="text">Esperar</span>
+          <span class="cost">fin</span>
+        </button>
+      </div>
+
+      <!-- Always rendered at a fixed height: the description replaces the
+           default line in place, it never adds to the window. -->
+      <div class="slot">
+        {#if hovered}
+          <p class="hint desc"><b>{hovered.name}</b> · {rangeLabel}<br />{hovered.desc}</p>
+        {:else}
+          <p class="hint">Elige una orden. <kbd>Esc</kbd> cancela.</p>
+        {/if}
+      </div>
+    {:else if phase === 'move'}
+      <p class="prompt">Elige una casilla azul.</p>
+      <div class="slot">
+        <p class="hint">Las casillas fuera de tu Salto quedan descartadas.</p>
+      </div>
+      <button class="back" onclick={onCancel}>Volver</button>
+    {:else if phase === 'target'}
+      <p class="prompt">{ability?.name}: elige el blanco.</p>
+      <div class="slot">
+        <p class="hint">{ability?.desc}</p>
+      </div>
+      <button class="back" onclick={onCancel}>Volver</button>
+    {:else if phase === 'facing'}
+      <div class="slot">
+        <p class="hint">¿Hacia dónde queda mirando?</p>
+      </div>
+      <div class="facings">
+        {#each FACINGS as f (f)}
+          <button class="cmd" onclick={() => onFacing(f)}>
+            <span class="text">{FACING_NAMES[f]}</span>
+          </button>
+        {/each}
+      </div>
+      <button class="back" onclick={onCancel}>Volver</button>
     {/if}
-  {:else if phase === 'move'}
-    <p class="prompt">Elige una casilla azul.</p>
-    <p class="hint">Las casillas fuera de tu Salto quedan descartadas.</p>
-    <button class="back" onclick={onCancel}>Volver</button>
-  {:else if phase === 'target'}
-    <p class="prompt">{ability?.name}: elige el blanco.</p>
-    <p class="hint">{ability?.desc}</p>
-    <button class="back" onclick={onCancel}>Volver</button>
-  {:else if phase === 'facing'}
-    <p class="hint">¿Hacia dónde queda mirando?</p>
-    <div class="facings">
-      {#each FACINGS as f (f)}
-        <button class="cmd" onclick={() => onFacing(f)}>
-          <span class="text">{FACING_NAMES[f]}</span>
-        </button>
-      {/each}
-    </div>
-    <button class="back" onclick={onCancel}>Volver</button>
-  {:else}
-    <p class="hint">…</p>
-  {/if}
+  </div>
 </Window>
 
 <style>
+  /* Fixed width: the window must never resize in response to its contents.
+     Wide enough that the longest ability description in the catalog wraps to
+     two lines, which is what keeps the reserved slot below from being mostly
+     empty in the common case. */
+  .panel {
+    width: 16rem;
+  }
+
   .list {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-width: 12.5rem;
   }
 
   .cmd {
@@ -125,16 +159,19 @@
     font-size: 0.78rem;
     text-align: left;
     cursor: pointer;
+    /* No transform on hover — moving the button moves its own hit box, and a
+       cursor resting on the edge would toggle the hover state forever. The
+       highlight is drawn entirely inside the existing box instead. */
     transition:
       background 0.12s,
       border-color 0.12s,
-      transform 0.08s;
+      box-shadow 0.12s;
   }
 
   .cmd:hover:not(:disabled) {
     background: rgba(78, 138, 226, 0.45);
     border-color: rgba(200, 224, 255, 0.7);
-    transform: translateX(2px);
+    box-shadow: inset 3px 0 0 rgba(255, 233, 168, 0.9);
   }
 
   .cmd:disabled {
@@ -175,12 +212,19 @@
     color: #ffe9a8;
   }
 
+  /* Reserved space for the help line: header plus two wrapped lines, measured
+     against every description in the catalog. Fixed, never grown. */
+  .slot {
+    height: 3.75rem;
+    margin-top: 0.45rem;
+    overflow: hidden;
+  }
+
   .hint {
     margin: 0;
     font-size: 0.66rem;
     line-height: 1.35;
     color: #a9c0e6;
-    max-width: 15rem;
   }
 
   .hint.desc b {
@@ -199,7 +243,6 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 3px;
-    margin: 0.35rem 0;
   }
 
   .facings .cmd {

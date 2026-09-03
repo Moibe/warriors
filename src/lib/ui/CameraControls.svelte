@@ -102,16 +102,18 @@
     border: 1px solid rgba(180, 200, 240, 0.35);
     border-radius: 4px;
     cursor: pointer;
+    /* No transform on hover: shifting a button shifts its own hit box, and a
+       cursor sitting on the edge would flicker between the two states. */
     transition:
       background 0.12s,
       color 0.12s,
-      transform 0.08s;
+      box-shadow 0.12s;
   }
 
   button:hover {
     background: rgba(78, 138, 226, 0.55);
     color: #fff;
-    transform: translateY(-1px);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
   }
 
   button.on {

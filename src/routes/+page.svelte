@@ -309,21 +309,18 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    /* Extra room at the bottom so no window lands on the shortcut strip. */
-    padding: 0.9rem 0.9rem 1.9rem;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    grid-template-rows: auto 1fr auto;
-    grid-template-areas:
-      'tl . tr'
-      '.  .  .'
-      'bl bc br';
-    gap: 0.7rem;
   }
 
-  /* Only the windows themselves take pointer events; the gaps between them
+  /* Each corner is anchored on its own rather than sharing a grid track.
+     In a grid, a row's height comes from its tallest cell, so one window
+     growing would shove the others — and a window that moves under a resting
+     cursor toggles its own hover state on and off forever. Anchored
+     absolutely, a panel can only ever grow away from its corner.
+
+     Only the windows themselves take pointer events; the gaps between them
      stay transparent so the map can be clicked through the HUD layer. */
   .corner {
+    position: absolute;
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
@@ -332,26 +329,28 @@
   }
 
   .top-left {
-    grid-area: tl;
+    top: 0.9rem;
+    left: 0.9rem;
   }
   .top-right {
-    grid-area: tr;
+    top: 0.9rem;
+    right: 0.9rem;
     align-items: flex-end;
   }
+  /* Bottom row clears the shortcut strip. */
   .bottom-left {
-    grid-area: bl;
-    justify-content: flex-end;
+    bottom: 1.9rem;
+    left: 0.9rem;
   }
   .bottom-center {
-    grid-area: bc;
-    justify-content: flex-end;
-    justify-self: center;
-    align-self: end;
+    bottom: 1.9rem;
+    left: 50%;
+    transform: translateX(-50%);
   }
   .bottom-right {
-    grid-area: br;
+    bottom: 1.9rem;
+    right: 0.9rem;
     align-items: flex-end;
-    justify-content: flex-end;
   }
 
   .header {

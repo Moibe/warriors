@@ -91,11 +91,13 @@
     border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: 4px;
     cursor: pointer;
-    transition: transform 0.1s, filter 0.12s;
+    transition:
+      filter 0.12s,
+      box-shadow 0.12s;
   }
 
   button:hover {
-    transform: translateY(-1px);
     filter: brightness(1.08);
+    box-shadow: 0 0 0 2px rgba(255, 233, 168, 0.45);
   }
 </style>
