@@ -1,0 +1,218 @@
+import {
+  NEIGHBORS,
+  gridDistance,
+  tileAt,
+  tileKey,
+  type BattleMap,
+  type Coord,
+  type Tile,
+} from './grid';
+import type { Ability } from './jobs';
+import { isAlive, type Unit } from './units';
+
+/**
+ * One reachable cell in a movement search.
+ *
+ * `stoppable` is the interesting field: a unit walks *through* its allies but
+ * cannot end its move standing on one, so the blue movement panel has to know
+ * the difference between "I can pass here" and "I can land here".
+ */
+export type ReachEntry = {
+  x: number;
+  y: number;
+  /** Tiles spent to get here. */
+  cost: number;
+  /** Key of the previous cell, for path reconstruction. `null` at the origin. */
+  from: string | null;
+  stoppable: boolean;
+};
+
+export type ReachMap = Map<string, ReachEntry>;
+
+/**
+ * Every cell the unit could walk to this turn.
+ *
+ * Movement is uniform-cost (one point per tile, as in FFT — terrain doesn't
+ * slow you down, height stops you), so a plain BFS is exact and there is no
+ * need for a priority queue.
+ *
+ * The two rules that make it tactical rather than a flood fill:
+ *   · Jump — a step is only legal if the height difference is within the
+ *     unit's Jump stat, which is what turns cliffs into real walls.
+ *   · Bodies — enemies block the cell outright; allies let you pass but not
+ *     stop.
+ */
+export function computeReachable(map: BattleMap, units: Unit[], unit: Unit): ReachMap {
+  const origin = tileAt(map, unit.x, unit.y);
+  if (!origin) return new Map();
+
+  const blockers = new Map<string, Unit>();
+  for (const u of units) {
+    if (u.id !== unit.id && isAlive(u)) blockers.set(tileKey(u.x, u.y), u);
+  }
+
+  const reach: ReachMap = new Map();
+  const startKey = tileKey(unit.x, unit.y);
+  reach.set(startKey, { x: unit.x, y: unit.y, cost: 0, from: null, stoppable: true });
+
+  // Frontier by cost. BFS order guarantees the first time we see a cell is via
+  // a shortest path, so entries are never revisited.
+  let frontier: ReachEntry[] = [reach.get(startKey)!];
+
+  for (let step = 0; step < unit.move && frontier.length; step++) {
+    const next: ReachEntry[] = [];
+    for (const cur of frontier) {
+      const curTile = tileAt(map, cur.x, cur.y)!;
+      for (const n of NEIGHBORS) {
+        const nx = cur.x + n.x;
+        const ny = cur.y + n.y;
+        const key = tileKey(nx, ny);
+        if (reach.has(key)) continue;
+
+        const tile = tileAt(map, nx, ny);
+        if (!tile || !tile.walkable) continue;
+        if (Math.abs(tile.height - curTile.height) > unit.jump) continue;
+
+        const blocker = blockers.get(key);
+        // An enemy body is a wall; you cannot even walk through the cell.
+        if (blocker && blocker.team !== unit.team) continue;
+
+        const entry: ReachEntry = {
+          x: nx,
+          y: ny,
+          cost: cur.cost + 1,
+          from: tileKey(cur.x, cur.y),
+          stoppable: !blocker,
+        };
+        reach.set(key, entry);
+        next.push(entry);
+      }
+    }
+    frontier = next;
+  }
+
+  return reach;
+}
+
+/** The cells a unit may actually finish its move on. */
+export function landableTiles(reach: ReachMap): Set<string> {
+  const out = new Set<string>();
+  for (const [key, entry] of reach) {
+    if (entry.stoppable) out.add(key);
+  }
+  return out;
+}
+
+/**
+ * Walk the `from` chain back from a destination, returning the route in travel
+ * order (origin first, destination last). Empty if the destination is outside
+ * the reach map.
+ */
+export function findPath(reach: ReachMap, x: number, y: number): Coord[] {
+  const path: Coord[] = [];
+  let key: string | null = tileKey(x, y);
+  while (key) {
+    const entry: ReachEntry | undefined = reach.get(key);
+    if (!entry) return [];
+    path.push({ x: entry.x, y: entry.y });
+    key = entry.from;
+  }
+  return path.reverse();
+}
+
+// ---------------------------------------------------------------------------
+// Ability targeting
+// ---------------------------------------------------------------------------
+
+/**
+ * Cells an ability could be aimed at from `origin`.
+ *
+ * Range is Manhattan (tactics grids have no diagonals) and bounded on both
+ * ends — a bow has a dead zone at its feet. Height is checked against the
+ * ability's vertical reach: a sword can't hit the top of a cliff, an arrow or a
+ * spell doesn't care.
+ */
+export function tilesInAbilityRange(
+  map: BattleMap,
+  origin: Coord,
+  originHeight: number,
+  ability: Ability
+): Set<string> {
+  const out = new Set<string>();
+  const r = ability.range;
+  for (let dy = -r; dy <= r; dy++) {
+    const span = r - Math.abs(dy);
+    for (let dx = -span; dx <= span; dx++) {
+      const dist = Math.abs(dx) + Math.abs(dy);
+      if (dist < ability.minRange || dist > r) continue;
+      const x = origin.x + dx;
+      const y = origin.y + dy;
+      const tile = tileAt(map, x, y);
+      if (!tile) continue;
+      if (Math.abs(tile.height - originHeight) > ability.vertical) continue;
+      out.add(tileKey(x, y));
+    }
+  }
+  return out;
+}
+
+/** Cells caught in an ability's burst, centred on the aimed tile. */
+export function tilesInBurst(map: BattleMap, center: Coord, radius: number): Set<string> {
+  const out = new Set<string>();
+  for (let dy = -radius; dy <= radius; dy++) {
+    const span = radius - Math.abs(dy);
+    for (let dx = -span; dx <= span; dx++) {
+      const x = center.x + dx;
+      const y = center.y + dy;
+      if (!tileAt(map, x, y)) continue;
+      out.add(tileKey(x, y));
+    }
+  }
+  return out;
+}
+
+/**
+ * Nearest landable cell from which `attacker` could hit `target` with
+ * `ability`. Returns null when no reachable cell works — the caller (the AI)
+ * then just walks as close as it can.
+ */
+export function bestApproach(
+  map: BattleMap,
+  reach: ReachMap,
+  targetTile: Tile,
+  ability: Ability
+): ReachEntry | null {
+  let best: ReachEntry | null = null;
+  for (const entry of reach.values()) {
+    if (!entry.stoppable) continue;
+    const from = tileAt(map, entry.x, entry.y);
+    if (!from) continue;
+    const dist = gridDistance(entry, targetTile);
+    if (dist < ability.minRange || dist > ability.range) continue;
+    if (Math.abs(targetTile.height - from.height) > ability.vertical) continue;
+    // Prefer the cheapest approach; ties break toward the closest shot.
+    if (!best || entry.cost < best.cost) best = entry;
+  }
+  return best;
+}
+
+/**
+ * The landable cell that gets closest to `goal`, used when the AI can't reach
+ * its target this turn and simply advances.
+ */
+export function stepToward(map: BattleMap, reach: ReachMap, goal: Coord): ReachEntry | null {
+  let best: ReachEntry | null = null;
+  let bestScore = Infinity;
+  for (const entry of reach.values()) {
+    if (!entry.stoppable) continue;
+    const dist = gridDistance(entry, goal);
+    // Distance first, then fewest steps — no point burning movement to end up
+    // the same distance away.
+    const score = dist * 100 + entry.cost;
+    if (score < bestScore) {
+      bestScore = score;
+      best = entry;
+    }
+  }
+  return best;
+}

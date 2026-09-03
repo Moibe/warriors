@@ -1,0 +1,42 @@
+/* Global reset and the shared type scale for the HUD.
+   Windows carry their own styling in Window.svelte; this file only sets the
+   ground rules every panel inherits. */
+
+:root {
+  --font-ui: 'Trebuchet MS', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* The window palette, kept here so the whole HUD can be retuned at once. */
+  --ink: #eef3ff;
+  --ink-dim: #a9c0e6;
+  --ink-faint: #93aad2;
+  --gold: #ffe9a8;
+  --ally: #5ea8ff;
+  --enemy: #e8564e;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: #0a1330;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  /* Pixel art everywhere: never let the browser smooth an upscaled sprite. */
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+img {
+  display: block;
+}
