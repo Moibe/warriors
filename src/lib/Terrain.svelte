@@ -31,11 +31,9 @@
   let {
     map,
     onTileClick,
-    onTileHover,
   }: {
     map: BattleMap;
     onTileClick?: (tile: Tile) => void;
-    onTileHover?: (tile: Tile | null) => void;
   } = $props();
 
   /** Void cells are simply absent, so instance index ≠ tile index. */
@@ -112,20 +110,8 @@
 
   type PointerLike = { instanceId?: number; stopPropagation?: () => void };
 
-  let hoveredIdx = -1;
-
-  function handleMove(e: PointerLike) {
-    const idx = e.instanceId;
-    if (idx === undefined || idx === hoveredIdx) return;
-    hoveredIdx = idx;
-    onTileHover?.(cells[idx] ?? null);
-  }
-
-  function handleLeave() {
-    hoveredIdx = -1;
-    onTileHover?.(null);
-  }
-
+  // Click only: there is deliberately no hover tracking. The cursor is pinned
+  // to the acting unit, so a pointer-move handler would have nothing to write.
   function handleClick(e: PointerLike) {
     const idx = e.instanceId;
     if (idx === undefined) return;
@@ -148,7 +134,5 @@
   bind:ref={platesRef}
   args={[plateGeometry, plateMaterial, Math.max(1, cells.length)]}
   receiveShadow
-  onpointermove={handleMove}
-  onpointerleave={handleLeave}
   onclick={handleClick}
 />

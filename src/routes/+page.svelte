@@ -17,30 +17,25 @@
     commandMove,
     commandWait,
     confirmFacing,
-    confirmTile,
     heightOf,
     map,
-    moveCursor,
     previewFacing,
-    setCursor,
     restart,
     upcomingTurns,
   } from '$lib/battle.svelte';
-  import { forecast, isValidTarget } from '$lib/combat';
   import { facingTo, tileAt, type Coord, type Facing } from '$lib/grid';
   import { JOBS } from '$lib/jobs';
-  import { isAlive, unitAt } from '$lib/units';
+  import { isAlive } from '$lib/units';
 
   import BattleLog from '$lib/ui/BattleLog.svelte';
   import CameraControls from '$lib/ui/CameraControls.svelte';
   import CommandMenu from '$lib/ui/CommandMenu.svelte';
-  import Forecast from '$lib/ui/Forecast.svelte';
   import ResultBanner from '$lib/ui/ResultBanner.svelte';
   import TileInfo from '$lib/ui/TileInfo.svelte';
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.3.1';
+  const APP_VERSION = '0.4.1';
 
   // ---- Camera -------------------------------------------------------------
 
@@ -61,19 +56,8 @@
     zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom + delta));
   }
 
-  /**
-   * Tile the keyboard cursor has pulled the camera to. Null means the camera
-   * sits on whoever is acting, which is where it returns on every new turn.
-   */
-  let keyFocus = $state<Coord | null>(null);
-
   function recenter() {
     pan = { x: 0, y: 0 };
-    keyFocus = null;
-    // Bring the cursor home as well: once it has been walked across the map
-    // there was no other way to get it back short of hunting for it.
-    const u = activeUnit();
-    if (u) setCursor(u.x, u.y);
   }
 
   // Whoever is acting is the subject of the shot, so a fresh turn drops any
@@ -83,7 +67,6 @@
     if (battle.activeId !== lastActive) {
       lastActive = battle.activeId;
       pan = { x: 0, y: 0 };
-      keyFocus = null;
     }
   });
 
@@ -126,6 +109,9 @@
 
   // ---- Keyboard -----------------------------------------------------------
 
+  // Arrows survive only inside the orientation step, where they aim the unit.
+  // They no longer drive a free-roaming board cursor.
+
   /** The four grid axes, in the order the arrows map to them at yawIndex 0. */
   const GRID_DIRS: Coord[] = [
     { x: 0, y: -1 }, // norte
@@ -166,35 +152,21 @@
     if (k === 'c') return recenter();
     if (k === '+' || k === '=') return zoomBy(6);
     if (k === '-') return zoomBy(-6);
-    if (k === 'escape') {
-      keyFocus = null;
-      return cancel();
-    }
+    if (k === 'escape') return cancel();
 
-    const arrow = ARROW_BASE[k];
-    if (arrow !== undefined) {
-      e.preventDefault();
-      const d = arrowToGrid(arrow);
-      // In the orientation step the arrows aim the unit instead of the cursor —
-      // there is nothing else for them to do there, and it matches the genre.
-      if (battle.phase === 'facing') {
-        previewFacing(facingTo({ x: 0, y: 0 }, d));
-      } else if (moveCursor(d.x, d.y)) {
-        keyFocus = battle.hovered;
+    if (battle.phase === 'facing') {
+      const arrow = ARROW_BASE[k];
+      if (arrow !== undefined) {
+        e.preventDefault();
+        previewFacing(facingTo({ x: 0, y: 0 }, arrowToGrid(arrow)));
+        return;
       }
-      return;
-    }
-
-    if (k === 'enter' || k === ' ') {
-      e.preventDefault();
-      const acting = activeUnit();
-      if (battle.phase === 'facing') {
+      if (k === 'enter' || k === ' ') {
+        e.preventDefault();
+        const acting = activeUnit();
         if (acting) confirmFacing(acting.facing);
-      } else if (battle.hovered) {
-        confirmTile(battle.hovered.x, battle.hovered.y);
-        keyFocus = null;
+        return;
       }
-      return;
     }
 
     const u = activeUnit();
@@ -213,39 +185,16 @@
 
   // ---- Derived views ------------------------------------------------------
 
-  const hoveredTile = $derived(
-    battle.hovered ? tileAt(map, battle.hovered.x, battle.hovered.y) : null
-  );
-
-  const hoveredUnit = $derived(
-    battle.hovered ? unitAt(battle.units, battle.hovered.x, battle.hovered.y) : undefined
-  );
-
-  /** The unit window follows the pointer, falling back to whoever is acting. */
-  const panelUnit = $derived(hoveredUnit ?? activeUnit());
-
   const active = $derived(activeUnit());
+
+  // Both windows report the acting unit and the ground under it. With the
+  // cursor pinned there is nothing else to point at — inspecting another unit
+  // now means reading its row in the turn order.
+  const activeTile = $derived(active ? tileAt(map, active.x, active.y) : null);
+  const panelUnit = $derived(active);
   const playerTurn = $derived(!!active && active.team === 'ally' && isAlive(active));
 
   const queue = $derived(upcomingTurns(7));
-
-  /** Odds preview, shown only while a live target sits under the cursor. */
-  const aimForecast = $derived.by(() => {
-    const aim = battle.aim;
-    const ability = battle.ability;
-    const u = activeUnit();
-    if (battle.phase !== 'target' || !aim || !ability || !u) return null;
-    const target = unitAt(battle.units, aim.x, aim.y);
-    if (!target) return null;
-    return {
-      target,
-      abilityName: ability.name,
-      data: forecast(u, heightOf(u), target, heightOf(target), ability),
-      // Aiming at your own side is allowed — the burst of a fireball doesn't
-      // check tabards — but the window says so before you commit.
-      friendlyFire: !isValidTarget(u, target, ability),
-    };
-  });
 
   const showCommands = $derived(
     playerTurn &&
@@ -279,7 +228,7 @@
 >
   <!-- The canvas is transparent, so the sky is CSS behind it. -->
   <Canvas toneMapping={NoToneMapping}>
-    <Scene {yawIndex} {pitchHigh} {zoom} {pan} focusTile={keyFocus} bind:yaw />
+    <Scene {yawIndex} {pitchHigh} {zoom} {pan} bind:yaw />
   </Canvas>
 
   <div class="hud">
@@ -291,7 +240,7 @@
           <span class="ver">v{APP_VERSION}</span>
         </p>
       </div>
-      <TileInfo tile={hoveredTile} occupant={hoveredUnit?.name} />
+      <TileInfo tile={activeTile} occupant={active?.name} />
     </div>
 
     <div class="corner top-right">
@@ -320,15 +269,6 @@
     </div>
 
     <div class="corner bottom-right">
-      {#if aimForecast}
-        <Forecast
-          target={aimForecast.target}
-          data={aimForecast.data}
-          abilityName={aimForecast.abilityName}
-          friendlyFire={aimForecast.friendlyFire}
-        />
-      {/if}
-
       {#if showCommands && active}
         <CommandMenu
           unit={active}
@@ -358,7 +298,7 @@
   {/if}
 
   <p class="keys">
-    <kbd>↑↓←→</kbd> mover cursor · <kbd>Enter</kbd> confirmar · <kbd>Q</kbd><kbd>E</kbd> girar ·
+    <kbd>clic</kbd> elegir casilla · <kbd>1</kbd>…<kbd>0</kbd> órdenes · <kbd>Q</kbd><kbd>E</kbd> girar ·
     <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar · <kbd>rueda</kbd> zoom ·
     <kbd>botón central</kbd> desplazar · <kbd>Esc</kbd> cancelar
   </p>

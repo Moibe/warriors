@@ -21,16 +21,14 @@
     advanceAnimations,
     advanceClock,
     battle,
-    clearCursor,
     confirmTile,
     heightOf,
     map,
     renderPosition,
-    setCursor,
   } from './battle.svelte';
-  import { LEVEL, TILE, tileAt, tileKey, tileToWorld, type Coord, type Tile } from './grid';
+  import { LEVEL, TILE, tileToWorld, type Tile } from './grid';
   import { CHAPEL_ANCHOR } from './maps';
-  import { landableTiles, tilesInBurst } from './pathfinding';
+  import { landableTiles } from './pathfinding';
   import { isAlive } from './units';
 
   let {
@@ -38,15 +36,12 @@
     pitchHigh = false,
     zoom = 46,
     pan = { x: 0, y: 0 },
-    /** Tile the keyboard cursor has claimed; overrides the active unit. */
-    focusTile = null,
     yaw = $bindable(Math.PI / 4),
   }: {
     yawIndex?: number;
     pitchHigh?: boolean;
     zoom?: number;
     pan?: { x: number; y: number };
-    focusTile?: Coord | null;
     yaw?: number;
   } = $props();
 
@@ -61,50 +56,12 @@
   });
 
   // ---- Camera target ------------------------------------------------------
-  // Follows whoever is acting, offset by the player's pan. Pan is expressed in
+  // Sits on whoever is acting, offset by the player's pan. Pan is expressed in
   // screen axes and rotated into world space here, so dragging right always
   // moves the view right no matter which way the camera is turned.
-  //
-  // Driving the cursor with the arrow keys takes the camera with it, otherwise
-  // the cursor would walk straight off the edge of the screen. The mouse does
-  // NOT move the camera — a view that lurches every time the pointer drifts is
-  // unusable.
-  /**
-   * How far the cursor may wander before it starts towing the camera, in tiles.
-   * Inside this radius the view holds perfectly still — a camera that slides on
-   * every single arrow press is exhausting to read — and past it the target
-   * trails the cursor at exactly this distance, so the cursor can never leave
-   * the screen. The two regimes meet at the same point, so there is no jump.
-   */
-  const CAMERA_LEASH = 3;
-
-  const cameraAnchor = $derived.by(() => {
-    const u = activeUnit();
-    const focus = focusTile ? tileAt(map, focusTile.x, focusTile.y) : null;
-    if (!u) {
-      return focus
-        ? { x: focus.x, y: focus.y, h: focus.height }
-        : { x: (map.width - 1) / 2, y: (map.depth - 1) / 2, h: 2 };
-    }
-    const unitHeight = heightOf(u);
-    if (!focus) return { x: u.x, y: u.y, h: unitHeight };
-
-    const dx = u.x - focus.x;
-    const dy = u.y - focus.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist <= CAMERA_LEASH) return { x: u.x, y: u.y, h: unitHeight };
-
-    const k = CAMERA_LEASH / dist;
-    return {
-      x: focus.x + dx * k,
-      y: focus.y + dy * k,
-      h: focus.height + (unitHeight - focus.height) * k,
-    };
-  });
-
   const cameraTarget = $derived.by(() => {
-    const a = cameraAnchor;
-    const base = tileToWorld(map, a.x, a.y, a.h);
+    const u = activeUnit();
+    const base = u ? tileToWorld(map, u.x, u.y, heightOf(u)) : { x: 0, y: 1, z: 0 };
     const right = { x: Math.cos(yaw), z: -Math.sin(yaw) };
     const fwd = { x: -Math.sin(yaw), z: -Math.cos(yaw) };
     return {
@@ -125,28 +82,22 @@
     battle.phase === 'target' ? abilityRangeTiles() : new Set<string>()
   );
 
-  const burstTiles = $derived.by(() => {
-    const aim = battle.aim;
-    if (battle.phase !== 'target' || !battle.ability || !aim) return new Set<string>();
-    if (battle.ability.aoe === 0) return new Set([tileKey(aim.x, aim.y)]);
-    return tilesInBurst(map, aim, battle.ability.aoe);
+  /**
+   * The cursor frame marks the acting unit, nothing else — it is a turn
+   * indicator, not a pointing device. Hidden mid-walk, where the unit's tile is
+   * still its origin and a frame left behind reads as a glitch.
+   */
+  const cursorTile = $derived.by(() => {
+    const u = activeUnit();
+    if (!u || battle.phase === 'moving') return null;
+    return { x: u.x, y: u.y };
   });
-
-  /** The tile the cursor frame sits on: what you're aiming at, else the hover. */
-  const cursorTile = $derived(
-    battle.phase === 'target' && battle.aim ? battle.aim : battle.hovered
-  );
 
   const cursorColor = $derived(
     battle.phase === 'target' ? '#ff8a7a' : battle.phase === 'move' ? '#8fd0ff' : '#ffffff'
   );
 
   // ---- Pointer ------------------------------------------------------------
-
-  function handleHover(tile: Tile | null) {
-    if (tile) setCursor(tile.x, tile.y);
-    else clearCursor();
-  }
 
   function handleClick(tile: Tile) {
     confirmTile(tile.x, tile.y);
@@ -186,16 +137,17 @@
   shadow.normalBias={0.02}
 />
 
-<Terrain {map} onTileHover={handleHover} onTileClick={handleClick} />
+<Terrain {map} onTileClick={handleClick} />
 
 <Chapel position={chapelPos} />
 
 <!-- Layer order by lift: movement under weapon reach under the burst. -->
 <TileOverlays {map} tiles={moveTiles} color="#2f7fe8" opacity={0.72} lift={0.02} />
 <TileOverlays {map} tiles={rangeTiles} color="#e0402f" opacity={0.55} lift={0.03} />
-<TileOverlays {map} tiles={burstTiles} color="#ffd24a" opacity={0.75} lift={0.045} pulse={0.25} />
 
-<TileCursor {map} tile={cursorTile} color={cursorColor} />
+<!-- No bobbing arrow: the acting unit already carries its own marker, and two
+     floating arrows on the same tile read as a duplicate. -->
+<TileCursor {map} tile={cursorTile} color={cursorColor} showArrow={false} />
 
 {#each livingUnits as unit (unit.id)}
   <UnitSprite

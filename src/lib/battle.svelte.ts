@@ -71,10 +71,6 @@ export const battle = $state({
   activeId: null as string | null,
   /** Ability chosen from the menu, waiting for a target. */
   ability: null as Ability | null,
-  /** Tile the pointer is over — drives the terrain info window. */
-  hovered: null as Coord | null,
-  /** Tile the player is aiming at while in `target` phase. */
-  aim: null as Coord | null,
   walk: null as WalkAnim | null,
   popups: [] as Popup[],
   log: [] as string[],
@@ -119,6 +115,10 @@ export function isPlayerTurn(): boolean {
   return !!u && u.team === 'ally';
 }
 
+// The cursor is not state: it is always the acting unit's tile, derived at the
+// point of use. There is no pointing device any more — the mouse selects by
+// clicking, and nothing else writes a cursor position.
+
 /** Tiles the chosen ability could be aimed at from where the actor stands. */
 export function abilityRangeTiles(): Set<string> {
   const u = activeUnit();
@@ -127,61 +127,8 @@ export function abilityRangeTiles(): Set<string> {
 }
 
 /**
- * Points the cursor at a tile. Both the mouse and the arrow keys come through
- * here, so what "pointing at a tile" means lives in exactly one place.
- */
-export function setCursor(x: number, y: number) {
-  const tile = tileAt(map, x, y);
-  if (!tile) return;
-  battle.hovered = { x, y };
-  // While aiming, the cursor IS the aim — the burst preview and the forecast
-  // have to follow it or the player can't see what an ability would catch.
-  if (battle.phase === 'target') {
-    battle.aim = abilityRangeTiles().has(tileKey(x, y)) ? { x, y } : null;
-  }
-}
-
-/** The pointer left the board. `aim` is deliberately left alone, so a forecast
- *  doesn't blank out just because the cursor slipped off the map. */
-export function clearCursor() {
-  battle.hovered = null;
-}
-
-/**
- * Steps the cursor one tile along a grid delta. The caller has already rotated
- * the delta into the camera's frame — this only knows about the board.
- *
- * With no cursor on screen yet, the first press just parks it on whoever is
- * acting rather than jumping off from nowhere. Holes in the map are stepped
- * over instead of blocking: getting stuck against a gap reads as broken input.
- */
-export function moveCursor(dx: number, dy: number): boolean {
-  const u = activeUnit();
-  if (!battle.hovered) {
-    const seed = u
-      ? { x: u.x, y: u.y }
-      : { x: Math.floor(map.width / 2), y: Math.floor(map.depth / 2) };
-    setCursor(seed.x, seed.y);
-    return true;
-  }
-
-  let { x, y } = battle.hovered;
-  const limit = Math.max(map.width, map.depth);
-  for (let step = 0; step < limit; step++) {
-    x += dx;
-    y += dy;
-    if (x < 0 || y < 0 || x >= map.width || y >= map.depth) return false;
-    if (tileAt(map, x, y)) {
-      setCursor(x, y);
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Commits whatever pointing at this tile means right now. Shared by the click
- * handler and the confirm key so the two can never drift apart.
+ * Commits what clicking this tile means in the current phase. The board is the
+ * only input: there is no cursor to aim first.
  */
 export function confirmTile(x: number, y: number) {
   if (battle.phase === 'move') confirmMove(x, y);
@@ -257,13 +204,9 @@ export function advanceClock(dt: number) {
 
 function beginTurn(u: Unit) {
   facingBeforePreview = null;
-  // Start every turn with the cursor on the unit that is acting, rather than
-  // stranded wherever it was left last turn.
-  setCursor(u.x, u.y);
   battle.turn += 1;
   battle.activeId = u.id;
   battle.ability = null;
-  battle.aim = null;
   u.hasMoved = false;
   u.hasActed = false;
 
@@ -291,7 +234,6 @@ export function endTurn() {
   }
   battle.activeId = null;
   battle.ability = null;
-  battle.aim = null;
   if (checkVictory()) return;
   battle.phase = 'clock';
   clockDelay = TURN_GAP;
@@ -322,7 +264,6 @@ export function commandAbility(ability: Ability) {
   if (!u || u.hasActed) return;
   if (ability.mp > u.mp) return;
   battle.ability = ability;
-  battle.aim = null;
   battle.phase = 'target';
 }
 
@@ -362,7 +303,6 @@ export function cancel() {
   }
   if (battle.phase === 'move' || battle.phase === 'target' || battle.phase === 'facing') {
     battle.ability = null;
-    battle.aim = null;
     battle.phase = 'command';
   }
 }
@@ -508,7 +448,6 @@ export function confirmAbility(x: number, y: number) {
   actor.hasActed = true;
   battle.phase = 'resolving';
   battle.ability = null;
-  battle.aim = null;
 
   if (!targets.length) {
     log(`${actor.name} usa ${ability.name} — sin blanco.`);
@@ -719,8 +658,6 @@ export function restart() {
   battle.phase = 'clock';
   battle.activeId = null;
   battle.ability = null;
-  battle.hovered = null;
-  battle.aim = null;
   battle.walk = null;
   battle.popups = [];
   battle.log = [];

@@ -128,11 +128,3 @@ export function rollAttack(
   const amount = Math.round(f.min + Math.random() * (f.max - f.min));
   return { hit: true, amount: Math.max(1, amount), healing: f.healing, angle: f.angle };
 }
-
-/** Whether an ability is allowed to be pointed at this unit at all. */
-export function isValidTarget(actor: Unit, target: Unit, ability: Ability): boolean {
-  if (target.hp <= 0) return false;
-  if (ability.targets === 'ally') return target.team === actor.team;
-  if (ability.targets === 'enemy') return target.team !== actor.team;
-  return true;
-}
