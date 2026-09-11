@@ -22,6 +22,7 @@
     advanceClock,
     battle,
     confirmTile,
+    cursorCoord,
     heightOf,
     map,
     renderPosition,
@@ -82,16 +83,7 @@
     battle.phase === 'target' ? abilityRangeTiles() : new Set<string>()
   );
 
-  /**
-   * The cursor frame marks the acting unit, nothing else — it is a turn
-   * indicator, not a pointing device. Hidden mid-walk, where the unit's tile is
-   * still its origin and a frame left behind reads as a glitch.
-   */
-  const cursorTile = $derived.by(() => {
-    const u = activeUnit();
-    if (!u || battle.phase === 'moving') return null;
-    return { x: u.x, y: u.y };
-  });
+  const cursorTile = $derived(cursorCoord());
 
   const cursorColor = $derived(
     battle.phase === 'target' ? '#ff8a7a' : battle.phase === 'move' ? '#8fd0ff' : '#ffffff'

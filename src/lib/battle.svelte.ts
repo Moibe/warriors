@@ -26,6 +26,7 @@ import {
   bestApproach,
   computeReachable,
   findPath,
+  landableTiles,
   stepToward,
   tilesInAbilityRange,
   tilesInBurst,
@@ -71,6 +72,13 @@ export const battle = $state({
   activeId: null as string | null,
   /** Ability chosen from the menu, waiting for a target. */
   ability: null as Ability | null,
+  /**
+   * Destination being pointed at while choosing where to walk. Null outside the
+   * move phase — this is the one moment the cursor stops being a turn indicator
+   * and becomes a pointing device, because it is the one moment there is
+   * something to point at.
+   */
+  moveTarget: null as Coord | null,
   walk: null as WalkAnim | null,
   popups: [] as Popup[],
   log: [] as string[],
@@ -115,9 +123,47 @@ export function isPlayerTurn(): boolean {
   return !!u && u.team === 'ally';
 }
 
-// The cursor is not state: it is always the acting unit's tile, derived at the
-// point of use. There is no pointing device any more — the mouse selects by
-// clicking, and nothing else writes a cursor position.
+/**
+ * Where the cursor frame sits: the destination being chosen while moving, the
+ * acting unit the rest of the time. Derived, never stored — outside the move
+ * phase there is nothing that could put it anywhere else.
+ *
+ * Null mid-walk, where the unit's tile is still its origin and a frame left
+ * behind reads as a glitch.
+ */
+export function cursorCoord(): Coord | null {
+  if (battle.phase === 'move' && battle.moveTarget) return battle.moveTarget;
+  const u = activeUnit();
+  if (!u || battle.phase === 'moving') return null;
+  return { x: u.x, y: u.y };
+}
+
+/**
+ * Steps the move cursor one tile. The caller has already rotated the delta into
+ * the camera's frame.
+ *
+ * Restricted to tiles the unit could actually stop on, so every press lands
+ * somewhere Enter will accept — no dead confirmations. It skips onward past
+ * cells that are merely passable, which is what stops an ally standing in the
+ * way from trapping the cursor against them.
+ */
+export function stepMoveCursor(dx: number, dy: number): boolean {
+  if (battle.phase !== 'move' || !battle.moveTarget) return false;
+  const landable = landableTiles(activeReach());
+
+  let { x, y } = battle.moveTarget;
+  const limit = Math.max(map.width, map.depth);
+  for (let step = 0; step < limit; step++) {
+    x += dx;
+    y += dy;
+    if (x < 0 || y < 0 || x >= map.width || y >= map.depth) return false;
+    if (landable.has(tileKey(x, y))) {
+      battle.moveTarget = { x, y };
+      return true;
+    }
+  }
+  return false;
+}
 
 /** Tiles the chosen ability could be aimed at from where the actor stands. */
 export function abilityRangeTiles(): Set<string> {
@@ -207,6 +253,7 @@ function beginTurn(u: Unit) {
   battle.turn += 1;
   battle.activeId = u.id;
   battle.ability = null;
+  battle.moveTarget = null;
   u.hasMoved = false;
   u.hasActed = false;
 
@@ -234,6 +281,7 @@ export function endTurn() {
   }
   battle.activeId = null;
   battle.ability = null;
+  battle.moveTarget = null;
   if (checkVictory()) return;
   battle.phase = 'clock';
   clockDelay = TURN_GAP;
@@ -256,6 +304,9 @@ function checkVictory(): boolean {
 export function commandMove() {
   const u = activeUnit();
   if (!u || u.hasMoved) return;
+  // Starts on the unit's own square, which is always landable, so the arrows
+  // have a valid place to step out from.
+  battle.moveTarget = { x: u.x, y: u.y };
   battle.phase = 'move';
 }
 
@@ -303,6 +354,7 @@ export function cancel() {
   }
   if (battle.phase === 'move' || battle.phase === 'target' || battle.phase === 'facing') {
     battle.ability = null;
+    battle.moveTarget = null;
     battle.phase = 'command';
   }
 }
@@ -326,6 +378,7 @@ export function confirmMove(x: number, y: number) {
   const entry = reach.get(tileKey(x, y));
   if (!entry || !entry.stoppable) return;
 
+  battle.moveTarget = null;
   const path = findPath(reach, x, y);
   if (path.length < 2) {
     // Chose the tile it already stands on — treat as a no-op, not a move.
@@ -658,6 +711,7 @@ export function restart() {
   battle.phase = 'clock';
   battle.activeId = null;
   battle.ability = null;
+  battle.moveTarget = null;
   battle.walk = null;
   battle.popups = [];
   battle.log = [];

@@ -17,15 +17,18 @@
     commandMove,
     commandWait,
     confirmFacing,
+    confirmTile,
+    cursorCoord,
     heightOf,
     map,
     previewFacing,
     restart,
+    stepMoveCursor,
     upcomingTurns,
   } from '$lib/battle.svelte';
   import { facingTo, tileAt, type Coord, type Facing } from '$lib/grid';
   import { JOBS } from '$lib/jobs';
-  import { isAlive } from '$lib/units';
+  import { isAlive, unitAt } from '$lib/units';
 
   import BattleLog from '$lib/ui/BattleLog.svelte';
   import CameraControls from '$lib/ui/CameraControls.svelte';
@@ -35,7 +38,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.4.2';
+  const APP_VERSION = '0.5.2';
 
   // ---- Camera -------------------------------------------------------------
 
@@ -109,8 +112,9 @@
 
   // ---- Keyboard -----------------------------------------------------------
 
-  // Arrows survive only inside the orientation step, where they aim the unit.
-  // They no longer drive a free-roaming board cursor.
+  // Arrows drive the cursor only where there is genuinely a tile to choose:
+  // picking a destination, and aiming the unit in the orientation step. Outside
+  // those two the cursor is a turn indicator and nothing moves it.
 
   /** The four grid axes, in the order the arrows map to them at yawIndex 0. */
   const GRID_DIRS: Coord[] = [
@@ -154,17 +158,26 @@
     if (k === '-') return zoomBy(-6);
     if (k === 'escape') return cancel();
 
-    if (battle.phase === 'facing') {
-      const arrow = ARROW_BASE[k];
-      if (arrow !== undefined) {
-        e.preventDefault();
-        previewFacing(facingTo({ x: 0, y: 0 }, arrowToGrid(arrow)));
-        return;
-      }
-      if (k === 'enter' || k === ' ') {
+    const arrow = ARROW_BASE[k];
+    if (arrow !== undefined && (battle.phase === 'facing' || battle.phase === 'move')) {
+      e.preventDefault();
+      const d = arrowToGrid(arrow);
+      if (battle.phase === 'facing') previewFacing(facingTo({ x: 0, y: 0 }, d));
+      else stepMoveCursor(d.x, d.y);
+      return;
+    }
+
+    if (k === 'enter' || k === ' ') {
+      if (battle.phase === 'facing') {
         e.preventDefault();
         const acting = activeUnit();
         if (acting) confirmFacing(acting.facing);
+        return;
+      }
+      if (battle.phase === 'move') {
+        e.preventDefault();
+        const c = cursorCoord();
+        if (c) confirmTile(c.x, c.y);
         return;
       }
     }
@@ -187,10 +200,16 @@
 
   const active = $derived(activeUnit());
 
-  // Both windows report the acting unit and the ground under it. With the
-  // cursor pinned there is nothing else to point at — inspecting another unit
-  // now means reading its row in the turn order.
-  const activeTile = $derived(active ? tileAt(map, active.x, active.y) : null);
+  // The terrain window follows the cursor, which is the acting unit except
+  // while a destination is being chosen — where the height of the square you
+  // are about to step onto is exactly what you need to read. The unit window
+  // stays on the acting unit; inspecting another one means reading its row in
+  // the turn order.
+  const cursor = $derived(cursorCoord());
+  const cursorTile = $derived(cursor ? tileAt(map, cursor.x, cursor.y) : null);
+  const cursorOccupant = $derived(
+    cursor ? unitAt(battle.units, cursor.x, cursor.y)?.name : undefined
+  );
   const panelUnit = $derived(active);
   const playerTurn = $derived(!!active && active.team === 'ally' && isAlive(active));
 
@@ -240,7 +259,7 @@
           <span class="ver">v{APP_VERSION}</span>
         </p>
       </div>
-      <TileInfo tile={activeTile} occupant={active?.name} />
+      <TileInfo tile={cursorTile} occupant={cursorOccupant} />
     </div>
 
     <div class="corner top-right">
@@ -298,7 +317,7 @@
   {/if}
 
   <p class="keys">
-    <kbd>clic</kbd> elegir casilla · <kbd>1</kbd>…<kbd>0</kbd> órdenes · <kbd>Q</kbd><kbd>E</kbd> girar ·
+    <kbd>clic</kbd> o <kbd>flechas</kbd> elegir casilla · <kbd>Enter</kbd> confirmar · <kbd>1</kbd>…<kbd>0</kbd> órdenes · <kbd>Q</kbd><kbd>E</kbd> girar ·
     <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar · <kbd>rueda</kbd> zoom ·
     <kbd>botón central</kbd> desplazar · <kbd>Esc</kbd> cancelar
   </p>
