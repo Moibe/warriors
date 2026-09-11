@@ -27,18 +27,21 @@
     stepMoveCursor,
     upcomingTurns,
   } from '$lib/battle.svelte';
-  import { facingTo, tileAt, type Coord, type Facing } from '$lib/grid';
+  import { forecast, isValidTarget } from '$lib/combat';
+  import { facingTo, tileAt, tileKey, type Coord, type Facing } from '$lib/grid';
+  import { tilesInBurst } from '$lib/pathfinding';
   import { isAlive, unitAt } from '$lib/units';
 
   import BattleLog from '$lib/ui/BattleLog.svelte';
   import CameraControls from '$lib/ui/CameraControls.svelte';
   import CommandMenu from '$lib/ui/CommandMenu.svelte';
+  import Forecast from '$lib/ui/Forecast.svelte';
   import ResultBanner from '$lib/ui/ResultBanner.svelte';
   import TileInfo from '$lib/ui/TileInfo.svelte';
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.8.3';
+  const APP_VERSION = '0.9.3';
 
   // ---- Camera -------------------------------------------------------------
 
@@ -282,6 +285,40 @@
 
   const queue = $derived(upcomingTurns(7));
 
+  /**
+   * The odds, for whoever is under the aiming cursor. Same maths the roll uses,
+   * so the window cannot promise something the dice will not honour.
+   */
+  const aimForecast = $derived.by(() => {
+    const aim = battle.aim;
+    const ability = battle.ability;
+    const u = activeUnit();
+    if (battle.phase !== 'target' || !aim || !ability || !u) return null;
+    const target = unitAt(battle.units, aim.x, aim.y);
+    if (!target) return null;
+
+    // Everyone else the burst would touch. The figures below describe the unit
+    // on the cursor alone, so a silent area ability would read as safer than it
+    // is when it is about to catch three more.
+    let alsoCaught = 0;
+    if (ability.aoe > 0) {
+      const cells = tilesInBurst(map, aim, ability.aoe);
+      alsoCaught = battle.units.filter(
+        (o) => isAlive(o) && o.id !== target.id && cells.has(tileKey(o.x, o.y))
+      ).length;
+    }
+
+    return {
+      target,
+      abilityName: ability.name,
+      data: forecast(u, heightOf(u), target, heightOf(target), ability),
+      // Aiming at your own side is allowed — a fireball does not check tabards
+      // — but the window says so before you commit.
+      friendlyFire: !isValidTarget(u, target, ability),
+      alsoCaught,
+    };
+  });
+
   const showCommands = $derived(
     playerTurn &&
       (battle.phase === 'command' ||
@@ -355,6 +392,18 @@
     </div>
 
     <div class="corner bottom-right">
+      <!-- Grows upward from the anchored corner, so the order window below it
+           never shifts under the pointer. -->
+      {#if aimForecast}
+        <Forecast
+          target={aimForecast.target}
+          data={aimForecast.data}
+          abilityName={aimForecast.abilityName}
+          friendlyFire={aimForecast.friendlyFire}
+          alsoCaught={aimForecast.alsoCaught}
+        />
+      {/if}
+
       {#if showCommands && active}
         <CommandMenu
           unit={active}

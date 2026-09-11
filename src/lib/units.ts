@@ -47,6 +47,14 @@ export type Unit = {
    */
   hurtFor: number;
 
+  /**
+   * Seconds left on the death animation. Presentation only, like `hurtFor`: the
+   * rules treat a unit at 0 HP as gone the instant it happens — it stops
+   * blocking squares and leaves the turn order — and this timer only keeps the
+   * body on screen long enough to see it fall.
+   */
+  deathFor: number;
+
   /** Per-unit recolor, so two goblins don't have to be the same goblin. */
   paletteOverride?: Partial<Palette>;
 };
@@ -108,6 +116,7 @@ export function createUnit(seed: UnitSeed): Unit {
     brave: seed.brave ?? 70,
     faith: seed.faith ?? 70,
     hurtFor: 0,
+    deathFor: 0,
     paletteOverride: seed.paletteOverride,
   };
 }

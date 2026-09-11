@@ -20,7 +20,7 @@
     Sprite,
     SpriteMaterial,
   } from 'three';
-  import { HURT_TIME } from './battle.svelte';
+  import { DEATH_TIME, HURT_TIME } from './battle.svelte';
   import { LEVEL, TILE, facingAngle, facingVector } from './grid';
   import { getShadowTexture } from './textures';
   import { SPRITE_WORLD_H, SPRITE_WORLD_W, getUnitTexture, type Pose } from './sprites';
@@ -76,11 +76,17 @@
     toneMapped: false,
   });
 
-  /** Boolean, not the raw timer: the texture only has to change when it flips. */
+  /** Booleans, not raw timers: the texture only changes when one of them flips. */
   const hurt = $derived(unit.hurtFor > 0);
+  const dying = $derived(unit.hp <= 0 && unit.deathFor > 0);
 
   $effect(() => {
-    material.map = getUnitTexture(unit.job, unit.paletteOverride, pose, flip, hurt);
+    // The recoil frame carries the death too — a unit that is struck down is
+    // still a unit being struck.
+    material.map = getUnitTexture(unit.job, unit.paletteOverride, pose, flip, hurt || dying);
+    // alphaTest would clip the entire sprite the moment its opacity dropped
+    // below the threshold, so the fade needs it switched off.
+    material.alphaTest = dying ? 0 : 0.5;
     material.needsUpdate = true;
   });
 
@@ -152,6 +158,10 @@
 
   /** How long the glare lasts, of the reaction's total. The pose outlives it. */
   const FLASH_TIME = 0.28;
+  /** How far the body sinks as it fades out. */
+  const DEATH_SINK = 0.28;
+
+  let fade = $state(1);
 
   useTask((delta) => {
     elapsed += delta;
@@ -176,6 +186,19 @@
       shake = 0;
       tinted = false;
     }
+
+    // Falling: the body holds the recoil frame, sinks a little and fades. Done
+    // here rather than in an effect because it changes every frame, and an
+    // effect rerunning sixty times a second is the wrong tool.
+    if (unit.deathFor > 0) {
+      fade = unit.deathFor / DEATH_TIME;
+      material.opacity = fade;
+      shadowMaterial.opacity = 0.9 * fade;
+    } else if (fade !== 1) {
+      fade = 1;
+      material.opacity = 1;
+      shadowMaterial.opacity = 0.9;
+    }
   });
 
   // Screen-right in world XZ, so the shudder reads as sideways however the
@@ -187,25 +210,33 @@
 </script>
 
 <T.Group position={[world.x, world.y, world.z]}>
-  <T.Mesh geometry={ringGeometry} material={ringMaterial} position.y={0.028} renderOrder={2} />
-  <T.Mesh
-    geometry={wedgeGeometry}
-    material={wedgeMaterial}
-    position.y={0.03}
-    rotation.y={facingRotation}
-    renderOrder={2}
-  />
+  <!-- A body has no side and no facing: both markers go the instant it falls,
+       rather than fading along with it and reading as still in play. -->
+  {#if !dying}
+    <T.Mesh geometry={ringGeometry} material={ringMaterial} position.y={0.028} renderOrder={2} />
+    <T.Mesh
+      geometry={wedgeGeometry}
+      material={wedgeMaterial}
+      position.y={0.03}
+      rotation.y={facingRotation}
+      renderOrder={2}
+    />
+  {/if}
   <T.Mesh geometry={shadowGeometry} material={shadowMaterial} position.y={0.024} renderOrder={2} />
 
   <T
     is={Sprite}
     {material}
-    position={[shakeOffset.x, SPRITE_WORLD_H / 2 + 0.02 + bob, shakeOffset.z]}
+    position={[
+      shakeOffset.x,
+      SPRITE_WORLD_H / 2 + 0.02 + bob - (1 - fade) * DEATH_SINK,
+      shakeOffset.z,
+    ]}
     scale={[SPRITE_WORLD_W, SPRITE_WORLD_H, 1]}
     renderOrder={3}
   />
 
-  {#if active}
+  {#if active && !dying}
     <T.Mesh bind:ref={markerRef} geometry={markerGeometry} material={markerMaterial} renderOrder={6} />
   {/if}
 </T.Group>

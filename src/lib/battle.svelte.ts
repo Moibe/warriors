@@ -97,6 +97,13 @@ export const battle = $state({
  */
 export const HURT_TIME = 0.5;
 
+/**
+ * How long a felled unit stays on screen, recoiling and fading. Kept close to
+ * the 0.75s pause after an action so the body is gone by the time the next turn
+ * starts, rather than fading over somebody else's move.
+ */
+export const DEATH_TIME = 0.8;
+
 /** Seconds of dead air between one turn ending and the next beginning. */
 const TURN_GAP = 0.35;
 /** Tiles walked per second during a move animation. */
@@ -213,18 +220,22 @@ function defaultAim(ability: Ability): Coord | null {
   }
   if (best) return best;
 
-  // Nobody worth pointing at: park on the nearest square in reach.
+  // Nobody worth pointing at: park on the nearest square in reach, but never
+  // on the caster's own. An ability with no minimum range covers the square it
+  // is cast from, so the plain nearest tile is the caster itself — opening the
+  // attack menu already aimed at your own face.
   let fallback: Coord | null = null;
   let fallbackDist = Infinity;
   for (const key of range) {
     const c = parseKey(key);
+    if (c.x === u.x && c.y === u.y) continue;
     const d = gridDistance(u, c);
     if (d < fallbackDist) {
       fallbackDist = d;
       fallback = c;
     }
   }
-  return fallback;
+  return fallback ?? { x: u.x, y: u.y };
 }
 
 /** Tiles the chosen ability could be aimed at from where the actor stands. */
@@ -542,6 +553,7 @@ export function advanceAnimations(dt: number) {
   // and it stops dead when the tab is hidden like everything else.
   for (const u of battle.units) {
     if (u.hurtFor > 0) u.hurtFor = Math.max(0, u.hurtFor - dt);
+    if (u.deathFor > 0) u.deathFor = Math.max(0, u.deathFor - dt);
   }
 
   for (const p of battle.popups) p.t += dt;
@@ -644,6 +656,7 @@ export function confirmAbility(x: number, y: number) {
       `${actor.name} → ${target.name}: ${result.amount} de daño${ANGLE_TAG[result.angle]}.`
     );
     if (target.hp === 0) {
+      target.deathFor = DEATH_TIME;
       log(`${target.name} cae.`);
       pushPopup(target, 'K.O.', '#ff6b6b');
     }

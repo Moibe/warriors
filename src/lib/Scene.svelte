@@ -113,7 +113,9 @@
     return [w.x, w.y, w.z] as [number, number, number];
   });
 
-  const livingUnits = $derived(battle.units.filter(isAlive));
+  // The fallen stay in the list until their death animation runs out. They are
+  // already gone as far as the rules are concerned — this is only the body.
+  const shownUnits = $derived(battle.units.filter((u) => isAlive(u) || u.deathFor > 0));
 </script>
 
 <CameraRig {yawIndex} {pitchHigh} {zoom} target={cameraTarget} bind:yaw />
@@ -156,7 +158,7 @@
      floating arrows on the same tile read as a duplicate. -->
 <TileCursor {map} tile={cursorTile} color={cursorColor} showArrow={false} />
 
-{#each livingUnits as unit (unit.id)}
+{#each shownUnits as unit (unit.id)}
   <UnitSprite
     {unit}
     pos={renderPosition(unit)}
