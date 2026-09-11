@@ -15,10 +15,12 @@
     MeshBasicMaterial,
     PlaneGeometry,
     RingGeometry,
+    Shape,
+    ShapeGeometry,
     Sprite,
     SpriteMaterial,
   } from 'three';
-  import { LEVEL, TILE, facingVector } from './grid';
+  import { LEVEL, TILE, facingAngle, facingVector } from './grid';
   import { getShadowTexture } from './textures';
   import { SPRITE_WORLD_H, SPRITE_WORLD_W, getUnitTexture, type Pose } from './sprites';
   import type { Unit } from './units';
@@ -56,16 +58,26 @@
     return { pose: (toward >= 0 ? 'front' : 'back') as Pose, flip: right < 0 };
   });
 
-  const material = $derived.by(() => {
-    const m = new SpriteMaterial({
-      map: getUnitTexture(unit.job, unit.paletteOverride, view.pose, view.flip),
-      transparent: true,
-      // alphaTest lets the sprite write depth, so characters occlude each other
-      // correctly instead of fighting in the transparent pass.
-      alphaTest: 0.5,
-      toneMapped: false,
-    });
-    return m;
+  // Split out as primitives on purpose. `view` rebuilds on every frame of a
+  // camera rotation because `yaw` animates, and a fresh object invalidates
+  // every dependent each frame. A string and a boolean only invalidate when the
+  // pose genuinely flips — a few times per rotation instead of sixty.
+  const pose = $derived(view.pose);
+  const flip = $derived(view.flip);
+
+  // One material for the life of the component: swapping `.map` is far cheaper
+  // than building a SpriteMaterial per change, and never leaks the old one.
+  const material = new SpriteMaterial({
+    transparent: true,
+    // alphaTest lets the sprite write depth, so characters occlude each other
+    // correctly instead of fighting in the transparent pass.
+    alphaTest: 0.5,
+    toneMapped: false,
+  });
+
+  $effect(() => {
+    material.map = getUnitTexture(unit.job, unit.paletteOverride, pose, flip);
+    material.needsUpdate = true;
   });
 
   const shadowGeometry = new PlaneGeometry(0.8, 0.8).rotateX(-Math.PI / 2);
@@ -76,16 +88,51 @@
     opacity: 0.9,
   });
 
-  const ringGeometry = new RingGeometry(0.36, 0.46, 24).rotateX(-Math.PI / 2);
-  const ringMaterial = $derived(
-    new MeshBasicMaterial({
-      color: unit.team === 'ally' ? '#5ea8ff' : '#e8564e',
-      transparent: true,
-      opacity: active ? 0.95 : 0.45,
-      depthWrite: false,
-      toneMapped: false,
-    })
-  );
+  const ringGeometry = new RingGeometry(0.26, 0.34, 24).rotateX(-Math.PI / 2);
+  const ringMaterial = new MeshBasicMaterial({
+    transparent: true,
+    depthWrite: false,
+    toneMapped: false,
+  });
+
+  // The facing wedge — an arrowhead on the ground breaking the ring on the side
+  // the unit is looking.
+  //
+  // The sprite alone cannot express four directions: the body art is
+  // left-right symmetric, so east and south differ only by which side the
+  // weapon hangs on, and a unit carrying nothing (the monk) renders
+  // pixel-identical in both. Facing decides flanking and back-attack bonuses,
+  // so it needs a tell that does not depend on the artwork.
+  // Sits in the gap OUTSIDE the ring, not on top of it: overlapping shapes in
+  // the same colour merge into one blob and the arrow stops reading as an
+  // arrow. The tip reaches just past the tile edge, pointing at the square the
+  // unit is actually looking at.
+  const wedgeShape = new Shape();
+  wedgeShape.moveTo(0, 0.6);
+  wedgeShape.lineTo(-0.19, 0.38);
+  wedgeShape.lineTo(0.19, 0.38);
+  wedgeShape.closePath();
+  // Authored pointing +Y; rotating -90° about X lays it flat aiming north,
+  // which is what facingAngle() is measured from.
+  const wedgeGeometry = new ShapeGeometry(wedgeShape).rotateX(-Math.PI / 2);
+  const wedgeMaterial = new MeshBasicMaterial({
+    transparent: true,
+    depthWrite: false,
+    toneMapped: false,
+  });
+
+  const facingRotation = $derived(facingAngle(unit.facing));
+
+  // The ring carries team identity, the wedge carries direction — so the wedge
+  // gets the brighter tint and the ring steps back, rather than both competing
+  // in the same colour at the same weight.
+  $effect(() => {
+    const ally = unit.team === 'ally';
+    ringMaterial.color.set(ally ? '#5ea8ff' : '#e8564e');
+    ringMaterial.opacity = active ? 0.8 : 0.35;
+    wedgeMaterial.color.set(ally ? '#bfe0ff' : '#ffb3ac');
+    wedgeMaterial.opacity = active ? 1 : 0.8;
+  });
 
   const markerGeometry = new ConeGeometry(0.15, 0.28, 4).rotateX(Math.PI);
   const markerMaterial = new MeshBasicMaterial({ color: '#ffe27a', toneMapped: false });
@@ -105,6 +152,13 @@
 
 <T.Group position={[world.x, world.y, world.z]}>
   <T.Mesh geometry={ringGeometry} material={ringMaterial} position.y={0.028} renderOrder={2} />
+  <T.Mesh
+    geometry={wedgeGeometry}
+    material={wedgeMaterial}
+    position.y={0.03}
+    rotation.y={facingRotation}
+    renderOrder={2}
+  />
   <T.Mesh geometry={shadowGeometry} material={shadowMaterial} position.y={0.024} renderOrder={2} />
 
   <T

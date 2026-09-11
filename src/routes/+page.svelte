@@ -19,6 +19,7 @@
     confirmFacing,
     heightOf,
     map,
+    previewFacing,
     restart,
     upcomingTurns,
   } from '$lib/battle.svelte';
@@ -36,7 +37,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.1.1';
+  const APP_VERSION = '0.2.1';
 
   // ---- Camera -------------------------------------------------------------
 
@@ -263,6 +264,7 @@
           onWait={commandWait}
           onCancel={cancel}
           onFacing={handleFacing}
+          onPreviewFacing={previewFacing}
         />
       {:else if battle.phase !== 'over'}
         <div class="waiting">

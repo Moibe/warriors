@@ -155,6 +155,15 @@ export function facingVector(f: Facing): Coord {
   }
 }
 
+/**
+ * Y rotation that aims a mesh authored pointing north (world −Z) along
+ * `facing`. Used by the ground wedge that shows which way a unit is looking.
+ */
+export function facingAngle(f: Facing): number {
+  const v = facingVector(f);
+  return Math.atan2(-v.x, -v.y);
+}
+
 export const FACING_NAMES: Record<Facing, string> = {
   n: 'Norte',
   e: 'Este',

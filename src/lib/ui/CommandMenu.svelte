@@ -27,6 +27,7 @@
     onWait,
     onCancel,
     onFacing,
+    onPreviewFacing,
   }: {
     unit: Unit;
     phase: Phase;
@@ -36,6 +37,8 @@
     onWait: () => void;
     onCancel: () => void;
     onFacing: (f: Facing) => void;
+    /** Turns the unit on the map while a direction is merely pointed at. */
+    onPreviewFacing: (f: Facing | null) => void;
   } = $props();
 
   const abilities = $derived(JOBS[unit.job].abilities);
@@ -115,11 +118,23 @@
       <button class="back" onclick={onCancel}>Volver</button>
     {:else if phase === 'facing'}
       <div class="slot">
-        <p class="hint">¿Hacia dónde queda mirando?</p>
+        <p class="hint">
+          ¿Hacia dónde queda mirando?<br />Apunta una dirección para verla en el
+          mapa; por la espalda recibe más daño.
+        </p>
       </div>
       <div class="facings">
         {#each FACINGS as f (f)}
-          <button class="cmd" onclick={() => onFacing(f)}>
+          <!-- focus/blur as well as hover, so the preview also works when the
+               buttons are reached with the keyboard. -->
+          <button
+            class="cmd"
+            onclick={() => onFacing(f)}
+            onmouseenter={() => onPreviewFacing(f)}
+            onmouseleave={() => onPreviewFacing(null)}
+            onfocus={() => onPreviewFacing(f)}
+            onblur={() => onPreviewFacing(null)}
+          >
             <span class="text">{FACING_NAMES[f]}</span>
           </button>
         {/each}

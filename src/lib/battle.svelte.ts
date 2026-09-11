@@ -186,6 +186,7 @@ export function advanceClock(dt: number) {
 }
 
 function beginTurn(u: Unit) {
+  facingBeforePreview = null;
   battle.turn += 1;
   battle.activeId = u.id;
   battle.ability = null;
@@ -252,13 +253,40 @@ export function commandAbility(ability: Ability) {
   battle.phase = 'target';
 }
 
+/**
+ * The facing a unit had when the orientation menu opened.
+ *
+ * Pointing at a direction turns the unit on the map for real so the player can
+ * see the choice before committing — but backing out has to restore it exactly,
+ * because facing is a rule (flanking, back attacks), not decoration.
+ */
+let facingBeforePreview: Facing | null = null;
+
 export function commandWait() {
-  if (!activeUnit()) return;
+  const u = activeUnit();
+  if (!u) return;
+  facingBeforePreview = u.facing;
   battle.phase = 'facing';
+}
+
+/**
+ * Live preview while the pointer rests on a direction. Pass `null` to put the
+ * unit back the way it was.
+ */
+export function previewFacing(facing: Facing | null) {
+  const u = activeUnit();
+  if (!u || battle.phase !== 'facing') return;
+  const next = facing ?? facingBeforePreview;
+  if (next) u.facing = next;
 }
 
 /** Back out of a submenu without spending anything. */
 export function cancel() {
+  if (battle.phase === 'facing') {
+    // Undo whatever the preview left on the unit.
+    previewFacing(null);
+    facingBeforePreview = null;
+  }
   if (battle.phase === 'move' || battle.phase === 'target' || battle.phase === 'facing') {
     battle.ability = null;
     battle.aim = null;
@@ -273,6 +301,7 @@ export function setFacing(facing: Facing) {
 
 export function confirmFacing(facing: Facing) {
   setFacing(facing);
+  facingBeforePreview = null;
   endTurn();
 }
 
@@ -621,6 +650,7 @@ export function restart() {
   battle.log = [];
   battle.winner = null;
   battle.turn = 0;
+  facingBeforePreview = null;
   aiPlan = null;
   resolveTimer = 0;
   clockDelay = TURN_GAP;
