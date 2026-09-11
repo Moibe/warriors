@@ -35,7 +35,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.4.1';
+  const APP_VERSION = '0.4.2';
 
   // ---- Camera -------------------------------------------------------------
 

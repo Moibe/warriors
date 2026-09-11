@@ -65,15 +65,18 @@
 </script>
 
 {#if placement}
-  <!-- depthTest is off on both: the cursor must stay visible even when a
-       cliff behind it would otherwise cut into the frame. renderOrder puts it
-       above the range panels. -->
+  <!-- depthTest stays off so a cliff in front never cuts the frame in half, but
+       renderOrder decides who paints over whom: 1 range panels, 2 the frame and
+       the ground rings, 3 the character sprites. Drawing the frame BEFORE the
+       sprites is what puts it under the character's feet instead of across
+       their shins — with the cursor now pinned to the acting unit, there is
+       always a character standing on it. -->
   <T.Group position={[placement.x, placement.y, placement.z]}>
     <T.Mesh
       geometry={frameGeometry}
       material={frameMaterial}
       position.y={0.05}
-      renderOrder={4}
+      renderOrder={2}
     />
     {#if showArrow}
       <T.Mesh
