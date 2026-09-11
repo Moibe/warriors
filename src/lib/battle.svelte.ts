@@ -301,6 +301,40 @@ function checkVictory(): boolean {
 // Player commands
 // ---------------------------------------------------------------------------
 
+export type CommandEntry =
+  | { kind: 'move'; enabled: boolean }
+  | { kind: 'ability'; ability: Ability; enabled: boolean }
+  | { kind: 'wait'; enabled: boolean };
+
+/**
+ * The order menu for the acting unit, as data.
+ *
+ * Both the window that draws the rows and the keyboard that walks them read
+ * this one list. Built twice, the highlight would eventually point at a
+ * different row than the one it appears to sit on.
+ */
+export function commandList(): CommandEntry[] {
+  const u = activeUnit();
+  if (!u) return [];
+  return [
+    { kind: 'move', enabled: !u.hasMoved },
+    ...JOBS[u.job].abilities.map((ability) => ({
+      kind: 'ability' as const,
+      ability,
+      enabled: !u.hasActed && ability.mp <= u.mp,
+    })),
+    { kind: 'wait', enabled: true },
+  ];
+}
+
+/** Runs one row of {@link commandList}. Disabled rows do nothing. */
+export function runCommand(entry: CommandEntry) {
+  if (!entry.enabled) return;
+  if (entry.kind === 'move') commandMove();
+  else if (entry.kind === 'ability') commandAbility(entry.ability);
+  else commandWait();
+}
+
 export function commandMove() {
   const u = activeUnit();
   if (!u || u.hasMoved) return;

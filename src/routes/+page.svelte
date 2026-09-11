@@ -6,6 +6,7 @@
   // `battle.svelte.ts`; the windows below are pure readers of it.
 
   import { Canvas } from '@threlte/core';
+  import { untrack } from 'svelte';
   import { NoToneMapping } from 'three';
 
   import Scene from '$lib/Scene.svelte';
@@ -13,9 +14,7 @@
     activeUnit,
     battle,
     cancel,
-    commandAbility,
-    commandMove,
-    commandWait,
+    commandList,
     confirmFacing,
     confirmTile,
     cursorCoord,
@@ -23,11 +22,11 @@
     map,
     previewFacing,
     restart,
+    runCommand,
     stepMoveCursor,
     upcomingTurns,
   } from '$lib/battle.svelte';
   import { facingTo, tileAt, type Coord, type Facing } from '$lib/grid';
-  import { JOBS } from '$lib/jobs';
   import { isAlive, unitAt } from '$lib/units';
 
   import BattleLog from '$lib/ui/BattleLog.svelte';
@@ -38,7 +37,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.5.2';
+  const APP_VERSION = '0.6.2';
 
   // ---- Camera -------------------------------------------------------------
 
@@ -70,6 +69,7 @@
     if (battle.activeId !== lastActive) {
       lastActive = battle.activeId;
       pan = { x: 0, y: 0 };
+      commandIndex = 0;
     }
   });
 
@@ -108,6 +108,45 @@
     if (!dragging) return;
     dragging = false;
     (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+  }
+
+  // ---- Order menu ---------------------------------------------------------
+
+  /** Highlighted row of the order window. Shared by the arrows and the mouse. */
+  let commandIndex = $state(0);
+
+  const commands = $derived(battle.phase === 'command' ? commandList() : []);
+
+  // Keep the highlight on a row that can actually be run: a command goes
+  // disabled while the menu is open (Mover, the moment you have moved) and a
+  // new turn brings a different list entirely.
+  $effect(() => {
+    const list = commands;
+    if (!list.length) return;
+    const i = untrack(() => commandIndex);
+    if (!list[i]?.enabled) {
+      const first = list.findIndex((c) => c.enabled);
+      if (first >= 0) commandIndex = first;
+    }
+  });
+
+  /** Walks the highlight, skipping rows Enter could not run. Wraps around. */
+  function stepCommand(delta: 1 | -1) {
+    const list = commands;
+    if (!list.length) return;
+    let i = commandIndex;
+    for (let n = 0; n < list.length; n++) {
+      i = (i + delta + list.length) % list.length;
+      if (list[i].enabled) {
+        commandIndex = i;
+        return;
+      }
+    }
+  }
+
+  function runIndex(i: number) {
+    const entry = commands[i];
+    if (entry) runCommand(entry);
   }
 
   // ---- Keyboard -----------------------------------------------------------
@@ -159,15 +198,34 @@
     if (k === 'escape') return cancel();
 
     const arrow = ARROW_BASE[k];
-    if (arrow !== undefined && (battle.phase === 'facing' || battle.phase === 'move')) {
-      e.preventDefault();
-      const d = arrowToGrid(arrow);
-      if (battle.phase === 'facing') previewFacing(facingTo({ x: 0, y: 0 }, d));
-      else stepMoveCursor(d.x, d.y);
+    if (arrow !== undefined) {
+      // In the order window the arrows walk a list, so up means up — the
+      // rotation into the board's frame would be nonsense here.
+      if (battle.phase === 'command') {
+        if (k === 'arrowup' || k === 'arrowdown') {
+          e.preventDefault();
+          stepCommand(k === 'arrowdown' ? 1 : -1);
+        }
+        return;
+      }
+      if (battle.phase === 'facing' || battle.phase === 'move') {
+        e.preventDefault();
+        const d = arrowToGrid(arrow);
+        if (battle.phase === 'facing') previewFacing(facingTo({ x: 0, y: 0 }, d));
+        else stepMoveCursor(d.x, d.y);
+      }
       return;
     }
 
-    if (k === 'enter' || k === ' ') {
+    // A button keeps focus after being clicked and fires its own activation on
+    // Enter; without this guard the order would run twice.
+    const onButton = (e.target as HTMLElement | null)?.tagName === 'BUTTON';
+    if ((k === 'enter' || k === ' ') && !onButton) {
+      if (battle.phase === 'command') {
+        e.preventDefault();
+        runIndex(commandIndex);
+        return;
+      }
       if (battle.phase === 'facing') {
         e.preventDefault();
         const acting = activeUnit();
@@ -185,13 +243,16 @@
     const u = activeUnit();
     if (!u || u.team !== 'ally') return;
 
+    // Number shortcuts stay, and run the very same rows the arrows walk.
     if (battle.phase === 'command') {
-      if (k === '1') return commandMove();
-      if (k === '0') return commandWait();
-      const idx = Number(k) - 2;
-      const abilities = JOBS[u.job].abilities;
-      if (Number.isInteger(idx) && idx >= 0 && idx < abilities.length) {
-        commandAbility(abilities[idx]);
+      if (k === '0') {
+        const wait = commands.findIndex((c) => c.kind === 'wait');
+        if (wait >= 0) runIndex(wait);
+        return;
+      }
+      const idx = Number(k) - 1;
+      if (Number.isInteger(idx) && idx >= 0 && idx < commands.length) {
+        if (commands[idx].kind !== 'wait') runIndex(idx);
       }
     }
   }
@@ -293,9 +354,10 @@
           unit={active}
           phase={battle.phase}
           ability={battle.ability}
-          onMove={commandMove}
-          onAbility={commandAbility}
-          onWait={commandWait}
+          {commands}
+          selected={commandIndex}
+          onSelect={(i) => (commandIndex = i)}
+          onRun={runIndex}
           onCancel={cancel}
           onFacing={handleFacing}
           onPreviewFacing={previewFacing}
@@ -317,7 +379,8 @@
   {/if}
 
   <p class="keys">
-    <kbd>clic</kbd> o <kbd>flechas</kbd> elegir casilla · <kbd>Enter</kbd> confirmar · <kbd>1</kbd>…<kbd>0</kbd> órdenes · <kbd>Q</kbd><kbd>E</kbd> girar ·
+    <kbd>↑↓</kbd> órdenes · <kbd>flechas</kbd> o <kbd>clic</kbd> elegir casilla ·
+    <kbd>Enter</kbd> confirmar · <kbd>1</kbd>…<kbd>0</kbd> órdenes · <kbd>Q</kbd><kbd>E</kbd> girar ·
     <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar · <kbd>rueda</kbd> zoom ·
     <kbd>botón central</kbd> desplazar · <kbd>Esc</kbd> cancelar
   </p>

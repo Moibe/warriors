@@ -5,26 +5,31 @@
   // being picked the same window explains what the game is waiting for, so the
   // player never has to look elsewhere to know what a click will do.
   //
-  // Layout rule for this window: **nothing here may change size on hover.**
+  // The rows are not built here: they arrive as data from `commandList()`, the
+  // very list the keyboard walks. Building them twice is how a highlight ends
+  // up one row away from the thing it is highlighting.
+  //
+  // Layout rule for this window: **nothing here may change size on selection.**
   // The window is anchored to the bottom of the screen, so any growth pushes
   // the buttons upward — out from under a stationary cursor — which fires
   // mouseleave, shrinks it back, fires mouseenter, and flickers forever. Hence
-  // the fixed panel width and the description slot that is always present and
-  // always the same height, empty or not.
+  // the fixed panel width and the help slot that is always present and always
+  // the same height.
 
+  import type { CommandEntry, Phase } from '../battle.svelte';
   import { FACING_NAMES, type Facing } from '../grid';
-  import { JOBS, type Ability } from '../jobs';
+  import type { Ability } from '../jobs';
   import type { Unit } from '../units';
-  import type { Phase } from '../battle.svelte';
   import Window from './Window.svelte';
 
   let {
     unit,
     phase,
     ability,
-    onMove,
-    onAbility,
-    onWait,
+    commands,
+    selected,
+    onSelect,
+    onRun,
     onCancel,
     onFacing,
     onPreviewFacing,
@@ -32,82 +37,95 @@
     unit: Unit;
     phase: Phase;
     ability: Ability | null;
-    onMove: () => void;
-    onAbility: (a: Ability) => void;
-    onWait: () => void;
+    /** The order list, straight from the battle module. */
+    commands: CommandEntry[];
+    /** Highlighted row — moved by the arrows and by hovering alike. */
+    selected: number;
+    onSelect: (index: number) => void;
+    onRun: (index: number) => void;
     onCancel: () => void;
     onFacing: (f: Facing) => void;
     /** Turns the unit on the map while a direction is merely pointed at. */
     onPreviewFacing: (f: Facing | null) => void;
   } = $props();
 
-  const abilities = $derived(JOBS[unit.job].abilities);
-  let hovered = $state<Ability | null>(null);
-
-  // A turn change can swap the menu out from under the pointer; the stale
-  // description would otherwise survive into the next unit's window.
-  $effect(() => {
-    void unit.id;
-    void phase;
-    hovered = null;
-  });
-
-  const rangeLabel = $derived.by(() => {
-    const a = hovered;
-    if (!a) return '';
-    const span = a.minRange > 0 ? `${a.minRange}–${a.range}` : `${a.range}`;
-    return `alcance ${span}${a.aoe ? ` · área ${a.aoe}` : ''}`;
-  });
-
   const FACINGS: Facing[] = ['n', 'e', 's', 'w'];
+
+  /** Label, cost tag and help text for one row. */
+  function present(entry: CommandEntry) {
+    if (entry.kind === 'move') {
+      return {
+        name: 'Mover',
+        cost: `${unit.move} cas.`,
+        short: false,
+        head: `Mover · ${unit.move} casillas · salto ${unit.jump}`,
+        desc: 'Las flechas eligen el destino y Enter confirma.',
+      };
+    }
+    if (entry.kind === 'wait') {
+      return {
+        name: 'Esperar',
+        cost: 'fin',
+        short: false,
+        head: 'Esperar · termina el turno',
+        desc: 'Cuanto menos gastes en el turno, antes te vuelve a tocar.',
+      };
+    }
+    const a = entry.ability;
+    const span = a.minRange > 0 ? `${a.minRange}–${a.range}` : `${a.range}`;
+    return {
+      name: a.name,
+      cost: a.mp ? `${a.mp} PM` : '—',
+      short: a.mp > unit.mp,
+      head: `${a.name} · alcance ${span}${a.aoe ? ` · área ${a.aoe}` : ''}`,
+      desc: a.desc,
+    };
+  }
+
+  const shown = $derived(commands[selected] ? present(commands[selected]) : null);
+
+  /** Keyboard tag: Esperar is always 0, everything else counts from 1. */
+  function keyTag(entry: CommandEntry, i: number) {
+    return entry.kind === 'wait' ? '0' : String(i + 1);
+  }
 </script>
 
 <Window title={phase === 'facing' ? 'Orientación' : 'Órdenes'}>
   <div class="panel">
     {#if phase === 'command'}
       <div class="list">
-        <button class="cmd" disabled={unit.hasMoved} onclick={onMove}>
-          <span class="key">1</span>
-          <span class="text">Mover</span>
-          <span class="cost">{unit.move} cas.</span>
-        </button>
-
-        {#each abilities as a, i (a.id)}
+        {#each commands as entry, i (entry.kind === 'ability' ? entry.ability.id : entry.kind)}
+          {@const p = present(entry)}
           <button
             class="cmd"
-            disabled={unit.hasActed || a.mp > unit.mp}
-            onclick={() => onAbility(a)}
-            onmouseenter={() => (hovered = a)}
-            onmouseleave={() => (hovered = null)}
+            class:selected={i === selected}
+            class:wait={entry.kind === 'wait'}
+            disabled={!entry.enabled}
+            onclick={() => onRun(i)}
+            onmouseenter={() => onSelect(i)}
+            onfocus={() => onSelect(i)}
           >
-            <span class="key">{i + 2}</span>
-            <span class="text">{a.name}</span>
-            <span class="cost">
-              {#if a.mp}<b class:short={a.mp > unit.mp}>{a.mp} PM</b>{:else}—{/if}
-            </span>
+            <span class="key">{keyTag(entry, i)}</span>
+            <span class="text">{p.name}</span>
+            <span class="cost"><b class:short={p.short}>{p.cost}</b></span>
           </button>
         {/each}
-
-        <button class="cmd wait" onclick={onWait}>
-          <span class="key">0</span>
-          <span class="text">Esperar</span>
-          <span class="cost">fin</span>
-        </button>
       </div>
 
-      <!-- Always rendered at a fixed height: the description replaces the
-           default line in place, it never adds to the window. -->
+      <!-- Always rendered at a fixed height: the help text swaps in place, it
+           never adds to the window. -->
       <div class="slot">
-        {#if hovered}
-          <p class="hint desc"><b>{hovered.name}</b> · {rangeLabel}<br />{hovered.desc}</p>
-        {:else}
-          <p class="hint">Elige una orden. <kbd>Esc</kbd> cancela.</p>
+        {#if shown}
+          <p class="hint desc"><b>{shown.head}</b><br />{shown.desc}</p>
         {/if}
       </div>
     {:else if phase === 'move'}
       <p class="prompt">Elige una casilla azul.</p>
       <div class="slot">
-        <p class="hint">Las casillas fuera de tu Salto quedan descartadas.</p>
+        <p class="hint">
+          Con las flechas o haciendo clic. Las casillas fuera de tu Salto quedan
+          descartadas.
+        </p>
       </div>
       <button class="back" onclick={onCancel}>Volver</button>
     {:else if phase === 'target'}
@@ -146,9 +164,8 @@
 
 <style>
   /* Fixed width: the window must never resize in response to its contents.
-     Wide enough that the longest ability description in the catalog wraps to
-     two lines, which is what keeps the reserved slot below from being mostly
-     empty in the common case. */
+     Wide enough that the longest help text in the catalog wraps to two lines,
+     which is what keeps the reserved slot below from being mostly empty. */
   .panel {
     width: 16rem;
   }
@@ -183,6 +200,9 @@
       box-shadow 0.12s;
   }
 
+  /* Keyboard selection and hover look identical on purpose: they are the same
+     state, so drawing them differently would imply two cursors. */
+  .cmd.selected:not(:disabled),
   .cmd:hover:not(:disabled) {
     background: rgba(78, 138, 226, 0.45);
     border-color: rgba(200, 224, 255, 0.7);
@@ -228,7 +248,7 @@
   }
 
   /* Reserved space for the help line: header plus two wrapped lines, measured
-     against every description in the catalog. Fixed, never grown. */
+     against every entry in the catalog. Fixed, never grown. */
   .slot {
     height: 3.75rem;
     margin-top: 0.45rem;
@@ -244,14 +264,6 @@
 
   .hint.desc b {
     color: #eef3ff;
-  }
-
-  .hint kbd {
-    font: inherit;
-    font-size: 0.6rem;
-    padding: 0 0.2rem;
-    border: 1px solid rgba(180, 200, 240, 0.4);
-    border-radius: 2px;
   }
 
   .facings {
