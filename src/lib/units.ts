@@ -39,6 +39,14 @@ export type Unit = {
   brave: number;
   faith: number;
 
+  /**
+   * Seconds left on the recoil reaction. Presentation only — it decides which
+   * sprite frame to draw and how hard to shake, and nothing in the rules reads
+   * it. It lives on the unit rather than in a side table so the renderer can
+   * find it without a lookup.
+   */
+  hurtFor: number;
+
   /** Per-unit recolor, so two goblins don't have to be the same goblin. */
   paletteOverride?: Partial<Palette>;
 };
@@ -99,6 +107,7 @@ export function createUnit(seed: UnitSeed): Unit {
     hasActed: false,
     brave: seed.brave ?? 70,
     faith: seed.faith ?? 70,
+    hurtFor: 0,
     paletteOverride: seed.paletteOverride,
   };
 }

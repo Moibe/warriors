@@ -87,6 +87,13 @@ export const battle = $state({
   turn: 0,
 });
 
+/**
+ * How long a unit holds the recoil frame after being hit. Long enough to read
+ * at a glance, short enough to finish inside the beat before the next action —
+ * the resolve pause is 0.75s.
+ */
+export const HURT_TIME = 0.5;
+
 /** Seconds of dead air between one turn ending and the next beginning. */
 const TURN_GAP = 0.35;
 /** Tiles walked per second during a move animation. */
@@ -472,6 +479,12 @@ export function advanceAnimations(dt: number) {
     }
   }
 
+  // Recoil frames tick down here rather than on a timer per unit: one clock,
+  // and it stops dead when the tab is hidden like everything else.
+  for (const u of battle.units) {
+    if (u.hurtFor > 0) u.hurtFor = Math.max(0, u.hurtFor - dt);
+  }
+
   for (const p of battle.popups) p.t += dt;
   if (battle.popups.length) {
     battle.popups = battle.popups.filter((p) => p.t < POPUP_LIFE);
@@ -565,6 +578,7 @@ export function confirmAbility(x: number, y: number) {
     }
 
     target.hp = Math.max(0, target.hp - result.amount);
+    target.hurtFor = HURT_TIME;
     pushPopup(target, String(result.amount), friendly ? '#ffb35c' : '#ffffff');
     log(
       `${actor.name} → ${target.name}: ${result.amount} de daño${ANGLE_TAG[result.angle]}.`

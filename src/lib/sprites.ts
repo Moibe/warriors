@@ -164,6 +164,120 @@ const MONSTER_BACK = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
 ]);
 
+// --- Recoil -----------------------------------------------------------------
+// The frame shown for a moment after taking a hit. Everything is off its
+// resting mark: the head rides one row higher with the eyes screwed shut and
+// the mouth open, the arms are flung wide, and the legs brace apart. The raised
+// head is why headgear and weapons get nudged along with it when drawing.
+
+const HUMAN_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHOOSSOOHO   ',
+  '   OHSSSSSSHO   ',
+  '    OSSOOSSO    ',
+  '     OKKKKO     ',
+  '   OAAAAAAAAO   ',
+  ' OSOAAAAAAAAOSO ',
+  ' OSOAAAAAAAAOSO ',
+  '  OAABAAAABAAO  ',
+  '  OAABAAAABAAO  ',
+  '   OOAAAAAAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '   OCCOOOOCCO   ',
+  '  OCCOOOOOOCCO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
+const HUMAN_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHHHHHHHO   ',
+  '    OHHHHHHO    ',
+  '     OKKKKO     ',
+  '   OAAAAAAAAO   ',
+  ' OSOAAAAAAAAOSO ',
+  ' OSOAAAAAAAAOSO ',
+  '  OAABAAAABAAO  ',
+  '  OAABAAAABAAO  ',
+  '   OOAAAAAAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '   OCCOOOOCCO   ',
+  '  OCCOOOOOOCCO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
+const MONSTER_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '   OO      OO   ',
+  '   OGO    OGO   ',
+  '   OGGGGGGGGO   ',
+  '   OGGGGGGGGO   ',
+  '   OGOOGGOOGO   ',
+  '   OGGGJJGGGO   ',
+  '    OGOOOOGO    ',
+  '    OGGGGGGO    ',
+  '     OKKKKO     ',
+  '   OAAAAAAAAO   ',
+  ' OGOAAAAAAAAOGO ',
+  ' OGOAAAAAAAAOGO ',
+  '  OGAABBBBAAGO  ',
+  '   OOAAAAAAOO   ',
+  '    OBBBBBBO    ',
+  '   OGGOOOOGGO   ',
+  '   OGGOOOOGGO   ',
+  '  OGGOOOOOOGGO  ',
+  '  OGGGOOOOGGGO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+  '                ',
+  '                ',
+]);
+
+const MONSTER_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '   OO      OO   ',
+  '   OGO    OGO   ',
+  '   OGGGGGGGGO   ',
+  '   OGGGGGGGGO   ',
+  '   OGGGGGGGGO   ',
+  '   OGGGJJGGGO   ',
+  '    OGGGGGGO    ',
+  '    OGGGGGGO    ',
+  '     OKKKKO     ',
+  '   OAAAAAAAAO   ',
+  ' OGOAAAAAAAAOGO ',
+  ' OGOAAAAAAAAOGO ',
+  '  OGAABBBBAAGO  ',
+  '   OOAAAAAAOO   ',
+  '    OBBBBBBO    ',
+  '   OGGOOOOGGO   ',
+  '   OGGOOOOGGO   ',
+  '  OGGOOOOOOGGO  ',
+  '  OGGGOOOOGGGO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+  '                ',
+  '                ',
+]);
+
 // ---------------------------------------------------------------------------
 // Headgear — stamped over the body, so a slit or an opening simply leaves the
 // face underneath showing through.
@@ -337,7 +451,13 @@ const SHIELD = template(1, 19, [
 // Painting
 // ---------------------------------------------------------------------------
 
-function drawTemplate(ctx: CanvasRenderingContext2D, tpl: Template, palette: Palette) {
+function drawTemplate(
+  ctx: CanvasRenderingContext2D,
+  tpl: Template,
+  palette: Palette,
+  dx = 0,
+  dy = 0
+) {
   const slots = palette as unknown as Record<string, string | undefined>;
   for (let r = 0; r < tpl.rows.length; r++) {
     const row = tpl.rows[r];
@@ -347,10 +467,21 @@ function drawTemplate(ctx: CanvasRenderingContext2D, tpl: Template, palette: Pal
       const color = slots[ch];
       if (!color) continue;
       ctx.fillStyle = color;
-      ctx.fillRect(tpl.ox + c, tpl.oy + r, 1, 1);
+      ctx.fillRect(tpl.ox + c + dx, tpl.oy + r + dy, 1, 1);
     }
   }
 }
+
+/**
+ * How far headgear, weapon and shield have to move to stay attached to the
+ * recoil pose: the head rides a row higher, and the hands swing up and outward.
+ * Without this the helmet floats off the skull and the sword hangs in mid-air.
+ */
+const RECOIL_OFFSET = {
+  hat: { dx: 0, dy: -1 },
+  weapon: { dx: 1, dy: -3 },
+  shield: { dx: -1, dy: -3 },
+};
 
 /**
  * Paints one sprite cell at 1:1 pixel scale.
@@ -363,7 +494,8 @@ export function renderUnitCanvas(
   jobId: JobId,
   palette: Palette,
   pose: Pose,
-  flip: boolean
+  flip: boolean,
+  hurt = false
 ): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = SPRITE_W;
@@ -378,18 +510,41 @@ export function renderUnitCanvas(
 
   const job = JOBS[jobId];
   const monster = job.sprite.body === 'monster';
+  const front = pose === 'front';
   const body = monster
-    ? pose === 'front'
-      ? MONSTER_FRONT
-      : MONSTER_BACK
-    : pose === 'front'
-      ? HUMAN_FRONT
-      : HUMAN_BACK;
+    ? hurt
+      ? front
+        ? MONSTER_HURT_FRONT
+        : MONSTER_HURT_BACK
+      : front
+        ? MONSTER_FRONT
+        : MONSTER_BACK
+    : hurt
+      ? front
+        ? HUMAN_HURT_FRONT
+        : HUMAN_HURT_BACK
+      : front
+        ? HUMAN_FRONT
+        : HUMAN_BACK;
+
+  const nudge = hurt ? RECOIL_OFFSET : null;
 
   drawTemplate(ctx, body, palette);
-  if (job.sprite.shield) drawTemplate(ctx, SHIELD, palette);
-  if (job.sprite.hat) drawTemplate(ctx, HATS[job.sprite.hat], palette);
-  if (job.sprite.weapon !== 'none') drawTemplate(ctx, WEAPONS[job.sprite.weapon], palette);
+  if (job.sprite.shield) {
+    drawTemplate(ctx, SHIELD, palette, nudge?.shield.dx ?? 0, nudge?.shield.dy ?? 0);
+  }
+  if (job.sprite.hat) {
+    drawTemplate(ctx, HATS[job.sprite.hat], palette, nudge?.hat.dx ?? 0, nudge?.hat.dy ?? 0);
+  }
+  if (job.sprite.weapon !== 'none') {
+    drawTemplate(
+      ctx,
+      WEAPONS[job.sprite.weapon],
+      palette,
+      nudge?.weapon.dx ?? 0,
+      nudge?.weapon.dy ?? 0
+    );
+  }
 
   return canvas;
 }
@@ -405,14 +560,20 @@ function paletteFor(jobId: JobId, override?: Partial<Palette>): Palette {
   return override ? { ...base, ...override } : base;
 }
 
-function cacheKey(jobId: JobId, override: Partial<Palette> | undefined, pose: Pose, flip: boolean) {
+function cacheKey(
+  jobId: JobId,
+  override: Partial<Palette> | undefined,
+  pose: Pose,
+  flip: boolean,
+  hurt: boolean
+) {
   const tint = override
     ? Object.entries(override)
         .map(([k, v]) => k + v)
         .sort()
         .join('')
     : '';
-  return `${jobId}|${tint}|${pose}|${flip ? 'f' : 'n'}`;
+  return `${jobId}|${tint}|${pose}|${flip ? 'f' : 'n'}|${hurt ? 'h' : 'r'}`;
 }
 
 /**
@@ -424,13 +585,14 @@ export function getUnitTexture(
   jobId: JobId,
   override: Partial<Palette> | undefined,
   pose: Pose,
-  flip: boolean
+  flip: boolean,
+  hurt = false
 ): Texture {
-  const key = cacheKey(jobId, override, pose, flip);
+  const key = cacheKey(jobId, override, pose, flip, hurt);
   const cached = textureCache.get(key);
   if (cached) return cached;
 
-  const canvas = renderUnitCanvas(jobId, paletteFor(jobId, override), pose, flip);
+  const canvas = renderUnitCanvas(jobId, paletteFor(jobId, override), pose, flip, hurt);
   const texture = new CanvasTexture(canvas);
   // Nearest on both filters is the whole point: hard pixel edges at any zoom.
   texture.magFilter = NearestFilter;
@@ -456,7 +618,7 @@ export function getPortraitUrl(
   scale = 4
 ): string {
   if (typeof document === 'undefined') return '';
-  const key = cacheKey(jobId, override, 'front', false) + '|' + scale;
+  const key = cacheKey(jobId, override, 'front', false, false) + '|' + scale;
   const cached = portraitCache.get(key);
   if (cached) return cached;
 

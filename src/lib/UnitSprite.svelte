@@ -20,6 +20,7 @@
     Sprite,
     SpriteMaterial,
   } from 'three';
+  import { HURT_TIME } from './battle.svelte';
   import { LEVEL, TILE, facingAngle, facingVector } from './grid';
   import { getShadowTexture } from './textures';
   import { SPRITE_WORLD_H, SPRITE_WORLD_W, getUnitTexture, type Pose } from './sprites';
@@ -75,8 +76,11 @@
     toneMapped: false,
   });
 
+  /** Boolean, not the raw timer: the texture only has to change when it flips. */
+  const hurt = $derived(unit.hurtFor > 0);
+
   $effect(() => {
-    material.map = getUnitTexture(unit.job, unit.paletteOverride, pose, flip);
+    material.map = getUnitTexture(unit.job, unit.paletteOverride, pose, flip, hurt);
     material.needsUpdate = true;
   });
 
@@ -140,13 +144,45 @@
   // A shallow idle bob on whoever is acting — enough motion to draw the eye to
   // the unit whose turn it is without animating the whole board.
   let bob = $state(0);
+  /** Recoil displacement along the camera's screen-right axis, in world units. */
+  let shake = $state(0);
   let markerRef = $state.raw<Mesh | undefined>(undefined);
   let elapsed = 0;
+  let tinted = false;
+
+  /** How long the glare lasts, of the reaction's total. The pose outlives it. */
+  const FLASH_TIME = 0.28;
 
   useTask((delta) => {
     elapsed += delta;
     bob = active ? Math.sin(elapsed * 5) * 0.04 : 0;
     if (markerRef) markerRef.position.y = SPRITE_WORLD_H + 0.32 + Math.sin(elapsed * 4) * 0.09;
+
+    // Three signals stacked on one hit, because any one alone gets lost in a
+    // busy frame: the recoil frame above, a flash, and a shudder. Both fade out
+    // over the reaction rather than switching off.
+    const left = unit.hurtFor;
+    if (left > 0) {
+      // One decaying flash, not a strobe: a sprite blinking on and off reads as
+      // a rendering fault, and fast flashing is worth avoiding on principle.
+      // Values above 1 blow the sprite out — tone mapping is off — so the peak
+      // is a hot glare rather than a polite tint.
+      const k = Math.max(0, (left - (HURT_TIME - FLASH_TIME)) / FLASH_TIME);
+      material.color.setRGB(1 + 1.8 * k, 1 - 0.55 * k, 1 - 0.6 * k);
+      shake = Math.sin(left * 58) * 0.12 * (left / HURT_TIME);
+      tinted = true;
+    } else if (tinted) {
+      material.color.setRGB(1, 1, 1);
+      shake = 0;
+      tinted = false;
+    }
+  });
+
+  // Screen-right in world XZ, so the shudder reads as sideways however the
+  // camera happens to be turned.
+  const shakeOffset = $derived({
+    x: shake * Math.cos(yaw),
+    z: -shake * Math.sin(yaw),
   });
 </script>
 
@@ -164,7 +200,7 @@
   <T
     is={Sprite}
     {material}
-    position.y={SPRITE_WORLD_H / 2 + 0.02 + bob}
+    position={[shakeOffset.x, SPRITE_WORLD_H / 2 + 0.02 + bob, shakeOffset.z]}
     scale={[SPRITE_WORLD_W, SPRITE_WORLD_H, 1]}
     renderOrder={3}
   />
