@@ -17,14 +17,17 @@
     commandMove,
     commandWait,
     confirmFacing,
+    confirmTile,
     heightOf,
     map,
+    moveCursor,
     previewFacing,
+    setCursor,
     restart,
     upcomingTurns,
   } from '$lib/battle.svelte';
   import { forecast, isValidTarget } from '$lib/combat';
-  import { tileAt, type Facing } from '$lib/grid';
+  import { facingTo, tileAt, type Coord, type Facing } from '$lib/grid';
   import { JOBS } from '$lib/jobs';
   import { isAlive, unitAt } from '$lib/units';
 
@@ -37,7 +40,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.2.1';
+  const APP_VERSION = '0.3.1';
 
   // ---- Camera -------------------------------------------------------------
 
@@ -58,8 +61,19 @@
     zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom + delta));
   }
 
+  /**
+   * Tile the keyboard cursor has pulled the camera to. Null means the camera
+   * sits on whoever is acting, which is where it returns on every new turn.
+   */
+  let keyFocus = $state<Coord | null>(null);
+
   function recenter() {
     pan = { x: 0, y: 0 };
+    keyFocus = null;
+    // Bring the cursor home as well: once it has been walked across the map
+    // there was no other way to get it back short of hunting for it.
+    const u = activeUnit();
+    if (u) setCursor(u.x, u.y);
   }
 
   // Whoever is acting is the subject of the shot, so a fresh turn drops any
@@ -69,6 +83,7 @@
     if (battle.activeId !== lastActive) {
       lastActive = battle.activeId;
       pan = { x: 0, y: 0 };
+      keyFocus = null;
     }
   });
 
@@ -111,6 +126,37 @@
 
   // ---- Keyboard -----------------------------------------------------------
 
+  /** The four grid axes, in the order the arrows map to them at yawIndex 0. */
+  const GRID_DIRS: Coord[] = [
+    { x: 0, y: -1 }, // norte
+    { x: 1, y: 0 }, // este
+    { x: 0, y: 1 }, // sur
+    { x: -1, y: 0 }, // oeste
+  ];
+
+  const ARROW_BASE: Record<string, number> = {
+    arrowup: 0,
+    arrowright: 1,
+    arrowdown: 2,
+    arrowleft: 3,
+  };
+
+  /**
+   * Arrows are screen-relative, not grid-relative — this is the whole trick.
+   *
+   * The camera sits at 45° to the grid, so the four grid axes project to the
+   * four screen *diagonals*: at the default view, north runs up-and-right,
+   * east down-and-right, and so on. Pressing ↑ therefore has to mean "north",
+   * and each quarter turn of the camera rotates the whole mapping by one step —
+   * which is exactly a shift of `-yawIndex` around the ring of four.
+   *
+   * Keyed off `yawIndex` rather than the live `yaw`, so a press landing in the
+   * middle of a rotation animation still resolves to the angle being turned to.
+   */
+  function arrowToGrid(base: number): Coord {
+    return GRID_DIRS[(((base - yawIndex) % 4) + 4) % 4];
+  }
+
   function onKeyDown(e: KeyboardEvent) {
     const k = e.key.toLowerCase();
 
@@ -120,7 +166,36 @@
     if (k === 'c') return recenter();
     if (k === '+' || k === '=') return zoomBy(6);
     if (k === '-') return zoomBy(-6);
-    if (k === 'escape') return cancel();
+    if (k === 'escape') {
+      keyFocus = null;
+      return cancel();
+    }
+
+    const arrow = ARROW_BASE[k];
+    if (arrow !== undefined) {
+      e.preventDefault();
+      const d = arrowToGrid(arrow);
+      // In the orientation step the arrows aim the unit instead of the cursor —
+      // there is nothing else for them to do there, and it matches the genre.
+      if (battle.phase === 'facing') {
+        previewFacing(facingTo({ x: 0, y: 0 }, d));
+      } else if (moveCursor(d.x, d.y)) {
+        keyFocus = battle.hovered;
+      }
+      return;
+    }
+
+    if (k === 'enter' || k === ' ') {
+      e.preventDefault();
+      const acting = activeUnit();
+      if (battle.phase === 'facing') {
+        if (acting) confirmFacing(acting.facing);
+      } else if (battle.hovered) {
+        confirmTile(battle.hovered.x, battle.hovered.y);
+        keyFocus = null;
+      }
+      return;
+    }
 
     const u = activeUnit();
     if (!u || u.team !== 'ally') return;
@@ -204,7 +279,7 @@
 >
   <!-- The canvas is transparent, so the sky is CSS behind it. -->
   <Canvas toneMapping={NoToneMapping}>
-    <Scene {yawIndex} {pitchHigh} {zoom} {pan} bind:yaw />
+    <Scene {yawIndex} {pitchHigh} {zoom} {pan} focusTile={keyFocus} bind:yaw />
   </Canvas>
 
   <div class="hud">
@@ -283,8 +358,9 @@
   {/if}
 
   <p class="keys">
-    <kbd>Q</kbd><kbd>E</kbd> girar · <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar ·
-    <kbd>rueda</kbd> zoom · <kbd>botón central</kbd> desplazar · <kbd>Esc</kbd> cancelar
+    <kbd>↑↓←→</kbd> mover cursor · <kbd>Enter</kbd> confirmar · <kbd>Q</kbd><kbd>E</kbd> girar ·
+    <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar · <kbd>rueda</kbd> zoom ·
+    <kbd>botón central</kbd> desplazar · <kbd>Esc</kbd> cancelar
   </p>
 </div>
 

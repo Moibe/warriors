@@ -15,20 +15,22 @@
   import TileOverlays from './TileOverlays.svelte';
   import UnitSprite from './UnitSprite.svelte';
   import {
+    abilityRangeTiles,
     activeReach,
     activeUnit,
     advanceAnimations,
     advanceClock,
     battle,
-    confirmAbility,
-    confirmMove,
+    clearCursor,
+    confirmTile,
     heightOf,
     map,
     renderPosition,
+    setCursor,
   } from './battle.svelte';
-  import { LEVEL, TILE, tileKey, tileToWorld, type Tile } from './grid';
+  import { LEVEL, TILE, tileAt, tileKey, tileToWorld, type Coord, type Tile } from './grid';
   import { CHAPEL_ANCHOR } from './maps';
-  import { landableTiles, tilesInAbilityRange, tilesInBurst } from './pathfinding';
+  import { landableTiles, tilesInBurst } from './pathfinding';
   import { isAlive } from './units';
 
   let {
@@ -36,12 +38,15 @@
     pitchHigh = false,
     zoom = 46,
     pan = { x: 0, y: 0 },
+    /** Tile the keyboard cursor has claimed; overrides the active unit. */
+    focusTile = null,
     yaw = $bindable(Math.PI / 4),
   }: {
     yawIndex?: number;
     pitchHigh?: boolean;
     zoom?: number;
     pan?: { x: number; y: number };
+    focusTile?: Coord | null;
     yaw?: number;
   } = $props();
 
@@ -59,11 +64,47 @@
   // Follows whoever is acting, offset by the player's pan. Pan is expressed in
   // screen axes and rotated into world space here, so dragging right always
   // moves the view right no matter which way the camera is turned.
-  const cameraTarget = $derived.by(() => {
+  //
+  // Driving the cursor with the arrow keys takes the camera with it, otherwise
+  // the cursor would walk straight off the edge of the screen. The mouse does
+  // NOT move the camera — a view that lurches every time the pointer drifts is
+  // unusable.
+  /**
+   * How far the cursor may wander before it starts towing the camera, in tiles.
+   * Inside this radius the view holds perfectly still — a camera that slides on
+   * every single arrow press is exhausting to read — and past it the target
+   * trails the cursor at exactly this distance, so the cursor can never leave
+   * the screen. The two regimes meet at the same point, so there is no jump.
+   */
+  const CAMERA_LEASH = 3;
+
+  const cameraAnchor = $derived.by(() => {
     const u = activeUnit();
-    const base = u
-      ? tileToWorld(map, u.x, u.y, heightOf(u))
-      : { x: 0, y: 1, z: 0 };
+    const focus = focusTile ? tileAt(map, focusTile.x, focusTile.y) : null;
+    if (!u) {
+      return focus
+        ? { x: focus.x, y: focus.y, h: focus.height }
+        : { x: (map.width - 1) / 2, y: (map.depth - 1) / 2, h: 2 };
+    }
+    const unitHeight = heightOf(u);
+    if (!focus) return { x: u.x, y: u.y, h: unitHeight };
+
+    const dx = u.x - focus.x;
+    const dy = u.y - focus.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist <= CAMERA_LEASH) return { x: u.x, y: u.y, h: unitHeight };
+
+    const k = CAMERA_LEASH / dist;
+    return {
+      x: focus.x + dx * k,
+      y: focus.y + dy * k,
+      h: focus.height + (unitHeight - focus.height) * k,
+    };
+  });
+
+  const cameraTarget = $derived.by(() => {
+    const a = cameraAnchor;
+    const base = tileToWorld(map, a.x, a.y, a.h);
     const right = { x: Math.cos(yaw), z: -Math.sin(yaw) };
     const fwd = { x: -Math.sin(yaw), z: -Math.cos(yaw) };
     return {
@@ -80,12 +121,9 @@
     return landableTiles(activeReach());
   });
 
-  const rangeTiles = $derived.by(() => {
-    if (battle.phase !== 'target' || !battle.ability) return new Set<string>();
-    const u = activeUnit();
-    if (!u) return new Set<string>();
-    return tilesInAbilityRange(map, { x: u.x, y: u.y }, heightOf(u), battle.ability);
-  });
+  const rangeTiles = $derived(
+    battle.phase === 'target' ? abilityRangeTiles() : new Set<string>()
+  );
 
   const burstTiles = $derived.by(() => {
     const aim = battle.aim;
@@ -106,21 +144,12 @@
   // ---- Pointer ------------------------------------------------------------
 
   function handleHover(tile: Tile | null) {
-    battle.hovered = tile ? { x: tile.x, y: tile.y } : null;
-    // While aiming, the hover *is* the aim — the burst preview has to follow
-    // the pointer or the player can't see what a spell would catch.
-    if (battle.phase === 'target' && tile) {
-      const inRange = rangeTiles.has(tileKey(tile.x, tile.y));
-      battle.aim = inRange ? { x: tile.x, y: tile.y } : null;
-    }
+    if (tile) setCursor(tile.x, tile.y);
+    else clearCursor();
   }
 
   function handleClick(tile: Tile) {
-    if (battle.phase === 'move') {
-      confirmMove(tile.x, tile.y);
-    } else if (battle.phase === 'target') {
-      if (rangeTiles.has(tileKey(tile.x, tile.y))) confirmAbility(tile.x, tile.y);
-    }
+    confirmTile(tile.x, tile.y);
   }
 
   const chapelPos = $derived.by(() => {
