@@ -59,21 +59,26 @@ let panelTexture: Texture | null = null;
 
 /**
  * The translucent plate dropped on a tile to mark movement or attack range.
- * A soft fill with a brighter rim reads as a pane of coloured glass rather than
- * a flat sticker, and the rim is what makes a block of thirty of them still
- * look like individual tiles.
+ *
+ * The interior is painted GREY and the rim white, which is the whole trick.
+ * MeshBasicMaterial multiplies its colour by the texture's RGB, so a grey fill
+ * comes out duller than a white rim tinted with the same colour — two
+ * brightnesses out of one material and one draw call. Alpha alone could not do
+ * it: the rim was already fully opaque and still washed into a fill sitting at
+ * 0.78, which is why the outlines barely read.
  */
 export function getPanelTexture(): Texture {
   if (panelTexture) return panelTexture;
   const S = 128;
   const [c, ctx] = canvas2d(S);
-  const inset = 5;
+  const inset = 4;
 
-  ctx.fillStyle = 'rgba(255,255,255,0.78)';
+  ctx.fillStyle = 'rgba(132,132,132,0.5)';
   ctx.fillRect(inset, inset, S - inset * 2, S - inset * 2);
+
   ctx.strokeStyle = 'rgba(255,255,255,1)';
-  ctx.lineWidth = 7;
-  ctx.strokeRect(inset + 3, inset + 3, S - inset * 2 - 6, S - inset * 2 - 6);
+  ctx.lineWidth = 11;
+  ctx.strokeRect(inset + 5, inset + 5, S - inset * 2 - 10, S - inset * 2 - 10);
 
   panelTexture = finish(c);
   return panelTexture;

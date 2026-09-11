@@ -134,8 +134,10 @@
 <Chapel position={chapelPos} />
 
 <!-- Layer order by lift: movement under weapon reach under the burst. -->
-<TileOverlays {map} tiles={moveTiles} color="#2f7fe8" opacity={0.72} lift={0.02} />
-<TileOverlays {map} tiles={rangeTiles} color="#e0402f" opacity={0.55} lift={0.03} />
+<!-- Opacity is high because the texture now carries the contrast: the rim
+     lands near full strength while the grey interior stays see-through. -->
+<TileOverlays {map} tiles={moveTiles} color="#4a9bff" opacity={0.85} lift={0.02} />
+<TileOverlays {map} tiles={rangeTiles} color="#ff4a36" opacity={0.85} lift={0.03} />
 
 <!-- No bobbing arrow: the acting unit already carries its own marker, and two
      floating arrows on the same tile read as a duplicate. -->
