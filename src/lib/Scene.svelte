@@ -29,7 +29,7 @@
   } from './battle.svelte';
   import { LEVEL, TILE, tileToWorld, type Tile } from './grid';
   import { CHAPEL_ANCHOR } from './maps';
-  import { landableTiles } from './pathfinding';
+  import { landableTiles, tilesInBurst } from './pathfinding';
   import { isAlive } from './units';
 
   let {
@@ -82,6 +82,18 @@
   const rangeTiles = $derived(
     battle.phase === 'target' ? abilityRangeTiles() : new Set<string>()
   );
+
+  // What an area ability would actually catch. Only for real bursts: on a
+  // single-target ability the cursor frame already says it, and a second
+  // highlight on the same square is noise.
+  const burstTiles = $derived.by(() => {
+    const aim = battle.aim;
+    const ability = battle.ability;
+    if (battle.phase !== 'target' || !ability || !aim || ability.aoe === 0) {
+      return new Set<string>();
+    }
+    return tilesInBurst(map, aim, ability.aoe);
+  });
 
   const cursorTile = $derived(cursorCoord());
 
@@ -138,6 +150,7 @@
      lands near full strength while the grey interior stays see-through. -->
 <TileOverlays {map} tiles={moveTiles} color="#4a9bff" opacity={0.85} lift={0.02} />
 <TileOverlays {map} tiles={rangeTiles} color="#ff4a36" opacity={0.85} lift={0.03} />
+<TileOverlays {map} tiles={burstTiles} color="#ffd24a" opacity={0.9} lift={0.045} pulse={0.25} />
 
 <!-- No bobbing arrow: the acting unit already carries its own marker, and two
      floating arrows on the same tile read as a duplicate. -->

@@ -23,6 +23,7 @@
     previewFacing,
     restart,
     runCommand,
+    stepAimCursor,
     stepMoveCursor,
     upcomingTurns,
   } from '$lib/battle.svelte';
@@ -37,7 +38,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.7.3';
+  const APP_VERSION = '0.8.3';
 
   // ---- Camera -------------------------------------------------------------
 
@@ -208,11 +209,16 @@
         }
         return;
       }
-      if (battle.phase === 'facing' || battle.phase === 'move') {
+      if (
+        battle.phase === 'facing' ||
+        battle.phase === 'move' ||
+        battle.phase === 'target'
+      ) {
         e.preventDefault();
         const d = arrowToGrid(arrow);
         if (battle.phase === 'facing') previewFacing(facingTo({ x: 0, y: 0 }, d));
-        else stepMoveCursor(d.x, d.y);
+        else if (battle.phase === 'move') stepMoveCursor(d.x, d.y);
+        else stepAimCursor(d.x, d.y);
       }
       return;
     }
@@ -232,7 +238,7 @@
         if (acting) confirmFacing(acting.facing);
         return;
       }
-      if (battle.phase === 'move') {
+      if (battle.phase === 'move' || battle.phase === 'target') {
         e.preventDefault();
         const c = cursorCoord();
         if (c) confirmTile(c.x, c.y);

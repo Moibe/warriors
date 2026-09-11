@@ -14,6 +14,7 @@ import { forecast, rollAttack, type Angle } from './combat';
 import {
   facingTo,
   gridDistance,
+  parseKey,
   tileAt,
   tileKey,
   type Coord,
@@ -79,6 +80,8 @@ export const battle = $state({
    * something to point at.
    */
   moveTarget: null as Coord | null,
+  /** Tile being aimed at while an ability is up. Null outside the target phase. */
+  aim: null as Coord | null,
   walk: null as WalkAnim | null,
   popups: [] as Popup[],
   log: [] as string[],
@@ -140,36 +143,88 @@ export function isPlayerTurn(): boolean {
  */
 export function cursorCoord(): Coord | null {
   if (battle.phase === 'move' && battle.moveTarget) return battle.moveTarget;
+  if (battle.phase === 'target' && battle.aim) return battle.aim;
   const u = activeUnit();
   if (!u || battle.phase === 'moving') return null;
   return { x: u.x, y: u.y };
 }
 
 /**
- * Steps the move cursor one tile. The caller has already rotated the delta into
- * the camera's frame.
+ * Walks a tile cursor one step within a permitted set.
  *
- * Restricted to tiles the unit could actually stop on, so every press lands
- * somewhere Enter will accept — no dead confirmations. It skips onward past
- * cells that are merely passable, which is what stops an ally standing in the
- * way from trapping the cursor against them.
+ * Staying inside the set is what makes every press land somewhere Enter will
+ * accept — no dead confirmations. It skips onward past cells the set excludes
+ * rather than stopping at the first one, so neither an ally blocking a square
+ * nor an ability's dead zone at its own feet can trap the cursor.
  */
-export function stepMoveCursor(dx: number, dy: number): boolean {
-  if (battle.phase !== 'move' || !battle.moveTarget) return false;
-  const landable = landableTiles(activeReach());
-
-  let { x, y } = battle.moveTarget;
+function stepWithin(from: Coord, dx: number, dy: number, allowed: Set<string>): Coord | null {
+  let { x, y } = from;
   const limit = Math.max(map.width, map.depth);
   for (let step = 0; step < limit; step++) {
     x += dx;
     y += dy;
-    if (x < 0 || y < 0 || x >= map.width || y >= map.depth) return false;
-    if (landable.has(tileKey(x, y))) {
-      battle.moveTarget = { x, y };
-      return true;
+    if (x < 0 || y < 0 || x >= map.width || y >= map.depth) return null;
+    if (allowed.has(tileKey(x, y))) return { x, y };
+  }
+  return null;
+}
+
+/** Steps the destination cursor, kept to squares the unit can stop on. */
+export function stepMoveCursor(dx: number, dy: number): boolean {
+  if (battle.phase !== 'move' || !battle.moveTarget) return false;
+  const next = stepWithin(battle.moveTarget, dx, dy, landableTiles(activeReach()));
+  if (next) battle.moveTarget = next;
+  return !!next;
+}
+
+/** Steps the aiming cursor, kept inside the chosen ability's reach. */
+export function stepAimCursor(dx: number, dy: number): boolean {
+  if (battle.phase !== 'target' || !battle.aim) return false;
+  const next = stepWithin(battle.aim, dx, dy, abilityRangeTiles());
+  if (next) battle.aim = next;
+  return !!next;
+}
+
+/**
+ * Where the cursor should sit the moment an ability is chosen.
+ *
+ * The closest unit of the side the ability is meant for, so the common case —
+ * hit the enemy in front of you — needs no aiming at all. Abilities with a dead
+ * zone at their feet make the caster's own square an invalid start, which is
+ * why this cannot simply begin under the unit the way movement does.
+ */
+function defaultAim(ability: Ability): Coord | null {
+  const u = activeUnit();
+  if (!u) return null;
+  const range = tilesInAbilityRange(map, { x: u.x, y: u.y }, heightOf(u), ability);
+  const wantsAlly = ability.targets === 'ally';
+
+  let best: Coord | null = null;
+  let bestDist = Infinity;
+  for (const other of battle.units) {
+    if (!isAlive(other) || other.id === u.id) continue;
+    if (!range.has(tileKey(other.x, other.y))) continue;
+    if (ability.targets !== 'any' && wantsAlly !== (other.team === u.team)) continue;
+    const d = gridDistance(u, other);
+    if (d < bestDist) {
+      bestDist = d;
+      best = { x: other.x, y: other.y };
     }
   }
-  return false;
+  if (best) return best;
+
+  // Nobody worth pointing at: park on the nearest square in reach.
+  let fallback: Coord | null = null;
+  let fallbackDist = Infinity;
+  for (const key of range) {
+    const c = parseKey(key);
+    const d = gridDistance(u, c);
+    if (d < fallbackDist) {
+      fallbackDist = d;
+      fallback = c;
+    }
+  }
+  return fallback;
 }
 
 /** Tiles the chosen ability could be aimed at from where the actor stands. */
@@ -261,6 +316,7 @@ function beginTurn(u: Unit) {
   battle.activeId = u.id;
   battle.ability = null;
   battle.moveTarget = null;
+  battle.aim = null;
   u.hasMoved = false;
   u.hasActed = false;
 
@@ -289,6 +345,7 @@ export function endTurn() {
   battle.activeId = null;
   battle.ability = null;
   battle.moveTarget = null;
+  battle.aim = null;
   if (checkVictory()) return;
   battle.phase = 'clock';
   clockDelay = TURN_GAP;
@@ -356,6 +413,7 @@ export function commandAbility(ability: Ability) {
   if (!u || u.hasActed) return;
   if (ability.mp > u.mp) return;
   battle.ability = ability;
+  battle.aim = defaultAim(ability);
   battle.phase = 'target';
 }
 
@@ -396,6 +454,7 @@ export function cancel() {
   if (battle.phase === 'move' || battle.phase === 'target' || battle.phase === 'facing') {
     battle.ability = null;
     battle.moveTarget = null;
+    battle.aim = null;
     battle.phase = 'command';
   }
 }
@@ -548,6 +607,7 @@ export function confirmAbility(x: number, y: number) {
   actor.hasActed = true;
   battle.phase = 'resolving';
   battle.ability = null;
+  battle.aim = null;
 
   if (!targets.length) {
     log(`${actor.name} usa ${ability.name} — sin blanco.`);
@@ -760,6 +820,7 @@ export function restart() {
   battle.activeId = null;
   battle.ability = null;
   battle.moveTarget = null;
+  battle.aim = null;
   battle.walk = null;
   battle.popups = [];
   battle.log = [];

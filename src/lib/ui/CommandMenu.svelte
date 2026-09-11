@@ -131,7 +131,7 @@
     {:else if phase === 'target'}
       <p class="prompt">{ability?.name}: elige el blanco.</p>
       <div class="slot">
-        <p class="hint">{ability?.desc}</p>
+        <p class="hint">Con las flechas o haciendo clic.<br />{ability?.desc}</p>
       </div>
       <button class="back" onclick={onCancel}>Volver</button>
     {:else if phase === 'facing'}
