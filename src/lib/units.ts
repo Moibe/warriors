@@ -194,6 +194,10 @@ export function createRoster(): Unit[] {
     // ---- Los que te esperan: holding the near end of the causeway --------
     // Close enough that first contact lands in the opening round — a tactics
     // battle that spends three rounds walking teaches the player nothing.
+    //
+    // Nine a side, and between the two of them the enemy fields all eight jobs:
+    // the point of matching the player's numbers is matching the player's
+    // threats, not stacking nine of the same goblin.
     createUnit({
       id: 'zaide',
       name: 'Zaide',
@@ -219,5 +223,63 @@ export function createRoster(): Unit[] {
       paletteOverride: { G: '#9aa84a' },
     }),
     createUnit({ id: 'vex', name: 'Vex', job: 'archer', team: 'enemy', x: 11, y: 5, facing: 'w', ct: 45, paletteOverride: { A: '#6a4a4a', P: '#553434' } }),
+
+    // Odo abre la carga y Bran la respalda; Vesna y Mirta se quedan detrás pero
+    // sobre la calzada, NO en la terraza del fondo: probándolo, Mirta salía a
+    // ocho casillas del combate con Mov 3 y se pasaba la batalla entera
+    // caminando, sin curar una sola vez. Una sanadora que llega tarde no es una
+    // sanadora. Desde aquí su alcance 4 cubre la línea desde el primer choque.
+    createUnit({
+      id: 'odo',
+      name: 'Odo',
+      job: 'monk',
+      team: 'enemy',
+      x: 8,
+      y: 7,
+      facing: 'w',
+      ct: 28,
+      brave: 90,
+      // Faja azul en vez de roja, para no confundirlo con Bruno.
+      paletteOverride: { A: '#b08a5c', B: '#3a5a7a', C: '#4a3a2c', H: '#1e1e22' },
+    }),
+    createUnit({
+      id: 'bran',
+      name: 'Bran',
+      job: 'squire',
+      team: 'enemy',
+      x: 10,
+      y: 5,
+      facing: 'w',
+      ct: 38,
+      brave: 72,
+      // Rojo oscuro y pelo moreno frente al azul y el rubio de Ramiro.
+      paletteOverride: { A: '#8a4a42', B: '#c9a24a', C: '#4a2a26', H: '#3a2a20', J: '#241a14' },
+    }),
+    createUnit({
+      id: 'vesna',
+      name: 'Vesna',
+      job: 'blackmage',
+      team: 'enemy',
+      x: 12,
+      y: 5,
+      facing: 'w',
+      ct: 18,
+      faith: 86,
+      // Carmesí sobre negro, lejos del morado de Nerea.
+      paletteOverride: { A: '#5a2838', B: '#c98a3a', C: '#3a1a24', P: '#4a1f2c', H: '#4a2030' },
+    }),
+    createUnit({
+      id: 'mirta',
+      name: 'Mirta',
+      job: 'whitemage',
+      team: 'enemy',
+      x: 11,
+      y: 6,
+      facing: 'w',
+      ct: 8,
+      faith: 82,
+      // Gris y violeta, para distinguirla del blanco de Lucía de un vistazo.
+      paletteOverride: { A: '#b9aec6', B: '#6a4a7a', C: '#a89cb6', P: '#c6bcd0', H: '#6a5a4a' },
+    }),
   ];
 }
