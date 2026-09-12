@@ -17,6 +17,7 @@
   import {
     abilityRangeTiles,
     activeReach,
+    aimHasTarget,
     activeUnit,
     advanceAnimations,
     advanceClock,
@@ -97,8 +98,16 @@
 
   const cursorTile = $derived(cursorCoord());
 
+  // Greyed out while aiming at something that cannot be confirmed, so the
+  // refusal reads as a rule rather than as an unresponsive button.
   const cursorColor = $derived(
-    battle.phase === 'target' ? '#ff8a7a' : battle.phase === 'move' ? '#8fd0ff' : '#ffffff'
+    battle.phase === 'target'
+      ? aimHasTarget()
+        ? '#ff8a7a'
+        : '#7d8690'
+      : battle.phase === 'move'
+        ? '#8fd0ff'
+        : '#ffffff'
   );
 
   // ---- Pointer ------------------------------------------------------------

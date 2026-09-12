@@ -238,6 +238,26 @@ function defaultAim(ability: Ability): Coord | null {
   return fallback ?? { x: u.x, y: u.y };
 }
 
+/**
+ * Units the pending ability would actually touch if confirmed on (x, y) — the
+ * whole burst, not merely the square under the cursor, so an area spell aimed at
+ * bare ground still counts whoever stands beside it.
+ */
+export function abilityTargetsAt(x: number, y: number): Unit[] {
+  const ability = battle.ability;
+  if (!ability) return [];
+  const cells =
+    ability.aoe > 0 ? tilesInBurst(map, { x, y }, ability.aoe) : new Set([tileKey(x, y)]);
+  return battle.units.filter((u) => isAlive(u) && cells.has(tileKey(u.x, u.y)));
+}
+
+/** Whether confirming the aim right now would hit anything at all. */
+export function aimHasTarget(): boolean {
+  const aim = battle.aim;
+  if (battle.phase !== 'target' || !aim) return false;
+  return abilityTargetsAt(aim.x, aim.y).length > 0;
+}
+
 /** Tiles the chosen ability could be aimed at from where the actor stands. */
 export function abilityRangeTiles(): Set<string> {
   const u = activeUnit();
@@ -603,16 +623,24 @@ const ANGLE_TAG: Record<Angle, string> = { front: '', side: ' (flanco)', back: '
  * Applies `ability` centred on (x, y). Every unit inside the burst is rolled
  * separately, so an area spell can crit one target and glance off another.
  */
-export function confirmAbility(x: number, y: number) {
+/**
+ * Resolves the pending ability on (x, y). Returns false when the action was
+ * refused and nothing was spent — the caller decides what to do about it.
+ */
+export function confirmAbility(x: number, y: number): boolean {
   const actor = activeUnit();
   const ability = battle.ability;
-  if (!actor || !ability || battle.phase !== 'target') return;
+  if (!actor || !ability || battle.phase !== 'target') return false;
   // Enforced here rather than in the caller: mouse, keyboard and the AI all
   // reach this function, and only one of them used to check.
-  if (!abilityRangeTiles().has(tileKey(x, y))) return;
+  if (!abilityRangeTiles().has(tileKey(x, y))) return false;
 
-  const cells = ability.aoe > 0 ? tilesInBurst(map, { x, y }, ability.aoe) : new Set([tileKey(x, y)]);
-  const targets = battle.units.filter((u) => isAlive(u) && cells.has(tileKey(u.x, u.y)));
+  const targets = abilityTargetsAt(x, y);
+  // Nothing in the burst, so the action does not happen at all. Spending a turn
+  // on empty ground is never a decision anybody meant to make — it is a misfired
+  // click — and the refusal comes before any MP or facing is touched, so the
+  // player is left exactly where they were, still aiming.
+  if (!targets.length) return false;
 
   actor.facing = facingTo({ x: actor.x, y: actor.y }, { x, y });
   actor.mp -= ability.mp;
@@ -620,12 +648,6 @@ export function confirmAbility(x: number, y: number) {
   battle.phase = 'resolving';
   battle.ability = null;
   battle.aim = null;
-
-  if (!targets.length) {
-    log(`${actor.name} usa ${ability.name} — sin blanco.`);
-    resolveTimer = 0.4;
-    return;
-  }
 
   const actorHeight = heightOf(actor);
   for (const target of targets) {
@@ -663,6 +685,7 @@ export function confirmAbility(x: number, y: number) {
   }
 
   resolveTimer = 0.75;
+  return true;
 }
 
 function onResolveFinished() {
@@ -809,8 +832,13 @@ function runAiStep() {
       if (victim) {
         battle.ability = plan.ability;
         battle.phase = 'target';
-        confirmAbility(plan.target.x, plan.target.y);
-        return;
+        if (confirmAbility(plan.target.x, plan.target.y)) return;
+        // Refused — whoever was there is gone. Unwind the aiming state before
+        // falling through, or the turn would sit in `target` forever with no
+        // timer left running to pull it out.
+        battle.ability = null;
+        battle.aim = null;
+        battle.phase = 'resolving';
       }
     }
     runAiStep();

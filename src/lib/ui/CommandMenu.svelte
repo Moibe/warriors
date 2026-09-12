@@ -31,6 +31,7 @@
     onSelect,
     onRun,
     onCancel,
+    canConfirm,
     onFacing,
     onPreviewFacing,
   }: {
@@ -44,6 +45,8 @@
     onSelect: (index: number) => void;
     onRun: (index: number) => void;
     onCancel: () => void;
+    /** False while the aim is on a square the ability would not touch. */
+    canConfirm: boolean;
     onFacing: (f: Facing) => void;
     /** Turns the unit on the map while a direction is merely pointed at. */
     onPreviewFacing: (f: Facing | null) => void;
@@ -130,8 +133,18 @@
       <button class="back" onclick={onCancel}>Volver</button>
     {:else if phase === 'target'}
       <p class="prompt">{ability?.name}: elige el blanco.</p>
+      <!-- El aviso va DENTRO del hueco de alto fijo, nunca en el rótulo de
+           arriba: cambiar la altura de la ventana al mover el cursor la haría
+           saltar bajo el puntero. -->
       <div class="slot">
-        <p class="hint">Con las flechas o haciendo clic.<br />{ability?.desc}</p>
+        {#if canConfirm}
+          <p class="hint">Con las flechas o haciendo clic.<br />{ability?.desc}</p>
+        {:else}
+          <p class="hint">
+            Con las flechas o haciendo clic.<br />Aquí no hay blanco: la acción no
+            se gasta.
+          </p>
+        {/if}
       </div>
       <button class="back" onclick={onCancel}>Volver</button>
     {:else if phase === 'facing'}

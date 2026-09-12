@@ -12,6 +12,7 @@
   import Scene from '$lib/Scene.svelte';
   import {
     activeUnit,
+    aimHasTarget,
     battle,
     cancel,
     commandList,
@@ -41,7 +42,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.12.3';
+  const APP_VERSION = '0.12.4';
 
   // ---- Camera -------------------------------------------------------------
 
@@ -457,6 +458,7 @@
           onSelect={(i) => (commandIndex = i)}
           onRun={runIndex}
           onCancel={cancel}
+          canConfirm={aimHasTarget()}
           onFacing={handleFacing}
           onPreviewFacing={previewFacing}
         />
