@@ -20,7 +20,8 @@
     confirmTile,
     cursorCoord,
     heightOf,
-    map,
+    stage as currentStage,
+    startStage,
     previewFacing,
     restart,
     runCommand,
@@ -38,11 +39,35 @@
   import CommandMenu from '$lib/ui/CommandMenu.svelte';
   import Forecast from '$lib/ui/Forecast.svelte';
   import ResultBanner from '$lib/ui/ResultBanner.svelte';
+  import StageSelect from '$lib/ui/StageSelect.svelte';
+  import { STAGE_LIST, type StageId } from '$lib/stages';
   import TileInfo from '$lib/ui/TileInfo.svelte';
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.14.0';
+  const APP_VERSION = '0.15.0';
+
+  const stage = $derived(currentStage());
+  const map = $derived(stage.map);
+
+  let pickerOpen = $state(false);
+  let picker = $state.raw<StageSelect | undefined>(undefined);
+
+  function openPicker() {
+    pickerOpen = true;
+  }
+
+  function pickStage(id: StageId) {
+    pickerOpen = false;
+    // The view belongs to the old board: a pan the player nudged and a zoom
+    // they chose for a 14-wide park would frame a 16-wide street wrong.
+    yawIndex = 0;
+    pitchHigh = false;
+    pan = { x: 0, y: 0 };
+    lastActive = null;
+    commandIndex = 0;
+    startStage(id);
+  }
 
   // ---- Camera -------------------------------------------------------------
 
@@ -236,6 +261,19 @@
   function onKeyDown(e: KeyboardEvent) {
     const k = e.key.toLowerCase();
 
+    // While the picker is up it owns the keyboard outright. Without this the
+    // arrows would still be walking the cursor around the board underneath.
+    if (pickerOpen) {
+      if (k === 'escape') pickerOpen = false;
+      else if (k === 'arrowup') picker?.step(-1);
+      else if (k === 'arrowdown') picker?.step(1);
+      else if (k === 'enter') picker?.confirm();
+      else return;
+      return e.preventDefault();
+    }
+
+    if (k === 'm') return openPicker();
+
     if (k === 'q') return rotate(-1);
     if (k === 'e') return rotate(1);
     if (k === 'r') return (pitchHigh = !pitchHigh);
@@ -376,7 +414,7 @@
 </script>
 
 <svelte:head>
-  <title>The Warriors · Riverside Park</title>
+  <title>The Warriors · {stage.name}</title>
 </svelte:head>
 
 <svelte:window onkeydown={onKeyDown} />
@@ -385,6 +423,7 @@
 <div
   class="stage"
   class:dragging
+  style="--sky-zenith:{stage.sky.zenith}; --sky-upper:{stage.sky.upper}; --sky-lower:{stage.sky.lower}; --sky-horizon:{stage.sky.horizon}; --sky-glow:{stage.sky.glow}"
   onwheel={onWheel}
   onclickcapture={onClickCapture}
   onpointerdown={onPointerDown}
@@ -395,13 +434,20 @@
 >
   <!-- The canvas is transparent, so the sky is CSS behind it. -->
   <Canvas toneMapping={NoToneMapping}>
-    <Scene {yawIndex} {pitchHigh} {zoom} {pan} bind:yaw />
+    {#key stage.id}
+      <Scene {yawIndex} {pitchHigh} {zoom} {pan} bind:yaw />
+    {/key}
   </Canvas>
 
   <div class="hud">
     <div class="corner top-left">
       <div class="header">
-        <h1>{map.name}</h1>
+        <button class="stage-name" onclick={openPicker} title="Cambiar de batalla (M)">
+          {stage.name}
+        </button>
+        <p>
+          contra {stage.rival}
+        </p>
         <p>
           Turno {battle.turn}
           <span class="ver">v{APP_VERSION}</span>
@@ -474,14 +520,29 @@
     </div>
   </div>
 
-  {#if battle.winner}
-    <ResultBanner winner={battle.winner} onRestart={restart} />
+  {#if battle.winner && !pickerOpen}
+    <ResultBanner
+      winner={battle.winner}
+      outcome={stage.outcome}
+      onRestart={restart}
+      onChangeStage={openPicker}
+    />
+  {/if}
+
+  {#if pickerOpen}
+    <StageSelect
+      bind:this={picker}
+      stages={STAGE_LIST}
+      currentId={stage.id}
+      onPick={pickStage}
+      onClose={() => (pickerOpen = false)}
+    />
   {/if}
 
   <p class="keys">
     <kbd>↑↓</kbd> órdenes · <kbd>flechas</kbd> o <kbd>clic</kbd> elegir casilla ·
     <kbd>Enter</kbd> confirmar · <kbd>1</kbd>…<kbd>0</kbd> órdenes · <kbd>Q</kbd><kbd>E</kbd> girar ·
-    <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar · <kbd>rueda</kbd> zoom ·
+    <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar · <kbd>M</kbd> batalla · <kbd>rueda</kbd> zoom ·
     <kbd>arrastrar</kbd> desplazar · <kbd>Esc</kbd> cancelar
   </p>
 </div>
@@ -496,8 +557,14 @@
        the canvas above it is transparent, so this is the backdrop the whole
        battlefield sits in. */
     background:
-      radial-gradient(120% 60% at 50% 100%, rgba(255, 176, 92, 0.3), transparent 62%),
-      linear-gradient(180deg, #070c1c 0%, #111a36 40%, #253356 72%, #4a4a63 100%);
+      radial-gradient(120% 60% at 50% 100%, var(--sky-glow, rgba(255, 176, 92, 0.3)), transparent 62%),
+      linear-gradient(
+        180deg,
+        var(--sky-zenith, #070c1c) 0%,
+        var(--sky-upper, #111a36) 40%,
+        var(--sky-lower, #253356) 72%,
+        var(--sky-horizon, #4a4a63) 100%
+      );
     cursor: default;
     user-select: none;
   }
@@ -559,11 +626,31 @@
     text-shadow: 0 2px 6px rgba(0, 20, 50, 0.85);
   }
 
-  .header h1 {
+  /* A button, but it has to carry the weight the heading used to. The only
+     hover tell is the underline: this corner is anchored, and anything that
+     changes the element's size under a stationary pointer starts a loop. */
+  .header .stage-name {
+    display: block;
     margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
     font-size: 1.15rem;
     font-weight: 800;
     letter-spacing: 0.03em;
+    text-align: left;
+    text-shadow: inherit;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .header .stage-name:hover,
+  .header .stage-name:focus-visible {
+    color: #ffe27a;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .header p {

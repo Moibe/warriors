@@ -4,7 +4,18 @@
 
   import type { Team } from '../units';
 
-  let { winner, onRestart }: { winner: Team; onRestart: () => void } = $props();
+  let {
+    winner,
+    outcome,
+    onRestart,
+    onChangeStage,
+  }: {
+    winner: Team;
+    /** What this particular battle says when it ends. Lives on the stage. */
+    outcome: { victory: string; defeat: string };
+    onRestart: () => void;
+    onChangeStage: () => void;
+  } = $props();
 
   const won = $derived(winner === 'ally');
 </script>
@@ -13,15 +24,22 @@
   <div class="banner" class:defeat={!won}>
     <div class="ribbon">{won ? 'Victoria' : 'Derrota'}</div>
     <p class="line">
-      {won
-        ? 'El parque es vuestro. Los Furies se quedan tirados en el asfalto.'
-        : 'Los Warriors no salen de Riverside. Ninguno llega a Coney Island.'}
+      {won ? outcome.victory : outcome.defeat}
     </p>
-    <button onclick={onRestart}>Otra batalla</button>
+    <div class="choices">
+      <button onclick={onRestart}>Repetir</button>
+      <button class="ghost" onclick={onChangeStage}>Otra batalla</button>
+    </div>
   </div>
 </div>
 
 <style>
+  .choices {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
   .veil {
     position: absolute;
     inset: 0;
@@ -99,5 +117,18 @@
   button:hover {
     filter: brightness(1.08);
     box-shadow: 0 0 0 2px rgba(255, 233, 168, 0.45);
+  }
+
+  /* The secondary choice: same shape, no fill — leaving this battle behind
+     should not compete with trying it again. */
+  button.ghost {
+    color: #e6eeff;
+    background: transparent;
+    border-color: rgba(214, 228, 255, 0.6);
+  }
+
+  button.ghost:hover {
+    background: rgba(90, 140, 230, 0.22);
+    box-shadow: 0 0 0 2px rgba(214, 228, 255, 0.3);
   }
 </style>

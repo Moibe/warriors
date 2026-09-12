@@ -103,7 +103,7 @@ export type Job = {
   stats: JobStats;
   abilities: Ability[];
   sprite: {
-    body: 'plain' | 'warrior' | 'fury';
+    body: 'plain' | 'warrior' | 'fury' | 'turnbull';
     hat: HatId;
     face: FaceId;
     /** What this role starts the fight holding. Can be lost, or taken. */
@@ -119,7 +119,10 @@ export type JobId =
   | 'runner'
   | 'thrower'
   | 'artist'
-  | 'slugger';
+  | 'slugger'
+  | 'enforcer'
+  | 'wrecker'
+  | 'ringleader';
 
 // ---------------------------------------------------------------------------
 // Palettes
@@ -157,6 +160,31 @@ const WARRIOR_COLORS: Partial<Palette> = {
   B: '#2b2724',
   C: '#42536f',
   F: '#e6dcc4',
+};
+
+/**
+ * The Turnbull A.C.: black denim vest buttoned shut over a shaved head. The
+ * skull rides in the hair slots a shade cooler and duller than the skin, which
+ * reads as three days unshaven rather than as a cartoon bald man. Nine of them
+ * wear exactly this, and the gold of the bull patch is the only bright thing
+ * on them.
+ */
+const TURNBULL_COLORS: Partial<Palette> = {
+  O: '#15131a',
+  // The shaved skull rides in the hair slots, a shade cooler and duller than
+  // the skin. It belongs to the gang and not to the man: leave these out and a
+  // Turnbull falls back to the base palette's dark brown and grows a full head
+  // of hair, which is the one thing none of them has.
+  H: '#d8ab80',
+  J: '#a87c58',
+  A: '#23283a',
+  B: '#14151a',
+  C: '#2f3a52',
+  M: '#7c828c',
+  W: '#6a4a2c',
+  P: '#1b1d24',
+  G: '#cdc6b8',
+  F: '#c9932f',
 };
 
 /** The Furies: New York pinstripes, navy cap, and that painted face. */
@@ -362,6 +390,145 @@ const WIDE_SWING: Ability = {
 };
 
 // ---------------------------------------------------------------------------
+// Turnbull A.C. moves
+// ---------------------------------------------------------------------------
+//
+// The Furies were a race against the clock, won by taking their bats. These are
+// a fight about space instead: they hand you the clock — they are the slowest
+// men on the board — and take tiles away from you in exchange. Nothing below
+// needs a new field on `Ability`. The whole identity is geometry.
+
+/**
+ * Two tiles of steel is the Turnbull's entire tactical claim: they advance less
+ * than anybody and still take a square off you.
+ *
+ * `minRange: 2` is the counterplay, and it is deliberately the reverse of what
+ * the Furies taught. Inside the arc the chain is dead weight, so the answer to
+ * a Turnbull is to walk *into* him rather than back away — the player has to
+ * unlearn the last fight, which is the whole point of a second one.
+ */
+const CHAIN_LASH: Ability = {
+  id: 'chain',
+  name: 'Cadenazo',
+  kind: 'physical',
+  range: 2,
+  minRange: 2,
+  aoe: 0,
+  mp: 0,
+  power: 2.0,
+  vertical: 1,
+  targets: 'enemy',
+  accuracy: 72,
+  needsWeapon: true,
+  desc: 'Dos casillas de cadena. Pegado a él no puede usarla.',
+};
+
+/**
+ * Everything he has, once. Priced at four of six stamina on purpose: the front
+ * rank spends it on contact and then fades to bare knuckles, which is how a
+ * gang of thirty-five-year-olds is supposed to lose a long fight.
+ */
+const BULL_RUSH: Ability = {
+  id: 'bullrush',
+  name: 'Cornada',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 4,
+  power: 2.3,
+  vertical: 1,
+  targets: 'enemy',
+  accuracy: 70,
+  desc: 'Se te echa encima entero, hombro y cabeza. Le queda una para todo el combate.',
+};
+
+/** The two-by-four on edge, both hands. Lands like a truck, misses like a drunk. */
+const PLANK_HIT: Ability = {
+  id: 'plank',
+  name: 'Estacazo',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 2.2,
+  vertical: 1,
+  targets: 'enemy',
+  accuracy: 64,
+  needsWeapon: true,
+  desc: 'El tablón de canto. Cuando entra, entra; falla más de un tercio.',
+};
+
+/**
+ * Aimed two tiles out and never at the next square along. A radius-1 burst
+ * thrown at an adjacent tile would catch the swinger's own square — the same
+ * flaw the Furies' wide swing has — so the minimum range keeps him outside his
+ * own arc while his neighbours stay well inside it. That is the price of nine
+ * men in a narrow street.
+ */
+const PLANK_SWEEP: Ability = {
+  id: 'sweep',
+  name: 'Barrido de tablón',
+  kind: 'physical',
+  range: 2,
+  minRange: 2,
+  aoe: 1,
+  mp: 3,
+  power: 1.9,
+  vertical: 1,
+  targets: 'enemy',
+  accuracy: 78,
+  needsWeapon: true,
+  desc: 'Pasea el tablón en horizontal. Pilla a todo el que esté junto, sea de quien sea.',
+};
+
+/**
+ * The mirror of the Warriors' Arrebatar, and the reason he is the man to drop
+ * first. His hands are already full, so what he knocks loose is not taken: it
+ * hits the floor and stays there. The disarm rides on a full-damage swing
+ * because the planner scores expected damage and nothing else — a cheap utility
+ * move would never once be picked.
+ */
+const MACHETE_CUT: Ability = {
+  id: 'machete',
+  name: 'Machetazo',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 2.0,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 74,
+  needsWeapon: true,
+  disarm: true,
+  desc: 'Corta, y de paso te tira de las manos lo que lleves.',
+};
+
+/**
+ * The only reach in the gang that answers height. Scored just under Machetazo,
+ * so it stays holstered until the machete's vertical 2 falls short — which is
+ * to say he pulls it out on the station stairs and nowhere else.
+ */
+const UPCUT: Ability = {
+  id: 'upcut',
+  name: 'Tajo de abajo arriba',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 4,
+  power: 2.2,
+  vertical: 3,
+  targets: 'enemy',
+  accuracy: 70,
+  needsWeapon: true,
+  desc: 'Alcanza al que se creía a salvo dos escalones más arriba.',
+};
+
+// ---------------------------------------------------------------------------
 // The catalog
 // ---------------------------------------------------------------------------
 
@@ -453,6 +620,70 @@ export const JOBS: Record<JobId, Job> = {
       face: null,
       weapon: 'can',
       palette: palette(WARRIOR_COLORS),
+    },
+  },
+
+  // --- Turnbull A.C. -------------------------------------------------------
+  //
+  // Slow, heavy and short of breath. Jump 1 across the whole gang, and vertical
+  // 1 on everything that actually hurts: they do not climb, and from below only
+  // the fist reaches. On a street with station stairs, that is not a stat — it
+  // is the way out.
+
+  enforcer: {
+    id: 'enforcer',
+    name: 'Matón',
+    tag: 'MAT',
+    stats: { hp: 62, mp: 6, pa: 9, ma: 2, speed: 7, move: 3, jump: 1 },
+    abilities: [
+      punch(1.6, 'Nudillos de obra. Sin nada en la mano sigue siendo un martillo.'),
+      CHAIN_LASH,
+      BULL_RUSH,
+    ],
+    sprite: {
+      body: 'turnbull',
+      hat: null,
+      face: null,
+      weapon: 'pipe',
+      palette: palette(TURNBULL_COLORS),
+    },
+  },
+
+  wrecker: {
+    id: 'wrecker',
+    name: 'Demoledor',
+    tag: 'DEM',
+    stats: { hp: 66, mp: 8, pa: 9, ma: 2, speed: 6, move: 3, jump: 1 },
+    abilities: [
+      punch(1.6, 'Con el tablón en el suelo, vuelve a ser sólo un tipo grande.'),
+      PLANK_HIT,
+      PLANK_SWEEP,
+    ],
+    sprite: {
+      body: 'turnbull',
+      hat: null,
+      face: null,
+      weapon: 'bat',
+      palette: palette(TURNBULL_COLORS),
+    },
+  },
+
+  ringleader: {
+    id: 'ringleader',
+    name: 'Cabecilla',
+    tag: 'CAB',
+    stats: { hp: 58, mp: 8, pa: 10, ma: 3, speed: 8, move: 4, jump: 2 },
+    abilities: [
+      punch(1.7, 'El que manda no necesita levantar la voz.'),
+      MACHETE_CUT,
+      UPCUT,
+    ],
+    sprite: {
+      body: 'turnbull',
+      hat: null,
+      face: null,
+      weapon: 'knife',
+      palette: palette(TURNBULL_COLORS),
     },
   },
 

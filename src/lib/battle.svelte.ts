@@ -17,12 +17,13 @@ import {
   parseKey,
   tileAt,
   tileKey,
+  type BattleMap,
   type Coord,
   type Facing,
   type Tile,
 } from './grid';
 import { JOBS, WEAPON_NAMES, type Ability, type ProjectileId } from './jobs';
-import { riversidePark } from './maps';
+import { DEFAULT_STAGE, STAGES, type Stage, type StageId } from './stages';
 import {
   bestApproach,
   computeReachable,
@@ -33,10 +34,33 @@ import {
   tilesInBurst,
   type ReachMap,
 } from './pathfinding';
-import { createRoster, isAlive, unitAt, unitById, type Team, type Unit } from './units';
+import { isAlive, unitAt, unitById, type Team, type Unit } from './units';
 
-/** The battlefield. Static for now — swap in another map from `maps.ts`. */
-export const map = riversidePark;
+/**
+ * Which battle is installed.
+ *
+ * `$state.raw` and not `$state`: the value it points at is a whole parsed board,
+ * and a deep proxy over it would wrap every tile the pathfinder touches — a BFS
+ * reads `tileAt()` thousands of times a turn on data that cannot change while a
+ * fight is running. Raw state signals on reassignment, which is the only event
+ * anybody needs to hear about.
+ *
+ * Exported as a function because Svelte 5 refuses to export a reassigned state
+ * binding; reading `stage()` inside a `$derived` is what subscribes the scene.
+ */
+let stageId = $state.raw<StageId>(DEFAULT_STAGE);
+
+export function stage(): Stage {
+  return STAGES[stageId];
+}
+
+/**
+ * The board itself, held as an ordinary binding on purpose. It is read a couple
+ * of dozen times per turn from inside pathfinding loops, and the engine is
+ * synchronous, so it can never observe a half-finished swap. `restart()` is the
+ * only place it is installed, so it cannot drift from `stageId`.
+ */
+let map: BattleMap = STAGES[DEFAULT_STAGE].map;
 
 export type Phase =
   | 'clock' // CT is filling; nobody is acting
@@ -83,7 +107,7 @@ export type ThrowAnim = {
 };
 
 export const battle = $state({
-  units: createRoster(),
+  units: STAGES[DEFAULT_STAGE].roster(),
   phase: 'clock' as Phase,
   activeId: null as string | null,
   /** Ability chosen from the menu, waiting for a target. */
@@ -959,7 +983,10 @@ function runAiStep() {
 // ---------------------------------------------------------------------------
 
 export function restart() {
-  battle.units = createRoster();
+  // Installing the stage comes first: everything below is torn down relative to
+  // the board that is about to be in play, not the one that just ended.
+  map = STAGES[stageId].map;
+  battle.units = STAGES[stageId].roster();
   battle.phase = 'clock';
   battle.activeId = null;
   battle.ability = null;
@@ -977,6 +1004,18 @@ export function restart() {
   resolveTimer = 0;
   clockDelay = TURN_GAP;
   log('Comienza la batalla en ' + map.name + '.');
+}
+
+/**
+ * Tears down the current fight and deals a fresh one on another board. The only
+ * writer of `stageId`, and it goes through `restart()` so every half-finished
+ * animation, timer and AI plan from the old board dies with it — a thrown
+ * bottle still in the air would otherwise land on a street that no longer has
+ * the people it was aimed at.
+ */
+export function startStage(id: StageId) {
+  stageId = id;
+  restart();
 }
 
 log('Comienza la batalla en ' + map.name + '.');

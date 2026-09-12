@@ -511,6 +511,126 @@ const RECOIL_OFFSET = {
   weapon: { dx: 1, dy: -3 },
 };
 
+/**
+ * A Turnbull A.C. Three things separate him from everyone else on the board
+ * without reading a single detail: there is no hairline (the skin runs up over
+ * the crown and the nape drops to shadow, which is a shaved head and not a
+ * cartoon bald man), there is no neck — the jaw sits straight on the shoulders —
+ * and he is the widest silhouette in the game. The vest is buttoned shut, so
+ * where a Warrior shows bare chest he shows a dark slab with a sliver of dirty
+ * undershirt at the collar.
+ */
+const TURNBULL_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '     OOOOOO     ',
+  '    OHHSSHHO    ',
+  '   OHHHSSHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSJSSJSHO   ',
+  '   OHSESSESHO   ',
+  '   OJSSSSSSJO   ',
+  '    OJJSSJJO    ',
+  '  OAAAAGGAAAAO  ',
+  ' OSKAAAGGAAAKSO ',
+  ' OSKAAABBAAAKSO ',
+  ' OSKAAABBAAAKSO ',
+  ' OSKAAABBAAAKSO ',
+  ' OSOAAAAAAAAOSO ',
+  '  OOAAAAAAAAOO  ',
+  '   OBBBWWBBBO   ',
+  '   OCCCCCCCCO   ',
+  '   OCCCOOCCCO   ',
+  '   OCCCOOCCCO   ',
+  '   OBBBOOBBBO   ',
+  '   OBBBOOBBBO   ',
+  '  OBBBBOOBBBBO  ',
+  '  OOOOO  OOOOO  ',
+]);
+
+/** From behind, the club patch: the bull's head between the lettering. */
+const TURNBULL_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '     OOOOOO     ',
+  '    OHHSSHHO    ',
+  '   OHHHSSHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OJJJJJJJJO   ',
+  '    OJJJJJJO    ',
+  '  OAAAAGGAAAAO  ',
+  ' OSKAFFFFFFAKSO ',
+  ' OSKAAAAAAAAKSO ',
+  ' OSKAFAAAAFAKSO ',
+  ' OSKAAFFFFAAKSO ',
+  ' OSOAAFOOFAAOSO ',
+  '  OOAAAAAAAAOO  ',
+  '   OBBBWWBBBO   ',
+  '   OCCCCCCCCO   ',
+  '   OCCCOOCCCO   ',
+  '   OCCCOOCCCO   ',
+  '   OBBBOOBBBO   ',
+  '   OBBBOOBBBO   ',
+  '  OBBBBOOBBBBO  ',
+  '  OOOOO  OOOOO  ',
+]);
+
+
+const TURNBULL_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '     OOOOOO     ',
+  '    OHHSSHHO    ',
+  '   OHHHSSHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSJSSJSHO   ',
+  '   OHOOSSOOHO   ',
+  '   OJSSSSSSJO   ',
+  '    OJSOOSJO    ',
+  '  OAAAAGGAAAAO  ',
+  'OSKOAAAGGAAAOKSO',
+  'OSKOAAABBAAAOKSO',
+  '  OAAAABBAAAAO  ',
+  '  OAAAABBAAAAO  ',
+  '  OAAAABBAAAAO  ',
+  '  OOAAAAAAAAOO  ',
+  '   OBBBWWBBBO   ',
+  '   OCCCCCCCCO   ',
+  '  OCCCOOOOCCCO  ',
+  '  OCCCOOOOCCCO  ',
+  ' OBBBOOOOOOBBBO ',
+  ' OBBBOOOOOOBBBO ',
+  'OBBBBOOOOOOBBBBO',
+  'OOOOO      OOOOO',
+  '                ',
+]);
+
+
+const TURNBULL_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '     OOOOOO     ',
+  '    OHHSSHHO    ',
+  '   OHHHSSHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OJJJJJJJJO   ',
+  '    OJJJJJJO    ',
+  '  OAAAAGGAAAAO  ',
+  'OSKOAFFFFFFAOKSO',
+  'OSKOAAAAAAAAOKSO',
+  '  OAAFAAAAFAAO  ',
+  '  OAAAFFFFAAAO  ',
+  '  OAAAFOOFAAAO  ',
+  '  OOAAAAAAAAOO  ',
+  '   OBBBWWBBBO   ',
+  '   OCCCCCCCCO   ',
+  '  OCCCOOOOCCCO  ',
+  '  OCCCOOOOCCCO  ',
+  ' OBBBOOOOOOBBBO ',
+  ' OBBBOOOOOOBBBO ',
+  'OBBBBOOOOOOBBBBO',
+  'OOOOO      OOOOO',
+  '                ',
+]);
+
 const BODIES = {
   plain: { front: PLAIN_FRONT, back: PLAIN_BACK, hurtFront: PLAIN_FRONT, hurtBack: PLAIN_BACK },
   warrior: {
@@ -524,6 +644,12 @@ const BODIES = {
     back: FURY_BACK,
     hurtFront: FURY_HURT_FRONT,
     hurtBack: FURY_HURT_BACK,
+  },
+  turnbull: {
+    front: TURNBULL_FRONT,
+    back: TURNBULL_BACK,
+    hurtFront: TURNBULL_HURT_FRONT,
+    hurtBack: TURNBULL_HURT_BACK,
   },
 } as const;
 

@@ -77,10 +77,72 @@ const RIVERSIDE_PARK: MapSource = {
 export const riversidePark = parseMap(RIVERSIDE_PARK);
 
 /**
- * Where the comfort station is planted: the north-west corner of its 3×2
- * blocked footprint, plus the height it stands on. Kept next to the map so
- * moving the building means editing one place, not two.
+ * "Gun Hill Road" — the night the Turnbull A.C. came down the block.
+ *
+ * The exact opposite of the park. There the sky was open and the ground fell
+ * away in terraces; here the ground is flat and everything is decided at the
+ * edges. North (row 0) at the top:
+ *   · A wall of shuttered storefronts along the north edge, five levels up and
+ *     solid — except at x=5,6, where an alley opens. That alley is the one
+ *     pocket on the board with its back covered, which matters in a game that
+ *     pays for hitting people from behind.
+ *   · Sidewalks one level up on both sides. Anybody down on the road has
+ *     people above them on two flanks.
+ *   · Six rows of asphalt between them: the roadway, and the fight.
+ *   · Two rows of elevated-line columns planted in the middle of the road at
+ *     x=5, 9 and 13. Hard cover that never moves — the thing Riverside has
+ *     none of — spaced so three tiles fit between them, cover without a maze.
+ *     Concrete, and no taller than a man: from this camera anything above that
+ *     stops being a column and becomes a wall you cannot see your own people
+ *     through.
+ *   · The station stairs climbing out of the east end, 0→1→2→3 up to a wooden
+ *     platform at level 5. The Turnbull cannot jump more than one level, so
+ *     those steps are not scenery: they are the way out.
+ *   · The bus parked across the road at the west end, blocking five of the six
+ *     lanes. It can only be rounded at the north or south tip — eight steps
+ *     either way, so neither is the obvious one.
  */
-export const BUILDING_ANCHOR = { x: 1, y: 0, w: 3, d: 2, height: 3 };
+const GUN_HILL_ROAD: MapSource = {
+  name: 'Gun Hill Road',
+  heights: [
+    '5555511555555555',
+    '1111111111113555',
+    '1111111111113334',
+    '0000000000000033',
+    '0000050005000522',
+    '0000000000000011',
+    '0000000000000000',
+    '0000050005000500',
+    '0000000000000000',
+    '1111111111111111',
+    '2222224444222222',
+  ],
+  surfaces: [
+    'sssssddsssssmmmm',
+    'ssssssssssssmmmm',
+    'ssssssssssssmmmm',
+    'kkkkkkkkkkkkkkmm',
+    'kkkkkskkkskkksmm',
+    'kkkkkkkkkkkkkkmm',
+    'kkkkkkkkkkkkkkkk',
+    'kkkkkskkkskkkskk',
+    'kkkkkkkkkkkkkkkk',
+    'ssssssssssssssss',
+    'ddddddssssssssss',
+  ],
+  blocked: [
+    '#####..#####....',
+    '................',
+    '................',
+    '..##............',
+    '..##.#...#...#..',
+    '..##............',
+    '..##............',
+    '..##.#...#...#..',
+    '................',
+    '................',
+    '......####......',
+  ],
+};
 
-export const MAPS = { riversidePark };
+export const gunHillRoad = parseMap(GUN_HILL_ROAD);

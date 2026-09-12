@@ -8,6 +8,7 @@
   import { T, useTask } from '@threlte/core';
   import { interactivity } from '@threlte/extras';
   import CameraRig from './CameraRig.svelte';
+  import Bus from './Bus.svelte';
   import ComfortStation from './ComfortStation.svelte';
   import FloatingNumber from './FloatingNumber.svelte';
   import Projectile from './Projectile.svelte';
@@ -26,11 +27,10 @@
     confirmTile,
     cursorCoord,
     heightOf,
-    map,
+    stage as currentStage,
     renderPosition,
   } from './battle.svelte';
   import { LEVEL, TILE, tileToWorld, type Tile } from './grid';
-  import { BUILDING_ANCHOR } from './maps';
   import { landableTiles, tilesInBurst } from './pathfinding';
   import { isAlive } from './units';
 
@@ -49,6 +49,15 @@
   } = $props();
 
   interactivity();
+
+  // One derived read of the installed stage; the board and the scenery hang off
+  // it, so every `map` below keeps working untouched and now tracks the swap.
+  const stage = $derived(currentStage());
+  const map = $derived(stage.map);
+  const light = $derived(stage.light);
+
+  /** Which component draws which prop. Stages name a kind, not a component. */
+  const PROPS = { comfortStation: ComfortStation, bus: Bus };
 
   useTask((delta) => {
     // Clamp: a backgrounded tab hands back a huge delta on return, which would
@@ -117,11 +126,23 @@
     confirmTile(tile.x, tile.y);
   }
 
-  const buildingPos = $derived.by(() => {
-    const c = BUILDING_ANCHOR;
-    const w = tileToWorld(map, c.x + (c.w - 1) / 2, c.y + (c.d - 1) / 2, c.height);
-    return [w.x, w.y, w.z] as [number, number, number];
-  });
+  // Props are centred on their footprint, so moving one is editing the anchor
+  // in stages.ts and nothing else.
+  const scenery = $derived(
+    stage.props.map((p) => {
+      const w = tileToWorld(map, p.x + (p.w - 1) / 2, p.y + (p.d - 1) / 2, p.height);
+      return {
+        p,
+        pos: [w.x, w.y, w.z] as [number, number, number],
+        rot: ((p.turns ?? 0) * Math.PI) / 2,
+      };
+    })
+  );
+
+  // The shadow frustum used to be hardwired to ±14, which fits the park and
+  // nothing else: on a longer board the units at the far end lose their shadow
+  // all at once, along a visible straight edge. Derive it from the board.
+  const shadowExtent = $derived(Math.max(map.width, map.depth) * 0.75 + 4);
 
   // The fallen stay in the list until their death animation runs out. They are
   // already gone as far as the rules are concerned — this is only the body.
@@ -135,19 +156,23 @@
      the tile faces the camera can see stay lit and the ledges keep throwing
      shadows across the board. The ambient carries a sodium tint, which is the
      only warmth out here — the park lamps. -->
-<T.AmbientLight intensity={0.5} color="#8fa4c8" />
-<T.HemisphereLight intensity={0.75} color="#7f9bd0" groundColor="#4a4030" />
+<T.AmbientLight intensity={light.ambient.intensity} color={light.ambient.color} />
+<T.HemisphereLight
+  intensity={light.hemisphere.intensity}
+  color={light.hemisphere.sky}
+  groundColor={light.hemisphere.ground}
+/>
 <T.DirectionalLight
   castShadow
-  intensity={1.55}
-  color="#cfd9f2"
-  position={[11, 15, 4]}
+  intensity={light.key.intensity}
+  color={light.key.color}
+  position={light.key.position}
   shadow.mapSize.width={2048}
   shadow.mapSize.height={2048}
-  shadow.camera.left={-14}
-  shadow.camera.right={14}
-  shadow.camera.top={14}
-  shadow.camera.bottom={-14}
+  shadow.camera.left={-shadowExtent}
+  shadow.camera.right={shadowExtent}
+  shadow.camera.top={shadowExtent}
+  shadow.camera.bottom={-shadowExtent}
   shadow.camera.near={1}
   shadow.camera.far={60}
   shadow.bias={-0.0015}
@@ -156,7 +181,10 @@
 
 <Terrain {map} onTileClick={handleClick} />
 
-<ComfortStation position={buildingPos} />
+{#each scenery as { p, pos, rot } (p.kind + ':' + p.x + ',' + p.y)}
+  {@const Prop = PROPS[p.kind]}
+  <Prop position={pos} rotation={rot} />
+{/each}
 
 <!-- Layer order by lift: movement under weapon reach under the burst. -->
 <!-- Opacity is high because the texture now carries the contrast: the rim

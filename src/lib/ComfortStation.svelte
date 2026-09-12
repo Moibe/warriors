@@ -14,7 +14,8 @@
 
   let {
     position = [0, 0, 0],
-  }: { position?: [number, number, number] } = $props();
+    rotation = 0,
+  }: { position?: [number, number, number]; rotation?: number } = $props();
 
   const brick = new MeshStandardMaterial({ color: '#6d4436', roughness: 1, flatShading: true });
   const concrete = new MeshStandardMaterial({ color: '#7d7a72', roughness: 1, flatShading: true });
@@ -68,7 +69,7 @@
   const tagGeometries = TAG.map((t) => new BoxGeometry(t.w, t.h, 0.02));
 </script>
 
-<T.Group {position}>
+<T.Group {position} rotation.y={rotation}>
   <T.Mesh
     geometry={plinthGeometry}
     material={concrete}

@@ -80,6 +80,30 @@ export function hatOf(u: Unit): HatId {
   return u.hat !== undefined ? u.hat : JOBS[u.job].sprite.hat;
 }
 
+/**
+ * Where a stage wants a squad to stand. A squad carries its own default
+ * deployment — the one it was written for — and a stage that needs it somewhere
+ * else hands over one spot per member, in order. Nine entries, nine fighters.
+ */
+export type Spot = { x: number; y: number; facing?: Facing; ct?: number };
+
+/**
+ * Moves a squad onto a stage's deployment without touching anything else about
+ * them. Who they are travels between battles; where they stand does not.
+ */
+function placeSquad(squad: Unit[], spots?: Spot[]): Unit[] {
+  if (!spots) return squad;
+  for (let i = 0; i < squad.length; i++) {
+    const spot = spots[i];
+    if (!spot) continue;
+    squad[i].x = spot.x;
+    squad[i].y = spot.y;
+    if (spot.facing) squad[i].facing = spot.facing;
+    if (spot.ct !== undefined) squad[i].ct = spot.ct;
+  }
+  return squad;
+}
+
 type UnitSeed = {
   id: string;
   name: string;
@@ -142,7 +166,7 @@ export function createUnit(seed: UnitSeed): Unit {
 // these recolors touches the uniform. What changes is skin, hair, and what each
 // of them has on his head: Cochise's afro, Cowboy's hat, Fox's bandana.
 
-const WARRIORS = () => [
+const WARRIOR_SQUAD = () => [
   // Vanguardia
   createUnit({
     id: 'swan', name: 'Swan', job: 'warchief', team: 'ally',
@@ -209,7 +233,7 @@ const WARRIORS = () => [
 // that varies is the war paint, which is exactly how the film handles them. The
 // turn-order list is where the player tells them apart.
 
-const FURIES = () => [
+const FURY_SQUAD = () => [
   // Los que llegan primero
   createUnit({
     id: 'fury-9', name: 'Furia 9', job: 'slugger', team: 'enemy',
@@ -262,7 +286,78 @@ const FURIES = () => [
   }),
 ];
 
-/** The opening brawl: the Warriors against the Baseball Furies, nine a side. */
-export function createRoster(): Unit[] {
-  return [...WARRIORS(), ...FURIES()];
+// ---------------------------------------------------------------------------
+// The Turnbull A.C.
+// ---------------------------------------------------------------------------
+//
+// Nine shaved heads in the same black denim cut, with the bull sewn across the
+// back. Older and heavier than the Warriors, and they know it: they came down
+// the block in a bus rather than walk. Same rule as the other two gangs — the
+// uniform is untouchable, and what tells them apart is the man wearing it: how
+// dark the skin, how recently the head was shaved, and which of them carries
+// the scar.
+
+const TURNBULL_SQUAD = () => [
+  createUnit({
+    id: 'bull', name: 'Bull', job: 'ringleader', team: 'enemy',
+    x: 1, y: 5, facing: 'e', ct: 30, brave: 88, faith: 60,
+    paletteOverride: { S: '#c99a6e', K: '#a67a52', H: '#bf8f66', J: '#8e6743' },
+  }),
+  createUnit({
+    id: 'moose', name: 'Moose', job: 'wrecker', team: 'enemy',
+    x: 1, y: 3, facing: 'e', ct: 12, brave: 84,
+    paletteOverride: { S: '#e0b489', K: '#b98a63', H: '#cfa077', J: '#a17650' },
+  }),
+  createUnit({
+    id: 'sledge', name: 'Sledge', job: 'wrecker', team: 'enemy',
+    x: 1, y: 7, facing: 'e', ct: 8, brave: 86,
+    paletteOverride: { S: '#7a5030', K: '#5b3a22', H: '#6d4629', J: '#4a3018' },
+  }),
+  createUnit({
+    id: 'bruno', name: 'Bruno', job: 'enforcer', team: 'enemy',
+    x: 2, y: 2, facing: 'e', ct: 34,
+    paletteOverride: { S: '#d8a878', K: '#ad8156', H: '#c79a6c', J: '#9a7048' },
+  }),
+  createUnit({
+    id: 'dutch', name: 'Dutch', job: 'enforcer', team: 'enemy',
+    x: 3, y: 2, facing: 'e', ct: 20,
+    // Nada de tocar G aquí: en esta plantilla es la camiseta que asoma por el
+    // cuello, así que un rojo de cicatriz le sale como un cuello ensangrentado.
+    paletteOverride: { S: '#e4bb92', K: '#bd8f68', H: '#d2a276', J: '#9e7550' },
+  }),
+  createUnit({
+    id: 'hatch', name: 'Hatch', job: 'enforcer', team: 'enemy',
+    x: 1, y: 2, facing: 'e', ct: 26,
+    paletteOverride: { S: '#6b4426', K: '#4e3020', H: '#5e3b21', J: '#3f2715' },
+  }),
+  createUnit({
+    id: 'tully', name: 'Tully', job: 'enforcer', team: 'enemy',
+    x: 1, y: 8, facing: 'e', ct: 16,
+    paletteOverride: { S: '#e8c19b', K: '#c0946d', H: '#d9b088', J: '#ab8058' },
+  }),
+  createUnit({
+    id: 'rooster', name: 'Rooster', job: 'enforcer', team: 'enemy',
+    x: 2, y: 8, facing: 'e', ct: 40, brave: 62,
+    paletteOverride: { S: '#a87c58', K: '#835c3d', H: '#976d4a', J: '#6d4d33' },
+  }),
+  createUnit({
+    id: 'angel', name: 'Angel', job: 'enforcer', team: 'enemy',
+    x: 3, y: 9, facing: 'e', ct: 4,
+    paletteOverride: { S: '#c08a5e', K: '#996a45', H: '#b07d52', J: '#8a5e3c' },
+  }),
+];
+
+/** The nine who went to the meeting. They travel from one battle to the next. */
+export function warriors(spots?: Spot[]): Unit[] {
+  return placeSquad(WARRIOR_SQUAD(), spots);
+}
+
+/** The Baseball Furies, who only ever stand in Riverside Park. */
+export function furies(spots?: Spot[]): Unit[] {
+  return placeSquad(FURY_SQUAD(), spots);
+}
+
+/** The Turnbull A.C., who only ever block Gun Hill Road. */
+export function turnbull(spots?: Spot[]): Unit[] {
+  return placeSquad(TURNBULL_SQUAD(), spots);
 }
