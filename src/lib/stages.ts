@@ -11,11 +11,11 @@
 // and never a unit somebody already took the bat off.
 
 import type { BattleMap } from './grid';
-import { gunHillRoad, riversidePark } from './maps';
-import { furies, turnbull, warriors, type Unit } from './units';
+import { gunHillRoad, orphanBlock, riversidePark } from './maps';
+import { furies, orphans, turnbull, warriors, type Unit } from './units';
 
 /** Which procedural prop draws it — one key per entry in Scene's PROPS map. */
-export type PropKind = 'comfortStation' | 'bus';
+export type PropKind = 'comfortStation' | 'bus' | 'parkedCar';
 
 /**
  * A prop standing on the board. The map's `blocked` layer has to agree with the
@@ -34,6 +34,12 @@ export type PropPlacement = {
   height: number;
   /** Quarter turns clockwise. Props are authored facing south. */
   turns?: 0 | 1 | 2 | 3;
+  /**
+   * Which of a prop's looks to draw, for props that have more than one. Three
+   * identical cars on one street would tell the player they are scenery; three
+   * different ones read as a street where people park.
+   */
+  variant?: number;
 };
 
 /**
@@ -68,7 +74,7 @@ export const NIGHT_RIG: Lighting = {
   key: { color: '#cfd9f2', intensity: 1.55, position: [11, 15, 4] },
 };
 
-export type StageId = 'riverside-park' | 'gun-hill-road';
+export type StageId = 'riverside-park' | 'gun-hill-road' | 'orphan-block';
 
 export type Stage = {
   id: StageId;
@@ -154,9 +160,68 @@ export const STAGES: Record<StageId, Stage> = {
       defeat: 'Los Turnbull cierran Gun Hill Road. Nadie pasa de aquí.',
     },
   },
+
+  'orphan-block': {
+    id: 'orphan-block',
+    name: 'La calle de los Orphans',
+    rival: 'Orphans',
+    map: orphanBlock,
+    // Three cars along the kerb, each a different look. Their footprints match
+    // the '#' blocks in the map exactly — the mesh is decoration, the '#' is
+    // what stops anybody walking through a car.
+    props: [
+      { kind: 'parkedCar', x: 1, y: 3, w: 4, d: 2, height: 1, variant: 0 },
+      { kind: 'parkedCar', x: 10, y: 3, w: 4, d: 2, height: 1, variant: 1 },
+      { kind: 'parkedCar', x: 5, y: 6, w: 4, d: 2, height: 1, variant: 2 },
+    ],
+    // The Warriors come up out of the east end of the block; the Orphans are
+    // already in the doorways, on the lot and standing on the subway mouth.
+    roster: () => [
+      ...warriors([
+        { x: 13, y: 6, facing: 'w', ct: 20 },
+        { x: 13, y: 5, facing: 'w', ct: 32 },
+        { x: 14, y: 6, facing: 'w', ct: 12 },
+        { x: 13, y: 7, facing: 'w', ct: 40 },
+        { x: 14, y: 7, facing: 'w', ct: 44 },
+        { x: 14, y: 5, facing: 'w', ct: 30 },
+        { x: 14, y: 4, facing: 'w', ct: 24 },
+        { x: 12, y: 7, facing: 'w', ct: 10 },
+        { x: 14, y: 8, facing: 'w', ct: 0 },
+      ]),
+      ...orphans(),
+    ],
+    sky: {
+      // A residential block, so there is sky again — but low and brown, the
+      // colour a city throws back at its own streetlights.
+      zenith: '#0b0d18',
+      upper: '#171a2a',
+      lower: '#302a34',
+      horizon: '#55423a',
+      glow: 'rgba(255, 164, 86, 0.32)',
+    },
+    light: {
+      // Warmer and flatter than the park: tenement windows and a couple of
+      // lamps, nothing directional enough to carve the street up.
+      ambient: { color: '#9a8c8a', intensity: 0.58 },
+      hemisphere: { sky: '#7a7f92', ground: '#40342c', intensity: 0.66 },
+      key: { color: '#e8d6bc', intensity: 1.3, position: [9, 14, 7] },
+    },
+    outcome: {
+      victory: 'Los Orphans se meten en sus portales. La calle era suya hasta esta noche.',
+      defeat: 'Tres manzanas y no las pasaste. Sully va a contarlo toda su vida.',
+    },
+  },
 };
 
-/** In the order the picker offers them — the order they happen on the way home. */
-export const STAGE_LIST: Stage[] = [STAGES['riverside-park'], STAGES['gun-hill-road']];
+/**
+ * The order the picker offers them, which is the order they happen on the way
+ * home: the Turnbull catch them on Gun Hill Road, the train dumps them on the
+ * Orphans' block, and the Furies are waiting further south in Riverside Park.
+ */
+export const STAGE_LIST: Stage[] = [
+  STAGES['gun-hill-road'],
+  STAGES['orphan-block'],
+  STAGES['riverside-park'],
+];
 
 export const DEFAULT_STAGE: StageId = 'riverside-park';

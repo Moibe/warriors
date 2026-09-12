@@ -766,8 +766,13 @@ function resolveHits(actor: Unit, ability: Ability, targets: Unit[]) {
   const actorHeight = heightOf(actor);
   for (const target of targets) {
     const friendly = target.team === actor.team;
-    // A heal on an enemy or a fireball on a friend is possible with an area
-    // effect; the roll simply applies to whoever is standing in it.
+
+    // A wide swing catching your own people is a real cost of swinging wide,
+    // and it stays. Shouting at your gang picking up the other gang is not a
+    // cost, it is nonsense — Sully was rallying Swan back to his feet. A rally
+    // only reaches the side it was shouted at.
+    if (ability.kind === 'rally' && !friendly) continue;
+
     const result = rollAttack(actor, actorHeight, target, heightOf(target), ability);
 
     if (!result.hit) {
@@ -780,8 +785,12 @@ function resolveHits(actor: Unit, ability: Ability, targets: Unit[]) {
       const before = target.hp;
       target.hp = Math.min(target.hpMax, target.hp + result.amount);
       const healed = target.hp - before;
-      pushPopup(target, '+' + healed, '#79e07a');
-      log(`${actor.name} levanta a ${target.name}: +${healed} PV.`);
+      // Somebody already on their feet has nothing to get up from, and a line
+      // in the report saying "+0" reads as a bug rather than as a full bar.
+      if (healed > 0) {
+        pushPopup(target, '+' + healed, '#79e07a');
+        log(`${actor.name} levanta a ${target.name}: +${healed} PV.`);
+      }
       continue;
     }
 
@@ -867,7 +876,7 @@ function planAiTurn(u: Unit) {
     for (const target of pool) {
       const targetTile = tileAt(map, target.x, target.y);
       if (!targetTile) continue;
-      const approach = bestApproach(map, reach, targetTile, ability);
+      const approach = bestApproach(map, reach, targetTile, ability, target);
       if (!approach) continue;
 
       // Score from the square it would actually attack from, so flanking and

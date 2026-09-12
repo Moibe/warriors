@@ -146,3 +146,76 @@ const GUN_HILL_ROAD: MapSource = {
 };
 
 export const gunHillRoad = parseMap(GUN_HILL_ROAD);
+
+/**
+ * "La calle de los Orphans" — three blocks nobody else wants.
+ *
+ * The other two boards are places you fight across. This one is a place people
+ * live in, which is the whole difference: the Orphans do not march in like the
+ * Furies or pile out of a bus like the Turnbull. They come out of the doorways.
+ * North (row 0) at the top:
+ *   · A tenement face five levels up, solid, with stoops at level 3 punched
+ *     through it every three doors. Half the gang starts standing in them,
+ *     above and behind the Warriors from the first tick.
+ *   · The sidewalk, then the roadway at level 1 with three cars parked along
+ *     it. Their footprints are blocked, and that is the point: this is the one
+ *     board where the cover is in the middle of the street rather than at the
+ *     edges, so a Warrior can put his back against something.
+ *   · The south side opens into a vacant lot — rubble at level 4, the only
+ *     high ground on the board, and a puddle nobody has drained.
+ *   · The subway mouth drops to level 0 at the west end. In the film the
+ *     Warriors do not win this street, they cross it.
+ */
+const ORPHAN_BLOCK: MapSource = {
+  name: 'La calle de los Orphans',
+  heights: [
+    '555555555555555',
+    '535535535535535',
+    '222222222222222',
+    '111111111111111',
+    '111111111111111',
+    '111111111111111',
+    '111111111111111',
+    '331111111111111',
+    '012222222223322',
+    '012222222223322',
+    '332222442224422',
+    '222222333222222',
+    '222223343322222',
+    '222222333222222',
+  ],
+  surfaces: [
+    'sssssssssssssss',
+    'sssssssssssssss',
+    'sssssssssssssss',
+    'kkkkkkkkkkkkkkk',
+    'kkkkkkkkkkkkkkk',
+    'kkkkkkkkkkkkkkk',
+    'kkkkkkkkkkkkkkk',
+    'sskkkkkkkkkkkkk',
+    'kssssssssssddss',
+    'kssssssssssddss',
+    'ssddddssdddssdd',
+    'ddwdddnnndddddd',
+    'ddwwdnnnnnddddd',
+    'ddddddnnndddddd',
+  ],
+  blocked: [
+    '###############',
+    '#.##.##.##.##.#',
+    '...............',
+    '.####.....####.',
+    '.####.....####.',
+    '...............',
+    '.....####......',
+    '##...####......',
+    '...........##..',
+    '...........##..',
+    '##....##...##..',
+    '...............',
+    '...............',
+    '...............',
+  ],
+};
+
+export const orphanBlock = parseMap(ORPHAN_BLOCK);

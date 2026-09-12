@@ -103,7 +103,7 @@ export type Job = {
   stats: JobStats;
   abilities: Ability[];
   sprite: {
-    body: 'plain' | 'warrior' | 'fury' | 'turnbull';
+    body: 'plain' | 'warrior' | 'fury' | 'turnbull' | 'orphan';
     hat: HatId;
     face: FaceId;
     /** What this role starts the fight holding. Can be lost, or taken. */
@@ -122,7 +122,10 @@ export type JobId =
   | 'slugger'
   | 'enforcer'
   | 'wrecker'
-  | 'ringleader';
+  | 'ringleader'
+  | 'stray'
+  | 'cornerboy'
+  | 'loudmouth';
 
 // ---------------------------------------------------------------------------
 // Palettes
@@ -389,6 +392,37 @@ const WIDE_SWING: Ability = {
   desc: 'Barre en círculo. Pilla a todo el que esté pegado, sea de quien sea.',
 };
 
+/**
+ * The Orphans: a sleeveless vest in dirty oxblood over a three-wash undershirt,
+ * work trousers, and their name painted on the back by hand.
+ *
+ * The rule this palette cares about is that it reads *cheaper* than the other
+ * three at a glance. F is a dull off-white with far less contrast than the
+ * Warriors' bone skull and none of the Turnbull gold — letters, not an emblem.
+ * These are the only gang who look like ordinary men who put something on to
+ * look like a gang.
+ *
+ * Every slot the nine share is declared here, including the two that bite: H/J
+ * (left out, a Turnbull grows hair) and G (left out, it falls to the Furies'
+ * face-paint white and nine Orphans get a glowing collar). In this template G
+ * is the undershirt at the neck, not war paint — the same trap Dutch carries a
+ * warning about in units.ts. Hair is the one slot that varies per man, because
+ * they are the only gang wearing their own.
+ */
+const ORPHAN_COLORS: Partial<Palette> = {
+  O: '#171319',
+  H: '#4a3524',
+  J: '#2e2016',
+  A: '#6e3033',
+  B: '#221d1c',
+  C: '#4a4d42',
+  M: '#8a8f95',
+  W: '#6a4a2c',
+  P: '#2b2f2c',
+  G: '#cdc6b8',
+  F: '#c6bca6',
+};
+
 // ---------------------------------------------------------------------------
 // Turnbull A.C. moves
 // ---------------------------------------------------------------------------
@@ -529,6 +563,120 @@ const UPCUT: Ability = {
 };
 
 // ---------------------------------------------------------------------------
+// Orphan moves
+// ---------------------------------------------------------------------------
+//
+// The Furies were a fight about the clock; the Turnbull, a fight about tiles.
+// These are a fight about which way you are facing.
+//
+// Not one number below is worth anything on its own. The whole gang lives on a
+// rule the engine already runs: `angleOf` turns the same punch into three
+// different punches depending on the side it comes in from, and a man faces one
+// way at a time. Nine Orphans around one Warrior means one of them is always
+// behind him — and the Warrior chooses which one every time he swings, because
+// landing a hit turns him to look at what he hit.
+//
+// So "surrounded" is not a counter anything here has to keep. It is geometry,
+// and it was in the rules before they arrived.
+//
+// Nobody in this gang is holding anything. That is the third thing the player
+// has to unlearn: Arrebatar, the move the Furies taught him, has nothing to
+// take here.
+
+const SURROUND: Ability = {
+  id: 'surround',
+  name: 'Rodear',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 1.0,
+  // Punch height. A Warrior three levels up a stoop is out of the mob's reach
+  // altogether — which is the hole the Esquinero's thrown junk exists to close.
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 72,
+  /**
+   * The widest front-to-back spread in the game, and the entire gang in one
+   * field: five points from the front, seventeen from behind. Never raise
+   * `power` to make them scarier — that would make them dangerous head-on,
+   * which is the one thing an Orphan must never be.
+   */
+  backstab: 3.4,
+  desc: 'Solo no es nada. Por detrás y entre varios, es otra cosa.',
+};
+
+/**
+ * The answer to a Warrior who turtles up facing the right way, or who climbs a
+ * stoop the mob's vertical 2 cannot follow. Thrown damage ignores the angle and
+ * ignores height, so it is the one thing here that correct facing does not
+ * switch off — and it is kept small on purpose, so facing correctly stays a
+ * real defence instead of a lie.
+ */
+const STREET_JUNK: Ability = {
+  id: 'junk',
+  name: 'Lo que haya en la calle',
+  kind: 'ranged',
+  range: 4,
+  minRange: 2,
+  aoe: 0,
+  mp: 4,
+  power: 2.2,
+  vertical: Infinity,
+  targets: 'enemy',
+  projectile: 'bottle',
+  desc: 'Una botella del solar. Hace poco daño, pero le da igual hacia dónde mires.',
+};
+
+/**
+ * Sully's whole scene as a move: the toll is that you cross his street without
+ * your colors on.
+ *
+ * Nearly a dead move here by design — the Warriors bring a knife and a spray
+ * can between the nine of them. When it does land, Sully's hands are empty, so
+ * he keeps what he takes, and then he is the only armed Orphan on the board:
+ * the one square inch of this battle where Arrebatar comes back to life.
+ */
+const TAKE_THE_COLORS: Ability = {
+  id: 'colors',
+  name: 'Quítate eso',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 2.0,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 78,
+  disarm: true,
+  desc: 'Te pone la mano encima y te quita lo que lleves. Es el precio de pasar.',
+};
+
+/**
+ * The man who holds the block together, and the reason to go and get him.
+ *
+ * Sized against the rally the player already owns rather than against nothing:
+ * Swan puts back 15.8, Sully 15.7. It is the number the player already knows,
+ * handed to the other side. Radius 1 and not 2 — a wider burst inside a crowd
+ * this dense would quietly double the length of the fight.
+ */
+const BLUSTER: Ability = {
+  id: 'bluster',
+  name: 'Bravata',
+  kind: 'rally',
+  range: 3,
+  minRange: 0,
+  aoe: 1,
+  mp: 7,
+  power: 2.0,
+  vertical: Infinity,
+  targets: 'ally',
+  desc: 'Grita mucho más fuerte de lo que pega. Mientras siga de pie, los suyos no se van.',
+};
+
+// ---------------------------------------------------------------------------
 // The catalog
 // ---------------------------------------------------------------------------
 
@@ -620,6 +768,85 @@ export const JOBS: Record<JobId, Job> = {
       face: null,
       weapon: 'can',
       palette: palette(WARRIOR_COLORS),
+    },
+  },
+
+  // --- The Orphans ---------------------------------------------------------
+  //
+  // Jump 4 across the gang, the exact inverse of the Turnbull who could not get
+  // over a kerb. This is their block and they do not have to think about where
+  // the stoops are. Nobody carries anything.
+  //
+  // Move 6 is not a round number, it is a measured one. Walking around a man on
+  // a four-neighbour grid costs six steps, so at Move 5 they stopped one square
+  // short every single time and settled for his flank — back hits came out at
+  // 12% of their swings, in a gang whose entire damage lives behind you. The
+  // sixth step is the difference between a mob that surrounds you and a mob
+  // that stands next to you.
+
+  stray: {
+    id: 'stray',
+    name: 'Chusma',
+    tag: 'CHU',
+    stats: { hp: 50, mp: 4, pa: 5, ma: 2, speed: 10, move: 6, jump: 4 },
+    // Two rows in the order window, the shortest command list in the game. That
+    // is the character: a Chusma has no decision to make. He only has a side of
+    // you to stand on.
+    abilities: [
+      punch(1.4, 'Un manotazo de alguien que no ha pegado a nadie en su vida.'),
+      SURROUND,
+    ],
+    sprite: {
+      body: 'orphan',
+      hat: null,
+      face: null,
+      weapon: 'none',
+      palette: palette(ORPHAN_COLORS),
+    },
+  },
+
+  cornerboy: {
+    id: 'cornerboy',
+    name: 'Esquinero',
+    tag: 'ESQ',
+    stats: { hp: 48, mp: 10, pa: 5, ma: 5, speed: 11, move: 6, jump: 4 },
+    // The same fist as the rest — what he has is legs and whatever is lying in
+    // the lot. The brick is the Warriors' own, reused exactly as it stands.
+    abilities: [
+      punch(1.5, 'Rápido y sin fuerza, como todo lo suyo.'),
+      SURROUND,
+      STREET_JUNK,
+      BRICK,
+    ],
+    sprite: {
+      body: 'orphan',
+      hat: null,
+      face: null,
+      weapon: 'none',
+      palette: palette(ORPHAN_COLORS),
+    },
+  },
+
+  loudmouth: {
+    id: 'loudmouth',
+    name: 'Bocazas',
+    tag: 'BOC',
+    stats: { hp: 54, mp: 14, pa: 4, ma: 6, speed: 8, move: 4, jump: 3 },
+    // No Rodear, deliberately: Sully is the one Orphan who never gets behind
+    // anybody. He plants himself in front and talks. Which makes the leader the
+    // safest enemy on the board to turn your back on — and the one you have to
+    // walk into the middle of the crowd to reach.
+    abilities: [
+      punch(1.3, 'El golpe más flojo de la calle, y lo tira el que manda.'),
+      TAKE_THE_COLORS,
+      BLUSTER,
+    ],
+    sprite: {
+      body: 'orphan',
+      hat: null,
+      face: null,
+      weapon: 'none',
+      palette: palette(ORPHAN_COLORS),
     },
   },
 

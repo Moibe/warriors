@@ -631,6 +631,124 @@ const TURNBULL_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
 ]);
 
+/**
+ * An Orphan. The other three gangs are recognised by what they *wear* — a cap,
+ * a skull, a gold bull. These have nothing worth wearing, so the silhouette has
+ * to carry them instead, and it does it with hair: a bell of it twelve pixels
+ * wide falling past the jaw onto the shoulders, so the head is as broad as the
+ * body and there is no clean break between them. Nobody else on the board has
+ * that outline. The vest is buttoned over an undershirt that shows at the
+ * collar and again at the hip — cheap cloth, not leather, and no emblem.
+ */
+const ORPHAN_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '    OOOOOOOO    ',
+  '   OHHHHHHHHO   ',
+  '  OHHHHHHHHHHO  ',
+  '  OHHSSSSSSHHO  ',
+  '  OHHSSSSSSHHO  ',
+  '  OHHSESSESHHO  ',
+  '  OHHJSSSSJHHO  ',
+  '   OHHSSSSHHO   ',
+  '   OHHOKKOHHO   ',
+  '  OHHAAGGAAHHO  ',
+  '  OSSAAABAASSO  ',
+  '  OSSAAABAASSO  ',
+  '  OSSAAABAASSO  ',
+  '  OKKAAAAAAKKO  ',
+  '   OOAAAAAAOO   ',
+  '    OBBBBGGO    ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+/** From behind: their name, painted on by hand. Letters, not an emblem. */
+const ORPHAN_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '    OOOOOOOO    ',
+  '   OHHHHHHHHO   ',
+  '  OHHHHHHHHHHO  ',
+  '  OHHHHHHHHHHO  ',
+  '  OHHHHHHHHHHO  ',
+  '  OHHJJJJJJHHO  ',
+  '  OHHJJJJJJHHO  ',
+  '   OHJJJJJJHO   ',
+  '   OHHJJJJHHO   ',
+  '  OHHAJJJJAHHO  ',
+  '  OSSAAAAAASSO  ',
+  '  OSSAFFAFASSO  ',
+  '  OSSAFFAAASSO  ',
+  '  OKKAAAAAAKKO  ',
+  '   OOAAAAAAOO   ',
+  '    OBBBBGGO    ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+const ORPHAN_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '    OOOOOOOO    ',
+  '   OHHHHHHHHO   ',
+  '  OHHHHHHHHHHO  ',
+  '  OHHSSSSSSHHO  ',
+  '  OHHSSSSSSHHO  ',
+  '  OHHOOSSOOHHO  ',
+  '  OHHJSSSSJHHO  ',
+  '   OHHSOOSHHO   ',
+  '   OHHOKKOHHO   ',
+  '  OHHAAGGAAHHO  ',
+  ' OKKOAAABAAOKKO ',
+  ' OKKOAAABAAOKKO ',
+  '    OAAABAAO    ',
+  '    OAAAAAAO    ',
+  '    OOAAAAOO    ',
+  '    OBBBBGGO    ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '   OCCOOOOCCO   ',
+  '  OCCOOOOOOCCO  ',
+  '  OCCOOOOOOCCO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
+const ORPHAN_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '    OOOOOOOO    ',
+  '   OHHHHHHHHO   ',
+  '  OHHHHHHHHHHO  ',
+  '  OHHHHHHHHHHO  ',
+  '  OHHHHHHHHHHO  ',
+  '  OHHJJJJJJHHO  ',
+  '  OHHJJJJJJHHO  ',
+  '   OHJJJJJJHO   ',
+  '   OHHJJJJHHO   ',
+  '  OHHAJJJJAHHO  ',
+  ' OKKOAAAAAAOKKO ',
+  ' OKKOAFFAFAOKKO ',
+  '    OAFFAAAO    ',
+  '    OAAAAAAO    ',
+  '    OOAAAAOO    ',
+  '    OBBBBGGO    ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '   OCCOOOOCCO   ',
+  '  OCCOOOOOOCCO  ',
+  '  OCCOOOOOOCCO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
 const BODIES = {
   plain: { front: PLAIN_FRONT, back: PLAIN_BACK, hurtFront: PLAIN_FRONT, hurtBack: PLAIN_BACK },
   warrior: {
@@ -650,6 +768,12 @@ const BODIES = {
     back: TURNBULL_BACK,
     hurtFront: TURNBULL_HURT_FRONT,
     hurtBack: TURNBULL_HURT_BACK,
+  },
+  orphan: {
+    front: ORPHAN_FRONT,
+    back: ORPHAN_BACK,
+    hurtFront: ORPHAN_HURT_FRONT,
+    hurtBack: ORPHAN_HURT_BACK,
   },
 } as const;
 

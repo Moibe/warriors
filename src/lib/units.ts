@@ -331,7 +331,7 @@ const TURNBULL_SQUAD = () => [
     paletteOverride: { S: '#6b4426', K: '#4e3020', H: '#5e3b21', J: '#3f2715' },
   }),
   createUnit({
-    id: 'tully', name: 'Tully', job: 'enforcer', team: 'enemy',
+    id: 'rizzo', name: 'Rizzo', job: 'enforcer', team: 'enemy',
     x: 1, y: 8, facing: 'e', ct: 16,
     paletteOverride: { S: '#e8c19b', K: '#c0946d', H: '#d9b088', J: '#ab8058' },
   }),
@@ -344,6 +344,76 @@ const TURNBULL_SQUAD = () => [
     id: 'angel', name: 'Angel', job: 'enforcer', team: 'enemy',
     x: 3, y: 9, facing: 'e', ct: 4,
     paletteOverride: { S: '#c08a5e', K: '#996a45', H: '#b07d52', J: '#8a5e3c' },
+  }),
+];
+
+// ---------------------------------------------------------------------------
+// The Orphans
+// ---------------------------------------------------------------------------
+//
+// Nine men from three blocks nobody else wants. They are the only gang here who
+// look like people rather than like an army: the vest is cheap cloth with their
+// name painted on the back by hand, and not one of them is carrying anything.
+//
+// Same rule as the other three, pointed somewhere new. The Warriors are told
+// apart by what sits on their heads, the Furies by their war paint, the
+// Turnbull by how recently each shaved — and the Orphans by their hair, because
+// they are the only gang wearing their own.
+
+const ORPHAN_SQUAD = () => [
+  // Sully, plumb in the middle of the road. The one Orphan with a name in the
+  // film, and the man the whole street stands up because of.
+  createUnit({
+    id: 'sully', name: 'Sully', job: 'loudmouth', team: 'enemy',
+    x: 9, y: 5, facing: 'e', ct: 34, brave: 92, faith: 44,
+    paletteOverride: { H: '#2a1d14', J: '#1a110b', S: '#d8a878', K: '#ad8156' },
+  }),
+
+  // Out of the doorways, above and behind the Warriors from the first tick.
+  createUnit({
+    id: 'chico', name: 'Chico', job: 'stray', team: 'enemy',
+    x: 10, y: 1, facing: 's', ct: 8,
+    paletteOverride: { H: '#1f1611', J: '#120c09', S: '#c08a5e', K: '#996a45' },
+  }),
+  createUnit({
+    id: 'tino', name: 'Tino', job: 'cornerboy', team: 'enemy',
+    x: 7, y: 1, facing: 's', ct: 22,
+    paletteOverride: { H: '#6b4a2a', J: '#45301a', S: '#e0b489', K: '#b98a63' },
+  }),
+  createUnit({
+    id: 'junior', name: 'Junior', job: 'stray', team: 'enemy',
+    x: 13, y: 1, facing: 's', ct: 45, brave: 58,
+    paletteOverride: { H: '#8a6a3c', J: '#5d4726', S: '#e8c19b', K: '#c0946d' },
+  }),
+
+  // The south sidewalk and the lot.
+  createUnit({
+    id: 'nickel', name: 'Nickel', job: 'stray', team: 'enemy',
+    x: 9, y: 9, facing: 'e', ct: 16,
+    paletteOverride: { H: '#3a2a1c', J: '#241a10', S: '#7a5030', K: '#5b3a22' },
+  }),
+  createUnit({
+    id: 'pockets', name: 'Pockets', job: 'cornerboy', team: 'enemy',
+    x: 5, y: 9, facing: 'e', ct: 28,
+    paletteOverride: { H: '#5a4632', J: '#3a2c1e', S: '#e4bb92', K: '#bd8f68' },
+  }),
+  // On the rubble: the only high ground on the board, and the only Orphan who
+  // starts on it.
+  createUnit({
+    id: 'spider', name: 'Spider', job: 'cornerboy', team: 'enemy',
+    x: 7, y: 12, facing: 'n', ct: 4, brave: 80,
+    paletteOverride: { H: '#151010', J: '#0b0808', S: '#6b4426', K: '#4e3020' },
+  }),
+  createUnit({
+    id: 'lefty', name: 'Lefty', job: 'stray', team: 'enemy',
+    x: 3, y: 11, facing: 'e', ct: 38,
+    paletteOverride: { H: '#7a3f22', J: '#4f2814', S: '#e8c19b', K: '#c0946d' },
+  }),
+  // Planted in front of the subway mouth: the way out is already taken.
+  createUnit({
+    id: 'buster', name: 'Buster', job: 'stray', team: 'enemy',
+    x: 2, y: 8, facing: 'e', ct: 12, brave: 84,
+    paletteOverride: { H: '#4a3524', J: '#2e2016', S: '#a87c58', K: '#835c3d' },
   }),
 ];
 
@@ -360,4 +430,9 @@ export function furies(spots?: Spot[]): Unit[] {
 /** The Turnbull A.C., who only ever block Gun Hill Road. */
 export function turnbull(spots?: Spot[]): Unit[] {
   return placeSquad(TURNBULL_SQUAD(), spots);
+}
+
+/** The Orphans, who never leave their three blocks. */
+export function orphans(spots?: Spot[]): Unit[] {
+  return placeSquad(ORPHAN_SQUAD(), spots);
 }

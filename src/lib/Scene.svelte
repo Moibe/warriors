@@ -10,6 +10,7 @@
   import CameraRig from './CameraRig.svelte';
   import Bus from './Bus.svelte';
   import ComfortStation from './ComfortStation.svelte';
+  import ParkedCar from './ParkedCar.svelte';
   import FloatingNumber from './FloatingNumber.svelte';
   import Projectile from './Projectile.svelte';
   import Terrain from './Terrain.svelte';
@@ -57,7 +58,7 @@
   const light = $derived(stage.light);
 
   /** Which component draws which prop. Stages name a kind, not a component. */
-  const PROPS = { comfortStation: ComfortStation, bus: Bus };
+  const PROPS = { comfortStation: ComfortStation, bus: Bus, parkedCar: ParkedCar };
 
   useTask((delta) => {
     // Clamp: a backgrounded tab hands back a huge delta on return, which would
@@ -135,6 +136,7 @@
         p,
         pos: [w.x, w.y, w.z] as [number, number, number],
         rot: ((p.turns ?? 0) * Math.PI) / 2,
+        variant: p.variant ?? 0,
       };
     })
   );
@@ -181,9 +183,9 @@
 
 <Terrain {map} onTileClick={handleClick} />
 
-{#each scenery as { p, pos, rot } (p.kind + ':' + p.x + ',' + p.y)}
+{#each scenery as { p, pos, rot, variant } (p.kind + ':' + p.x + ',' + p.y)}
   {@const Prop = PROPS[p.kind]}
-  <Prop position={pos} rotation={rot} />
+  <Prop position={pos} rotation={rot} {variant} />
 {/each}
 
 <!-- Layer order by lift: movement under weapon reach under the burst. -->
