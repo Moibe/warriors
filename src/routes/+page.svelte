@@ -41,7 +41,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.11.3';
+  const APP_VERSION = '0.12.3';
 
   // ---- Camera -------------------------------------------------------------
 
@@ -77,11 +77,24 @@
     }
   });
 
-  // ---- Pointer: wheel zoom, middle/right drag to pan -----------------------
+  // ---- Pointer: wheel zoom, drag to pan -----------------------------------
+  //
+  // Any button drags the view, the left one included — but the left button also
+  // picks a tile, so the two have to be told apart. A press only becomes a drag
+  // once it has travelled DRAG_THRESHOLD pixels; below that it stays a click and
+  // reaches the board untouched.
+
+  /** Pixels of travel before a press stops being a click and becomes a drag. */
+  const DRAG_THRESHOLD = 5;
 
   let dragging = $state(false);
+  let pressing = false;
+  let startX = 0;
+  let startY = 0;
   let lastX = 0;
   let lastY = 0;
+  /** Set when a drag ends, so the click the browser fires next is discarded. */
+  let swallowClick = false;
 
   function onWheel(e: WheelEvent) {
     e.preventDefault();
@@ -89,16 +102,29 @@
   }
 
   function onPointerDown(e: PointerEvent) {
-    if (e.button !== 1 && e.button !== 2) return;
-    e.preventDefault();
-    dragging = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    if (e.button !== 0 && e.button !== 1 && e.button !== 2) return;
+    // Only the middle and right buttons get their default suppressed: doing it
+    // to the left one would interfere with the click we still want to deliver.
+    if (e.button !== 0) e.preventDefault();
+    pressing = true;
+    dragging = false;
+    swallowClick = false;
+    startX = lastX = e.clientX;
+    startY = lastY = e.clientY;
   }
 
   function onPointerMove(e: PointerEvent) {
-    if (!dragging) return;
+    if (!pressing) return;
+
+    if (!dragging) {
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) < DRAG_THRESHOLD) return;
+      dragging = true;
+      // Captured only now, once it is certainly a drag. Capturing on press
+      // would reroute the pointer-up and the click along with it, and an
+      // ordinary click on a tile would stop landing on the board.
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    }
+
     const dx = e.clientX - lastX;
     const dy = e.clientY - lastY;
     lastX = e.clientX;
@@ -109,9 +135,25 @@
   }
 
   function onPointerUp(e: PointerEvent) {
-    if (!dragging) return;
+    if (!pressing) return;
+    pressing = false;
+    if (dragging) {
+      swallowClick = true;
+      (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    }
     dragging = false;
-    (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+  }
+
+  /**
+   * Eats the click the browser fires after a drag. Runs in the capture phase,
+   * so it gets there before the canvas does its own hit test and the drag never
+   * moves a unit by accident.
+   */
+  function onClickCapture(e: MouseEvent) {
+    if (!swallowClick) return;
+    swallowClick = false;
+    e.stopPropagation();
+    e.preventDefault();
   }
 
   // ---- Order menu ---------------------------------------------------------
@@ -343,6 +385,7 @@
   class="stage"
   class:dragging
   onwheel={onWheel}
+  onclickcapture={onClickCapture}
   onpointerdown={onPointerDown}
   onpointermove={onPointerMove}
   onpointerup={onPointerUp}
@@ -437,7 +480,7 @@
     <kbd>↑↓</kbd> órdenes · <kbd>flechas</kbd> o <kbd>clic</kbd> elegir casilla ·
     <kbd>Enter</kbd> confirmar · <kbd>1</kbd>…<kbd>0</kbd> órdenes · <kbd>Q</kbd><kbd>E</kbd> girar ·
     <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar · <kbd>rueda</kbd> zoom ·
-    <kbd>botón central</kbd> desplazar · <kbd>Esc</kbd> cancelar
+    <kbd>arrastrar</kbd> desplazar · <kbd>Esc</kbd> cancelar
   </p>
 </div>
 
