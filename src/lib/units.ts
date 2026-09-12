@@ -127,15 +127,69 @@ export function createUnit(seed: UnitSeed): Unit {
  * Allies deploy in the southern meadow, enemies hold the eastern terraces and
  * the far end of the causeway. Starting CT is dealt out unevenly so the battle
  * opens with a staggered turn order rather than a simultaneous rush.
+ *
+ * The squad is laid out in depth rather than in a line, east being the way the
+ * enemy lies: armour and fists at the front, bows a rank back, casters at the
+ * rear where a goblin has to walk past three people to reach them. Duplicated
+ * jobs carry a recolor — two knights in identical plate standing next to each
+ * other are two units the player cannot tell apart at a glance.
  */
 export function createRoster(): Unit[] {
   return [
-    // ---- Tu escuadra: the southern meadow, backs to the pond -------------
+    // ---- Tu escuadra ------------------------------------------------------
+    // Vanguardia
+    createUnit({ id: 'agata', name: 'Ágata', job: 'knight', team: 'ally', x: 5, y: 8, facing: 'e', ct: 20, brave: 82 }),
+    createUnit({ id: 'bruno', name: 'Bruno', job: 'monk', team: 'ally', x: 5, y: 9, facing: 'e', ct: 32, brave: 88 }),
+
+    // Segunda línea
+    createUnit({
+      id: 'gaspar',
+      name: 'Gaspar',
+      job: 'knight',
+      team: 'ally',
+      x: 4,
+      y: 7,
+      facing: 'e',
+      ct: 12,
+      brave: 74,
+      // Latón y verde contra el acero y el morado de Ágata.
+      // El yelmo también, o a distancia los dos caballeros son el mismo casco.
+      paletteOverride: { A: '#c6b184', B: '#8d7a4e', C: '#3f5240', M: '#e0cf9c', F: '#4f8fbf', H: '#4a3320' },
+    }),
     createUnit({ id: 'ramiro', name: 'Ramiro', job: 'squire', team: 'ally', x: 4, y: 8, facing: 'e', ct: 40, brave: 78 }),
-    createUnit({ id: 'agata', name: 'Ágata', job: 'knight', team: 'ally', x: 3, y: 9, facing: 'e', ct: 20, brave: 82 }),
-    createUnit({ id: 'tobias', name: 'Tobías', job: 'archer', team: 'ally', x: 2, y: 8, facing: 'e', ct: 30, brave: 65 }),
-    createUnit({ id: 'nerea', name: 'Nerea', job: 'blackmage', team: 'ally', x: 2, y: 10, facing: 'e', ct: 10, faith: 84 }),
-    createUnit({ id: 'lucia', name: 'Lucía', job: 'whitemage', team: 'ally', x: 1, y: 10, facing: 'e', ct: 0, faith: 88 }),
+    createUnit({
+      id: 'inigo',
+      name: 'Íñigo',
+      job: 'thief',
+      team: 'ally',
+      x: 4,
+      y: 10,
+      facing: 'e',
+      ct: 44,
+      brave: 60,
+      // Azul de noche, para no confundirlo con Harn en el bando contrario.
+      paletteOverride: { A: '#4a6a8a', B: '#2e4356', C: '#26313f', H: '#5b3a1e' },
+    }),
+
+    // Arqueras
+    createUnit({ id: 'tobias', name: 'Tobías', job: 'archer', team: 'ally', x: 3, y: 8, facing: 'e', ct: 30, brave: 65 }),
+    createUnit({
+      id: 'elena',
+      name: 'Elena',
+      job: 'archer',
+      team: 'ally',
+      x: 3,
+      y: 10,
+      facing: 'e',
+      ct: 24,
+      brave: 68,
+      // Oliva y pluma dorada frente al pardo y la pluma verde de Tobías.
+      paletteOverride: { A: '#6e7c50', B: '#4a5336', P: '#586043', F: '#d8a94a', H: '#c99a54', J: '#a07a3c' },
+    }),
+
+    // Retaguardia
+    createUnit({ id: 'nerea', name: 'Nerea', job: 'blackmage', team: 'ally', x: 2, y: 9, facing: 'e', ct: 10, faith: 84 }),
+    createUnit({ id: 'lucia', name: 'Lucía', job: 'whitemage', team: 'ally', x: 2, y: 11, facing: 'e', ct: 0, faith: 88 }),
 
     // ---- Los que te esperan: holding the near end of the causeway --------
     // Close enough that first contact lands in the opening round — a tactics
