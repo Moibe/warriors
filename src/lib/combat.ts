@@ -41,14 +41,19 @@ function faithFactor(u: Unit) {
   return Math.max(0.7, Math.min(1.4, u.faith / 70));
 }
 
+/** Nerve. This is what carries a rally, and it is why Ajax is no good at them. */
+function braveFactor(u: Unit) {
+  return Math.max(0.7, Math.min(1.4, u.brave / 70));
+}
+
 export type AttackForecast = {
-  /** Percentage, 5..99. Magic and healing are shown as their own base. */
+  /** Percentage, 5..99. Thrown and rallied actions show their own base. */
   hit: number;
   min: number;
   max: number;
   angle: Angle;
   heightDiff: number;
-  /** True when the ability restores HP instead of removing it. */
+  /** True when the ability puts someone back on their feet instead of down. */
   healing: boolean;
 };
 
@@ -67,8 +72,10 @@ export function forecast(
   const h = heightFactor(actorHeight, targetHeight);
   const angle = angleOf({ x: actor.x, y: actor.y }, target);
 
-  if (ability.kind === 'heal') {
-    const base = actor.ma * ability.power * faithFactor(actor);
+  // A rally always lands — nobody dodges being shouted at. What it is worth
+  // depends on the nerve of whoever is doing the shouting.
+  if (ability.kind === 'rally') {
+    const base = actor.ma * ability.power * braveFactor(actor);
     return {
       hit: 100,
       min: Math.max(1, Math.round(base * 0.9)),
@@ -79,7 +86,8 @@ export function forecast(
     };
   }
 
-  if (ability.kind === 'magic') {
+  // Thrown things: skill and street sense decide, not the angle you came from.
+  if (ability.kind === 'ranged') {
     const base = actor.ma * ability.power * faithFactor(actor);
     return {
       hit: Math.max(5, Math.min(99, 92 + h.hit / 2)),

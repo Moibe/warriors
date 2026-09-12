@@ -1,41 +1,52 @@
-// Job catalog — the "clases" a unit can be, with their stats, their command
-// list and the recipe used to draw their sprite.
+// Role catalog — what a member is inside the gang, with the stats the rules
+// read, the moves the order window offers, and the recipe the sprite generator
+// paints.
 //
-// Everything a job is lives in one entry: stats the rules read, abilities the
-// command menu offers, and the palette + gear the sprite generator paints. Add
-// a job by adding one object here; nothing else needs to know about it.
+// There is no magic in this game. Everything here is fists, whatever you picked
+// up off the street, and nerve. Two ability kinds carry that: `physical` for
+// anything that lands on a body, where the angle you come from matters, and
+// `ranged` for things you throw, where skill matters more than the angle. The
+// third, `rally`, is talking somebody back onto their feet.
+//
+// Everything a role is lives in one entry. Add a role by adding one object;
+// nothing else needs to know about it.
 
-export type AbilityKind = 'physical' | 'magic' | 'heal';
+export type AbilityKind = 'physical' | 'ranged' | 'rally';
 
 export type Ability = {
   id: string;
   name: string;
   kind: AbilityKind;
-  /** Maximum Manhattan range in tiles. 1 = melee. */
+  /** Maximum Manhattan range in tiles. 1 = you have to be on top of them. */
   range: number;
-  /** Minimum range — a bow can't be fired point blank. */
+  /** Minimum range — you cannot throw a bottle at someone's chest. */
   minRange: number;
-  /** Radius of the burst around the target tile. 0 = single target. */
+  /** Radius of the sweep around the target tile. 0 = one person. */
   aoe: number;
+  /** Stamina it costs. Named AGUANTE in the UI; there is no mana here. */
   mp: number;
   /**
-   * Multiplier on PA (physical) or MA (magic/heal). Rough scale: 2.0 with
-   * PA 6 lands ~12 damage against a 45 HP body — four hits to drop someone.
+   * Multiplier on PA (fists and weapons) or MA (thrown, rallying). Rough scale:
+   * 2.0 with PA 7 lands ~14 on a 50 HP body — four swings to put someone down.
    */
   power: number;
   /**
-   * How many height levels the ability can span. Melee reaches barely above
-   * eye level; arcing shots and spells ignore height entirely (Infinity).
+   * Height levels the move can span. A punch barely reaches above eye level;
+   * something thrown does not care (Infinity).
    */
   vertical: number;
   targets: 'enemy' | 'ally' | 'any';
   /**
-   * Base hit chance before facing and height are applied. Defaults to 80 — the
-   * dial for "wild swing" versus "measured strike".
+   * Base hit chance before facing and height. Defaults to 80 — the dial between
+   * a measured jab and a wild haymaker.
    */
   accuracy?: number;
-  /** Extra multiplier when striking a target from behind (Puñalada). */
+  /** Extra multiplier when it lands from behind. */
   backstab?: number;
+  /** Greyed out unless the fighter is holding something. */
+  needsWeapon?: boolean;
+  /** On a hit, takes the target's weapon — the signature street move. */
+  disarm?: boolean;
   desc: string;
 };
 
@@ -47,94 +58,118 @@ export type Palette = {
   H: string; // hair
   J: string; // hair shadow
   E: string; // eye
-  A: string; // primary — armour, tunic, robe
-  B: string; // secondary — trim, belt, boots
-  C: string; // cloth — trousers, skirt
-  M: string; // metal — blades, helmets
-  W: string; // wood / leather — hafts, bows
+  A: string; // the gang's colors — vest, shirt. Identical across a gang.
+  B: string; // belt, boots, trim
+  C: string; // trousers
+  M: string; // metal / cap
+  W: string; // wood, leather — bat handles, grips
   P: string; // headwear
-  G: string; // monster hide
-  F: string; // accent — plumes, feathers
+  G: string; // face paint
+  F: string; // accent — the logo on the back, stripes, bandanas
 };
 
-export type HatId = 'helm' | 'pointy' | 'brim' | 'hood' | null;
-export type WeaponId = 'sword' | 'bow' | 'staff' | 'dagger' | 'club' | 'none';
+export type HatId = 'afro' | 'brim' | 'bandana' | 'cap' | null;
+export type FaceId = 'fury' | null;
+export type WeaponId = 'bat' | 'knife' | 'pipe' | 'can' | 'none';
 
 export type JobStats = {
   hp: number;
+  /** Stamina. Shown as AGUANTE; gates the special moves. */
   mp: number;
-  /** Physical attack. */
+  /** Fists and weapons. */
   pa: number;
-  /** Magic attack. */
+  /** Skill — what you throw and how well you talk people up. */
   ma: number;
   /** Charge Time gained per clock tick — the whole turn order runs on this. */
   speed: number;
-  /** Tiles of movement per turn. */
   move: number;
-  /** Height levels the unit can climb in one step. */
   jump: number;
 };
 
 export type Job = {
   id: JobId;
   name: string;
-  /** Three-letter tag, the way FFT abbreviates jobs in tight UI. */
+  /** Three-letter tag, for the tight corners of the UI. */
   tag: string;
   stats: JobStats;
   abilities: Ability[];
   sprite: {
-    body: 'human' | 'monster';
+    body: 'plain' | 'warrior' | 'fury';
     hat: HatId;
+    face: FaceId;
+    /** What this role starts the fight holding. Can be lost, or taken. */
     weapon: WeaponId;
-    shield: boolean;
     palette: Palette;
   };
 };
 
 export type JobId =
-  | 'squire'
-  | 'knight'
-  | 'archer'
-  | 'blackmage'
-  | 'whitemage'
-  | 'monk'
-  | 'thief'
-  | 'goblin';
+  | 'warchief'
+  | 'bruiser'
+  | 'scrapper'
+  | 'runner'
+  | 'thrower'
+  | 'artist'
+  | 'slugger';
 
 // ---------------------------------------------------------------------------
 // Palettes
 // ---------------------------------------------------------------------------
 
 const BASE_PALETTE: Palette = {
-  O: '#241a2b',
-  S: '#f0c9a0',
-  K: '#c99f78',
-  H: '#7a4a24',
-  J: '#563219',
-  E: '#2b1c33',
-  A: '#4d7ec8',
-  B: '#e2c76a',
-  C: '#3a4a6e',
-  M: '#dfe6f2',
-  W: '#7b4f2c',
-  P: '#4d7ec8',
-  G: '#7ab35a',
-  F: '#d6534b',
+  O: '#1c1620',
+  S: '#e8bd93',
+  K: '#c2946c',
+  H: '#3a2a1e',
+  J: '#241a12',
+  E: '#241a2a',
+  A: '#6b4a2e',
+  B: '#2e2a28',
+  C: '#3f4f6b',
+  M: '#c9ced8',
+  W: '#8a6038',
+  P: '#3a2a1e',
+  G: '#ece4dc',
+  F: '#d8c48b',
 };
 
 function palette(overrides: Partial<Palette>): Palette {
   return { ...BASE_PALETTE, ...overrides };
 }
 
+/**
+ * The Warriors' colors: brown leather cut over a bare chest, denim, and the
+ * bone-white skull across the back. Identical for all nine — a gang wears one
+ * thing, and telling the members apart is the job of skin, hair and whatever
+ * each of them has on his head.
+ */
+const WARRIOR_COLORS: Partial<Palette> = {
+  A: '#6d4b2c',
+  B: '#2b2724',
+  C: '#42536f',
+  F: '#e6dcc4',
+};
+
+/** The Furies: New York pinstripes, navy cap, and that painted face. */
+const FURY_COLORS: Partial<Palette> = {
+  A: '#e8e4dc',
+  B: '#20264a',
+  C: '#e8e4dc',
+  M: '#20264a',
+  F: '#20264a',
+  G: '#f4efe6',
+  W: '#c08a4a',
+};
+
 // ---------------------------------------------------------------------------
-// Shared abilities
+// Moves
 // ---------------------------------------------------------------------------
 
-/** The plain swing every job has as its first command. */
-function meleeAttack(power: number, desc = 'Golpe cuerpo a cuerpo.'): Ability {
+/** The bare-knuckle swing everybody has as their first order. */
+function punch(power: number, desc: string): Ability {
   return {
-    id: 'attack',
-    name: 'Atacar',
+    id: 'punch',
+    name: 'Golpear',
     kind: 'physical',
     range: 1,
     minRange: 0,
@@ -143,385 +178,295 @@ function meleeAttack(power: number, desc = 'Golpe cuerpo a cuerpo.'): Ability {
     power,
     vertical: 2,
     targets: 'enemy',
+    accuracy: 82,
     desc,
   };
 }
+
+/** Unlocked the moment you are holding something — including something stolen. */
+const WEAPON_HIT: Ability = {
+  id: 'weapon',
+  name: 'Golpe con arma',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 3.0,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 76,
+  needsWeapon: true,
+  desc: 'Con lo que lleves en la mano. Pega mucho más que el puño.',
+};
+
+const DISARM: Ability = {
+  id: 'disarm',
+  name: 'Arrebatar',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 3,
+  power: 0.9,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 74,
+  disarm: true,
+  desc: 'Le quitas el arma de las manos. Si tienes libres, te la quedas.',
+};
+
+const LOW_BLOW: Ability = {
+  id: 'lowblow',
+  name: 'Golpe bajo',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 2,
+  power: 1.3,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 90,
+  backstab: 2.7,
+  desc: 'Poca cosa de frente. Por la espalda, se acabó.',
+};
+
+const BOTTLE: Ability = {
+  id: 'bottle',
+  name: 'Lanzar botella',
+  kind: 'ranged',
+  range: 4,
+  minRange: 2,
+  aoe: 0,
+  mp: 3,
+  power: 2.0,
+  vertical: Infinity,
+  targets: 'enemy',
+  desc: 'Vuela por encima de todo. No hace falta acercarse.',
+};
+
+const BRICK: Ability = {
+  id: 'brick',
+  name: 'Ladrillo',
+  kind: 'ranged',
+  range: 5,
+  minRange: 2,
+  aoe: 0,
+  mp: 6,
+  power: 2.8,
+  vertical: Infinity,
+  targets: 'enemy',
+  desc: 'Pesa, llega lejos y tumba. Cuesta aguante lanzarlo.',
+};
+
+const RALLY: Ability = {
+  id: 'rally',
+  name: 'Arenga',
+  kind: 'rally',
+  range: 3,
+  minRange: 0,
+  aoe: 1,
+  mp: 6,
+  power: 2.2,
+  vertical: Infinity,
+  targets: 'ally',
+  desc: 'Los levantas del suelo a gritos. Alcanza a los que estén al lado.',
+};
+
+const TAG_WALL: Ability = {
+  id: 'tag',
+  name: 'Pintar la pared',
+  kind: 'rally',
+  range: 2,
+  minRange: 0,
+  aoe: 2,
+  mp: 8,
+  power: 1.3,
+  vertical: Infinity,
+  targets: 'ally',
+  desc: 'Marcas el terreno. Los tuyos pelean distinto en barrio propio.',
+};
+
+const EYE_SPRAY: Ability = {
+  id: 'spray',
+  name: 'Spray a los ojos',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 4,
+  power: 1.2,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 96,
+  desc: 'Casi nunca falla. Duele poco y ciega mucho.',
+};
+
+const CHARGE: Ability = {
+  id: 'charge',
+  name: 'Embestida',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 4,
+  power: 2.8,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 68,
+  desc: 'Te le echas encima entero. Si conecta, se entera.',
+};
+
+const BAT_SWING: Ability = {
+  id: 'batswing',
+  name: 'Batazo',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 2.5,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 76,
+  needsWeapon: true,
+  desc: 'El bate de frente. Para eso lo llevan.',
+};
+
+const WIDE_SWING: Ability = {
+  id: 'wideswing',
+  name: 'Bateo amplio',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 1,
+  mp: 5,
+  power: 1.9,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 66,
+  needsWeapon: true,
+  desc: 'Barre en círculo. Pilla a todo el que esté pegado, sea de quien sea.',
+};
 
 // ---------------------------------------------------------------------------
 // The catalog
 // ---------------------------------------------------------------------------
 
 export const JOBS: Record<JobId, Job> = {
-  squire: {
-    id: 'squire',
-    name: 'Escudero',
-    tag: 'ESC',
-    stats: { hp: 46, mp: 14, pa: 6, ma: 4, speed: 9, move: 4, jump: 3 },
-    abilities: [
-      meleeAttack(2.0),
-      {
-        id: 'stone',
-        name: 'Lanzar piedra',
-        kind: 'physical',
-        range: 4,
-        minRange: 2,
-        aoe: 0,
-        mp: 0,
-        power: 1.2,
-        vertical: Infinity,
-        targets: 'enemy',
-        accuracy: 72,
-        desc: 'Piedra en arco. Poco daño, pero llega lejos y no cuesta PM.',
-      },
-      {
-        id: 'rally',
-        name: 'Arengar',
-        kind: 'heal',
-        range: 2,
-        minRange: 0,
-        aoe: 1,
-        mp: 6,
-        power: 1.4,
-        vertical: Infinity,
-        targets: 'ally',
-        desc: 'Un grito que reanima a los aliados cercanos.',
-      },
-    ],
+  warchief: {
+    id: 'warchief',
+    name: 'Jefe de guerra',
+    tag: 'JEF',
+    stats: { hp: 54, mp: 14, pa: 7, ma: 6, speed: 9, move: 4, jump: 3 },
+    abilities: [punch(2.3, 'El derechazo del que manda.'), WEAPON_HIT, RALLY, LOW_BLOW],
     sprite: {
-      body: 'human',
+      body: 'warrior',
       hat: null,
-      weapon: 'sword',
-      shield: false,
-      palette: palette({
-        A: '#6d8ec9',
-        B: '#d9b45c',
-        C: '#39497a',
-        H: '#e6c766',
-        J: '#b6923c',
-        M: '#c3cede',
-      }),
+      face: null,
+      weapon: 'knife',
+      palette: palette(WARRIOR_COLORS),
     },
   },
 
-  knight: {
-    id: 'knight',
-    name: 'Caballero',
-    tag: 'CAB',
-    stats: { hp: 62, mp: 8, pa: 8, ma: 3, speed: 7, move: 3, jump: 2 },
-    abilities: [
-      meleeAttack(2.2, 'Mandoble de acero.'),
-      {
-        id: 'breakarmor',
-        name: 'Romper armadura',
-        kind: 'physical',
-        range: 1,
-        minRange: 0,
-        aoe: 0,
-        mp: 4,
-        power: 1.6,
-        vertical: 2,
-        targets: 'enemy',
-        accuracy: 85,
-        desc: 'Astilla la coraza: menos daño ahora, pero deja al blanco frágil.',
-      },
-    ],
+  bruiser: {
+    id: 'bruiser',
+    name: 'Bruto',
+    tag: 'BRU',
+    stats: { hp: 66, mp: 8, pa: 9, ma: 3, speed: 7, move: 3, jump: 2 },
+    abilities: [punch(2.6, 'Nudillos. Nada más hace falta.'), WEAPON_HIT, CHARGE, DISARM],
     sprite: {
-      body: 'human',
-      hat: 'helm',
-      weapon: 'sword',
-      shield: true,
-      palette: palette({
-        A: '#b9c6d6',
-        B: '#7d8ca0',
-        C: '#5a3d6b',
-        M: '#e6edf7',
-        F: '#c0453f',
-        H: '#8a5a2b',
-      }),
-    },
-  },
-
-  archer: {
-    id: 'archer',
-    name: 'Arquero',
-    tag: 'ARQ',
-    stats: { hp: 42, mp: 10, pa: 6, ma: 4, speed: 8, move: 4, jump: 4 },
-    abilities: [
-      {
-        id: 'attack',
-        name: 'Atacar',
-        kind: 'physical',
-        range: 4,
-        minRange: 1,
-        aoe: 0,
-        mp: 0,
-        power: 1.9,
-        vertical: Infinity,
-        targets: 'enemy',
-        desc: 'Flecha en arco. Gana alcance desde lo alto.',
-      },
-      {
-        id: 'charged',
-        name: 'Disparo cargado',
-        kind: 'physical',
-        range: 6,
-        minRange: 2,
-        aoe: 0,
-        mp: 6,
-        power: 2.7,
-        vertical: Infinity,
-        targets: 'enemy',
-        accuracy: 74,
-        desc: 'Tensa el arco al límite: mucho más daño y alcance.',
-      },
-    ],
-    sprite: {
-      body: 'human',
-      hat: 'brim',
-      weapon: 'bow',
-      shield: false,
-      palette: palette({
-        A: '#8a6a3f',
-        B: '#5a4326',
-        C: '#4a5a3a',
-        P: '#6f5230',
-        W: '#6b4526',
-        H: '#5b3a1e',
-        F: '#4f8f5a',
-      }),
-    },
-  },
-
-  blackmage: {
-    id: 'blackmage',
-    name: 'Maga negra',
-    tag: 'MGN',
-    stats: { hp: 34, mp: 42, pa: 3, ma: 9, speed: 7, move: 3, jump: 2 },
-    abilities: [
-      meleeAttack(1.1, 'Bastonazo. Mejor no llegar a esto.'),
-      {
-        id: 'fire',
-        name: 'Fuego',
-        kind: 'magic',
-        range: 4,
-        minRange: 0,
-        aoe: 1,
-        mp: 8,
-        power: 2.1,
-        vertical: Infinity,
-        targets: 'enemy',
-        desc: 'Estallido de llamas que alcanza a todo lo adyacente al blanco.',
-      },
-      {
-        id: 'bolt',
-        name: 'Rayo',
-        kind: 'magic',
-        range: 5,
-        minRange: 0,
-        aoe: 0,
-        mp: 6,
-        power: 2.9,
-        vertical: Infinity,
-        targets: 'enemy',
-        desc: 'Un solo blanco, pero cae con toda la fuerza de la tormenta.',
-      },
-    ],
-    sprite: {
-      body: 'human',
-      hat: 'pointy',
-      weapon: 'staff',
-      shield: false,
-      palette: palette({
-        A: '#3b3163',
-        B: '#c94f4f',
-        C: '#2a2348',
-        P: '#2d2450',
-        M: '#f2d06a',
-        W: '#5f4126',
-        H: '#33303f',
-        J: '#22202b',
-      }),
-    },
-  },
-
-  whitemage: {
-    id: 'whitemage',
-    name: 'Clériga',
-    tag: 'CLE',
-    stats: { hp: 38, mp: 40, pa: 3, ma: 8, speed: 7, move: 3, jump: 2 },
-    abilities: [
-      meleeAttack(1.0, 'Un golpe de vara, sin convicción.'),
-      {
-        id: 'cure',
-        name: 'Curar',
-        kind: 'heal',
-        range: 4,
-        minRange: 0,
-        aoe: 1,
-        mp: 7,
-        power: 2.6,
-        vertical: Infinity,
-        targets: 'ally',
-        desc: 'Restaura PV al blanco y a quien esté a su lado.',
-      },
-      {
-        id: 'holy',
-        name: 'Luz',
-        kind: 'magic',
-        range: 3,
-        minRange: 0,
-        aoe: 0,
-        mp: 12,
-        power: 2.5,
-        vertical: Infinity,
-        targets: 'enemy',
-        desc: 'Un haz sagrado. Caro en PM, contundente.',
-      },
-    ],
-    sprite: {
-      body: 'human',
-      hat: 'hood',
-      weapon: 'staff',
-      shield: false,
-      palette: palette({
-        A: '#eae2d0',
-        B: '#c04a4a',
-        C: '#d6ccb6',
-        P: '#f4efe3',
-        M: '#7fd4e0',
-        W: '#8a6a44',
-        H: '#dcb45c',
-        J: '#b18f3f',
-      }),
-    },
-  },
-
-  monk: {
-    id: 'monk',
-    name: 'Monje',
-    tag: 'MNJ',
-    stats: { hp: 56, mp: 12, pa: 9, ma: 4, speed: 9, move: 4, jump: 4 },
-    abilities: [
-      meleeAttack(2.4, 'Puño desnudo, más duro que muchos aceros.'),
-      {
-        id: 'kiwave',
-        name: 'Onda de ki',
-        kind: 'physical',
-        range: 3,
-        minRange: 1,
-        aoe: 0,
-        mp: 0,
-        power: 1.8,
-        vertical: 3,
-        targets: 'enemy',
-        accuracy: 78,
-        desc: 'Proyecta el golpe a distancia. Sin coste.',
-      },
-      {
-        id: 'chakra',
-        name: 'Chakra',
-        kind: 'heal',
-        range: 1,
-        minRange: 0,
-        aoe: 1,
-        mp: 0,
-        power: 1.8,
-        vertical: 2,
-        targets: 'ally',
-        desc: 'Reparte energía interna entre los aliados de al lado.',
-      },
-    ],
-    sprite: {
-      body: 'human',
+      body: 'warrior',
       hat: null,
+      face: null,
       weapon: 'none',
-      shield: false,
-      palette: palette({
-        A: '#e8c49a',
-        B: '#c0453f',
-        C: '#6a5540',
-        H: '#2e2e33',
-        J: '#1d1d21',
-      }),
+      palette: palette(WARRIOR_COLORS),
     },
   },
 
-  thief: {
-    id: 'thief',
-    name: 'Bandido',
-    tag: 'BAN',
-    stats: { hp: 40, mp: 10, pa: 6, ma: 3, speed: 11, move: 5, jump: 4 },
-    abilities: [
-      meleeAttack(1.8, 'Daga rápida.'),
-      {
-        id: 'backstab',
-        name: 'Puñalada',
-        kind: 'physical',
-        range: 1,
-        minRange: 0,
-        aoe: 0,
-        mp: 0,
-        power: 1.3,
-        vertical: 2,
-        targets: 'enemy',
-        accuracy: 88,
-        backstab: 2.6,
-        desc: 'Mediocre de frente. Letal por la espalda.',
-      },
-    ],
+  scrapper: {
+    id: 'scrapper',
+    name: 'Peleador',
+    tag: 'PEL',
+    stats: { hp: 52, mp: 10, pa: 7, ma: 3, speed: 8, move: 4, jump: 3 },
+    abilities: [punch(2.4, 'Corto y seco, como se aprende en la calle.'), WEAPON_HIT, LOW_BLOW, DISARM],
     sprite: {
-      body: 'human',
+      body: 'warrior',
       hat: null,
-      weapon: 'dagger',
-      shield: false,
-      palette: palette({
-        A: '#6b5b8a',
-        B: '#3c3350',
-        C: '#2f2a42',
-        M: '#cfd6e2',
-        H: '#4a3a2a',
-        J: '#33271b',
-      }),
+      face: null,
+      weapon: 'none',
+      palette: palette(WARRIOR_COLORS),
     },
   },
 
-  goblin: {
-    id: 'goblin',
-    name: 'Trasgo',
-    tag: 'TRA',
-    stats: { hp: 44, mp: 0, pa: 7, ma: 2, speed: 8, move: 4, jump: 3 },
-    abilities: [
-      meleeAttack(2.0, 'Garrote al bulto.'),
-      {
-        id: 'maul',
-        name: 'Zarpazo',
-        kind: 'physical',
-        range: 1,
-        minRange: 0,
-        aoe: 0,
-        mp: 0,
-        power: 2.7,
-        vertical: 2,
-        targets: 'enemy',
-        accuracy: 62,
-        desc: 'Salvaje y torpe: pega fuerte pero falla más.',
-      },
-    ],
+  runner: {
+    id: 'runner',
+    name: 'Corredor',
+    tag: 'COR',
+    stats: { hp: 48, mp: 12, pa: 6, ma: 4, speed: 11, move: 5, jump: 4 },
+    abilities: [punch(2.1, 'Entra, pega y sale antes de que te vean.'), WEAPON_HIT, LOW_BLOW, BOTTLE],
     sprite: {
-      body: 'monster',
+      body: 'warrior',
       hat: null,
-      weapon: 'club',
-      shield: false,
-      palette: palette({
-        G: '#7fae4a',
-        A: '#7a5f3a',
-        B: '#57422a',
-        E: '#e8d24a',
-        O: '#20211a',
-        W: '#6b4526',
-      }),
+      face: null,
+      weapon: 'none',
+      palette: palette(WARRIOR_COLORS),
+    },
+  },
+
+  thrower: {
+    id: 'thrower',
+    name: 'Lanzador',
+    tag: 'LAN',
+    stats: { hp: 48, mp: 12, pa: 6, ma: 6, speed: 8, move: 4, jump: 4 },
+    abilities: [punch(1.8, 'De cerca no es lo suyo.'), WEAPON_HIT, BOTTLE, BRICK],
+    sprite: {
+      body: 'warrior',
+      hat: null,
+      face: null,
+      weapon: 'none',
+      palette: palette(WARRIOR_COLORS),
+    },
+  },
+
+  artist: {
+    id: 'artist',
+    name: 'Artista',
+    tag: 'ART',
+    stats: { hp: 46, mp: 16, pa: 5, ma: 7, speed: 8, move: 4, jump: 3 },
+    abilities: [punch(1.4, 'Pega como quien no quiere pegar.'), EYE_SPRAY, TAG_WALL, RALLY],
+    sprite: {
+      body: 'warrior',
+      hat: null,
+      face: null,
+      weapon: 'can',
+      palette: palette(WARRIOR_COLORS),
+    },
+  },
+
+  slugger: {
+    id: 'slugger',
+    name: 'Bateador',
+    tag: 'BAT',
+    stats: { hp: 50, mp: 8, pa: 7, ma: 2, speed: 8, move: 4, jump: 3 },
+    abilities: [BAT_SWING, WIDE_SWING, punch(1.5, 'Sin el bate no son gran cosa.')],
+    sprite: {
+      body: 'fury',
+      hat: 'cap',
+      face: 'fury',
+      weapon: 'bat',
+      palette: palette(FURY_COLORS),
     },
   },
 };
 
 export const JOB_IDS = Object.keys(JOBS) as JobId[];
+
+/** For the battle report, so it reads like a sentence and not like an enum. */
+export const WEAPON_NAMES: Record<Exclude<WeaponId, 'none'>, string> = {
+  bat: 'el bate',
+  knife: 'la navaja',
+  pipe: 'el tubo',
+  can: 'el spray',
+};

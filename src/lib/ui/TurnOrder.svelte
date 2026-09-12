@@ -7,7 +7,7 @@
 
   import { JOBS } from '../jobs';
   import { getPortraitUrl } from '../sprites';
-  import type { Unit } from '../units';
+  import { hatOf, type Unit } from '../units';
   import Window from './Window.svelte';
 
   let {
@@ -27,7 +27,7 @@
         <span class="pos">{i === 0 ? '▶' : i + 1}</span>
         <img
           class="face"
-          src={getPortraitUrl(entry.unit.job, entry.unit.paletteOverride, 2)}
+          src={getPortraitUrl(entry.unit.job, entry.unit.paletteOverride, 2, hatOf(entry.unit))}
           alt=""
         />
         <span class="who">

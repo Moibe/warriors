@@ -78,7 +78,7 @@
     const span = a.minRange > 0 ? `${a.minRange}–${a.range}` : `${a.range}`;
     return {
       name: a.name,
-      cost: a.mp ? `${a.mp} PM` : '—',
+      cost: a.mp ? `${a.mp} AG` : '—',
       short: a.mp > unit.mp,
       head: `${a.name} · alcance ${span}${a.aoe ? ` · área ${a.aoe}` : ''}`,
       desc: a.desc,

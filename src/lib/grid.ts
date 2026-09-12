@@ -29,13 +29,13 @@ export const LEVEL = 0.25;
 export const COLUMN_DEPTH = 1.25;
 
 export type Surface =
-  | 'grass' // césped — the default green
-  | 'dirt' // tierra — worn paths
-  | 'stone' // piedra clara — paved road / plaza
-  | 'dark' // piedra oscura — the stepped basalt platforms
-  | 'sand' // arena
-  | 'wood' // madera — bridges, decks
-  | 'water'; // agua — impassable under the base rules
+  | 'grass' // césped del parque
+  | 'dirt' // tierra pisada — where the grass gave up
+  | 'stone' // concreto — the walkways and the terraced steps
+  | 'dark' // asfalto — the courts and the road
+  | 'sand' // tierra batida — the infield
+  | 'wood' // tarima — the bandstand deck
+  | 'water'; // charco — impassable under the base rules
 
 export type Facing = 'n' | 'e' | 's' | 'w';
 
@@ -66,28 +66,32 @@ export type Coord = { x: number; y: number };
 
 /** Human-readable terrain names for the tile info window. */
 export const SURFACE_NAMES: Record<Surface, string> = {
-  grass: 'Pradera',
-  dirt: 'Tierra',
-  stone: 'Camino de piedra',
-  dark: 'Roca basáltica',
-  sand: 'Arena',
+  grass: 'Césped',
+  dirt: 'Tierra pisada',
+  stone: 'Concreto',
+  dark: 'Asfalto',
+  sand: 'Tierra batida',
   wood: 'Tarima',
-  water: 'Agua',
+  water: 'Charco',
 };
 
 /**
  * Top-face color and cliff-side color per surface. Two tones per material is
- * what sells the look: FFT terrain is a bright, saturated top plate sitting on
- * a duller, darker flank.
+ * what sells the look: a lit top plate sitting on a duller, darker flank.
+ *
+ * These are night values, lit by park lamps: everything is dragged toward
+ * blue-green, and the warm sodium cast only reaches the concrete. They stay
+ * lighter than a real night would be, because a tactics grid you cannot read
+ * is not atmospheric, it is broken.
  */
 export const SURFACE_COLORS: Record<Surface, { top: string; side: string }> = {
-  grass: { top: '#6f9e3f', side: '#7a6141' },
-  dirt: { top: '#a08055', side: '#6f5738' },
-  stone: { top: '#a9a396', side: '#79736a' },
-  dark: { top: '#4b4f57', side: '#33363c' },
-  sand: { top: '#d8c48b', side: '#a08d5e' },
-  wood: { top: '#8a5f36', side: '#5d3f24' },
-  water: { top: '#2f6f9e', side: '#1d4a6d' },
+  grass: { top: '#40603a', side: '#2d3a2a' },
+  dirt: { top: '#6d5b43', side: '#473b2c' },
+  stone: { top: '#77756f', side: '#4e4d49' },
+  dark: { top: '#43454d', side: '#2c2d33' },
+  sand: { top: '#8d7551', side: '#5e4d35' },
+  wood: { top: '#5d4126', side: '#3b2a18' },
+  water: { top: '#2b4a63', side: '#1a2f40' },
 };
 
 // ---------------------------------------------------------------------------

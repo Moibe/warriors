@@ -1,18 +1,22 @@
 // Procedural pixel-art sprites.
 //
-// FFT's characters are hand-drawn 2D sprites standing on a 3D map. We can't
-// ship those, so the sprites here are *drawn in code*: a shared humanoid
-// silhouette written as ASCII art, painted through a per-job palette, with
-// headgear and weapons stamped on top as small overlays. One body template
-// plus a handful of 6×16 accessories covers the whole roster, and adding a new
-// look is a matter of writing a few more rows of text.
+// Nothing here is a file on disk: the fighters are *drawn in code*, from ASCII
+// art painted through a per-role palette, with headgear, face paint and weapons
+// stamped on top as small overlays.
+//
+// The hard part of a gang game is the opposite of the usual one. A gang wears
+// ONE outfit — that is what makes it a gang — so the nine Warriors cannot be
+// told apart by their clothes, and recoloring the uniform would be the wrong
+// answer. What varies instead is the person inside it: skin, hair, and what
+// each of them has on his head. The vest, the denim and the skull on the back
+// stay identical down to the pixel.
 //
 // Everything is drawn at true pixel scale (a 20×32 canvas, one canvas pixel per
 // art pixel) and magnified by the GPU with a nearest-neighbour filter, which is
 // what keeps the edges hard instead of the mush you get from upscaling in 2D.
 
 import { CanvasTexture, NearestFilter, SRGBColorSpace, type Texture } from 'three';
-import { JOBS, type HatId, type JobId, type Palette, type WeaponId } from './jobs';
+import { JOBS, type FaceId, type HatId, type JobId, type Palette, type WeaponId } from './jobs';
 
 /** Sprite sheet cell, in art pixels. Wide enough for hats and drawn weapons. */
 export const SPRITE_W = 20;
@@ -20,8 +24,7 @@ export const SPRITE_H = 32;
 
 /**
  * World height of a sprite quad, in tile widths. A shade over one tile makes
- * characters read as people standing on the terrain rather than as chess
- * pieces — the proportion the original uses.
+ * characters read as people standing on the street rather than as chess pieces.
  */
 export const SPRITE_WORLD_H = 1.55;
 export const SPRITE_WORLD_W = (SPRITE_WORLD_H * SPRITE_W) / SPRITE_H;
@@ -53,10 +56,12 @@ function template(ox: number, oy: number, rows: string[]): Template {
 // Bodies
 // ---------------------------------------------------------------------------
 //   O outline   S skin      K skin shadow  H hair    J hair shadow  E eye
-//   A primary   B secondary C cloth        M metal   W wood         P headwear
-//   G monster   F accent    (space) = leave transparent
+//   A gang colors  B trim/boots  C trousers  M metal/cap  W wood/leather
+//   P headwear  G face paint  F accent (the skull, the pinstripes)
+//   (space) = leave transparent
 
-const HUMAN_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+/** Plain street clothes — kept for gangs that are neither of these two. */
+const PLAIN_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
   '     OOOOOO     ',
   '    OHHHHHHO    ',
@@ -83,7 +88,7 @@ const HUMAN_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
   '   OOOO  OOOO   ',
 ]);
 
-const HUMAN_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+const PLAIN_BACK = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
   '     OOOOOO     ',
   '    OHHHHHHO    ',
@@ -110,67 +115,123 @@ const HUMAN_BACK = template(BODY_AT.ox, BODY_AT.oy, [
   '   OOOO  OOOO   ',
 ]);
 
-const MONSTER_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+/** The Warriors: leather cut open over a bare chest, bare arms, denim. */
+const WARRIOR_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
-  '                ',
-  '   OO      OO   ',
-  '   OGO    OGO   ',
-  '   OGGGGGGGGO   ',
-  '   OGGGGGGGGO   ',
-  '   OGEEGGEEGO   ',
-  '   OGGGJJGGGO   ',
-  '    OGOOOOGO    ',
-  '    OGGGGGGO    ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSESSESHO   ',
+  '   OHSSSSSSHO   ',
+  '    OSSSSSSO    ',
   '     OKKKKO     ',
-  '   OAAAAAAAAO   ',
-  '  OGAAAAAAAAGO  ',
-  '  OGAABBBBAAGO  ',
-  '  OGOAAAAAAOGO  ',
-  '   OOAAAAAAOO   ',
+  '   OAAASSAAAO   ',
+  '  OSAABSSBAASO  ',
+  '  OSAABSSBAASO  ',
+  '  OSAABSSBAASO  ',
+  '  OSOAASSAAOSO  ',
+  '   OOAASSAAOO   ',
   '    OBBBBBBO    ',
-  '    OGGOOGGO    ',
-  '    OGGOOGGO    ',
-  '    OGGOOGGO    ',
-  '   OGGGOOGGGO   ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
   '   OOOO  OOOO   ',
-  '                ',
-  '                ',
 ]);
 
-const MONSTER_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+/** From behind, the cut is closed and the skull rides across the back. */
+const WARRIOR_BACK = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
-  '                ',
-  '   OO      OO   ',
-  '   OGO    OGO   ',
-  '   OGGGGGGGGO   ',
-  '   OGGGGGGGGO   ',
-  '   OGGGGGGGGO   ',
-  '   OGGGJJGGGO   ',
-  '    OGGGGGGO    ',
-  '    OGGGGGGO    ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHHHHHHHO   ',
+  '    OHHHHHHO    ',
   '     OKKKKO     ',
   '   OAAAAAAAAO   ',
-  '  OGAAAAAAAAGO  ',
-  '  OGAABBBBAAGO  ',
-  '  OGOAAAAAAOGO  ',
+  '  OSAFFFFFFASO  ',
+  '  OSAAFFFFAASO  ',
+  '  OSAAFOOFAASO  ',
+  '  OSOAAFFAAOSO  ',
   '   OOAAAAAAOO   ',
   '    OBBBBBBO    ',
-  '    OGGOOGGO    ',
-  '    OGGOOGGO    ',
-  '    OGGOOGGO    ',
-  '   OGGGOOGGGO   ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
   '   OOOO  OOOO   ',
+]);
+
+/** The Furies: pinstripes, navy socks, cleats. */
+const FURY_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSESSESHO   ',
+  '   OHSSSSSSHO   ',
+  '    OSSSSSSO    ',
+  '     OKKKKO     ',
+  '   OAAAAAAAAO   ',
+  '  OABABABABAAO  ',
+  '  OABABABABAAO  ',
+  '  OSBABABABASO  ',
+  '  OSOABABAAOSO  ',
+  '   OOABABAAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OBBOOBBO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+const FURY_BACK = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHHHHHHHO   ',
+  '    OHHHHHHO    ',
+  '     OKKKKO     ',
+  '   OAAAAAAAAO   ',
+  '  OABABABABAAO  ',
+  '  OABABABABAAO  ',
+  '  OSBABABABASO  ',
+  '  OSOABABAAOSO  ',
+  '   OOABABAAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OBBOOBBO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
 ]);
 
 // --- Recoil -----------------------------------------------------------------
-// The frame shown for a moment after taking a hit. Everything is off its
-// resting mark: the head rides one row higher with the eyes screwed shut and
-// the mouth open, the arms are flung wide, and the legs brace apart. The raised
-// head is why headgear and weapons get nudged along with it when drawing.
+// The frame held for a moment after taking a hit: head a row higher with the
+// eyes screwed shut and the mouth open, arms flung wide, legs braced apart. The
+// raised head is why headgear, face paint and weapons get nudged with it.
 
-const HUMAN_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+const WARRIOR_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
   '     OOOOOO     ',
   '    OHHHHHHO    ',
   '   OHHHHHHHHO   ',
@@ -180,12 +241,12 @@ const HUMAN_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
   '   OHSSSSSSHO   ',
   '    OSSOOSSO    ',
   '     OKKKKO     ',
-  '   OAAAAAAAAO   ',
-  ' OSOAAAAAAAAOSO ',
-  ' OSOAAAAAAAAOSO ',
-  '  OAABAAAABAAO  ',
-  '  OAABAAAABAAO  ',
-  '   OOAAAAAAOO   ',
+  '   OAAASSAAAO   ',
+  ' OSOAABSSBAAOSO ',
+  ' OSOAABSSBAAOSO ',
+  '  OAABSSSSBAAO  ',
+  '  OAABSSSSBAAO  ',
+  '   OOAASSAAOO   ',
   '    OBBBBBBO    ',
   '    OCCCCCCO    ',
   '   OCCOOOOCCO   ',
@@ -197,7 +258,7 @@ const HUMAN_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
 ]);
 
-const HUMAN_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+const WARRIOR_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
   '     OOOOOO     ',
   '    OHHHHHHO    ',
   '   OHHHHHHHHO   ',
@@ -209,9 +270,9 @@ const HUMAN_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
   '     OKKKKO     ',
   '   OAAAAAAAAO   ',
   ' OSOAAAAAAAAOSO ',
-  ' OSOAAAAAAAAOSO ',
-  '  OAABAAAABAAO  ',
-  '  OAABAAAABAAO  ',
+  ' OSOAFFFFFFAOSO ',
+  '  OAAFFFFFFAAO  ',
+  '  OAAFOOOOFAAO  ',
   '   OOAAAAAAOO   ',
   '    OBBBBBBO    ',
   '    OCCCCCCO    ',
@@ -224,185 +285,146 @@ const HUMAN_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
 ]);
 
-const MONSTER_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
-  '                ',
-  '   OO      OO   ',
-  '   OGO    OGO   ',
-  '   OGGGGGGGGO   ',
-  '   OGGGGGGGGO   ',
-  '   OGOOGGOOGO   ',
-  '   OGGGJJGGGO   ',
-  '    OGOOOOGO    ',
-  '    OGGGGGGO    ',
-  '     OKKKKO     ',
-  '   OAAAAAAAAO   ',
-  ' OGOAAAAAAAAOGO ',
-  ' OGOAAAAAAAAOGO ',
-  '  OGAABBBBAAGO  ',
-  '   OOAAAAAAOO   ',
-  '    OBBBBBBO    ',
-  '   OGGOOOOGGO   ',
-  '   OGGOOOOGGO   ',
-  '  OGGOOOOOOGGO  ',
-  '  OGGGOOOOGGGO  ',
-  '  OOOO    OOOO  ',
-  '                ',
-  '                ',
-  '                ',
-]);
-
-const MONSTER_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
-  '                ',
-  '   OO      OO   ',
-  '   OGO    OGO   ',
-  '   OGGGGGGGGO   ',
-  '   OGGGGGGGGO   ',
-  '   OGGGGGGGGO   ',
-  '   OGGGJJGGGO   ',
-  '    OGGGGGGO    ',
-  '    OGGGGGGO    ',
-  '     OKKKKO     ',
-  '   OAAAAAAAAO   ',
-  ' OGOAAAAAAAAOGO ',
-  ' OGOAAAAAAAAOGO ',
-  '  OGAABBBBAAGO  ',
-  '   OOAAAAAAOO   ',
-  '    OBBBBBBO    ',
-  '   OGGOOOOGGO   ',
-  '   OGGOOOOGGO   ',
-  '  OGGOOOOOOGGO  ',
-  '  OGGGOOOOGGGO  ',
-  '  OOOO    OOOO  ',
-  '                ',
-  '                ',
-  '                ',
-]);
-
-// ---------------------------------------------------------------------------
-// Headgear — stamped over the body, so a slit or an opening simply leaves the
-// face underneath showing through.
-// ---------------------------------------------------------------------------
-
-const HAT_HELM = template(BODY_AT.ox, BODY_AT.oy, [
-  '       FF       ',
+const FURY_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
   '     OOOOOO     ',
-  '    OMMMMMMO    ',
-  '   OMMMMMMMMO   ',
-  '   OMMMMMMMMO   ',
-  '   OMMMMMMMMO   ',
-  '   OM      MO   ', // visor slit — the eyes below show through
-  '   OMMMMMMMMO   ',
-  '    OMMMMMMO    ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHOOSSOOHO   ',
+  '   OHSSSSSSHO   ',
+  '    OSSOOSSO    ',
+  '     OKKKKO     ',
+  '   OAAAAAAAAO   ',
+  ' OSOABABABAAOSO ',
+  ' OSOABABABAAOSO ',
+  '  OABABABABAO   ',
+  '  OABABABABAO   ',
+  '   OOABABAAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '   OCCOOOOCCO   ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
 ]);
 
-const HAT_POINTY = template(3, 1, [
-  '      OO      ',
-  '     OPPO     ',
-  '     OPPO     ',
-  '    OPPPPO    ',
-  '    OPPPPO    ',
-  '   OPPPPPPO   ',
-  '  OPPPPPPPPO  ',
-  ' OPPPPPPPPPPO ',
-  ' OOOOOOOOOOOO ',
+const FURY_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHHHHHHHO   ',
+  '    OHHHHHHO    ',
+  '     OKKKKO     ',
+  '   OAAAAAAAAO   ',
+  ' OSOABABABAAOSO ',
+  ' OSOABABABAAOSO ',
+  '  OABABABABAO   ',
+  '  OABABABABAO   ',
+  '   OOABABAAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '   OCCOOOOCCO   ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
+// ---------------------------------------------------------------------------
+// Headgear — stamped over the body. This is most of what tells nine men in the
+// same vest apart, so it does a lot of work for very few pixels.
+// ---------------------------------------------------------------------------
+
+const HAT_AFRO = template(BODY_AT.ox, BODY_AT.oy - 1, [
+  '    OOOOOOOO    ',
+  '   OHHHHHHHHO   ',
+  '  OHHHHHHHHHHO  ',
+  '  OHHHHHHHHHHO  ',
+  '  OHH      HHO  ',
+  '  OHH      HHO  ',
+  '   OHH    HHO   ',
+  '    OO    OO    ',
 ]);
 
 const HAT_BRIM = template(BODY_AT.ox, BODY_AT.oy, [
   '      OOOO      ',
-  '     OPPPPOFF   ', // feather off the side
+  '     OPPPPO     ',
   '     OPPPPO     ',
   '   OPPPPPPPPO   ',
   '  OPPPPPPPPPPO  ',
   '  OOOOOOOOOOOO  ',
 ]);
 
-const HAT_HOOD = template(BODY_AT.ox, BODY_AT.oy, [
-  '                ',
-  '     OOOOOO     ',
-  '    OPPPPPPO    ',
+const HAT_BANDANA = template(BODY_AT.ox, BODY_AT.oy + 3, [
   '   OPPPPPPPPO   ',
-  '   OPP    PPO   ',
-  '   OPP    PPO   ',
-  '   OPP    PPO   ',
-  '   OPPP  PPPO   ',
-  '  OPPPPPPPPPPO  ',
-  '  OPPPPPPPPPPO  ',
+  '   OPPPPPPPPO   ',
+]);
+
+const HAT_CAP = template(BODY_AT.ox, BODY_AT.oy, [
+  '      OOOO      ',
+  '     OMMMMO     ',
+  '    OMMMMMMO    ',
+  '   OMMMMMMMMO   ',
+  '   OOOOOOOOOOO  ',
 ]);
 
 const HATS: Record<Exclude<HatId, null>, Template> = {
-  helm: HAT_HELM,
-  pointy: HAT_POINTY,
+  afro: HAT_AFRO,
   brim: HAT_BRIM,
-  hood: HAT_HOOD,
+  bandana: HAT_BANDANA,
+  cap: HAT_CAP,
+};
+
+/**
+ * The Furies' makeup. It goes on over the face, so the eyes underneath still
+ * show through the paint — which is what makes it read as a painted man rather
+ * than as a mask.
+ */
+const FACE_FURY = template(BODY_AT.ox, BODY_AT.oy + 4, [
+  '   OGGGGGGGGO   ',
+  '   OGFFGGFFGO   ',
+  '   OGEEGGEEGO   ',
+  '   OGGGGGGGGO   ',
+  '    OGGGGGGO    ',
+]);
+
+const FACES: Record<Exclude<FaceId, null>, Template> = {
+  fury: FACE_FURY,
 };
 
 // ---------------------------------------------------------------------------
 // Weapons — positioned so the grip lands in the right hand (canvas y ≈ 21).
+// A weapon belongs to the UNIT, not the role: it can be knocked loose or taken.
 // ---------------------------------------------------------------------------
 
-const WEAPON_SWORD = template(13, 9, [
+const WEAPON_BAT = template(13, 9, [
   '  OO  ',
-  ' OMMO ',
-  ' OMMO ',
-  ' OMMO ',
-  ' OMMO ',
-  ' OMMO ',
-  ' OMMO ',
-  ' OMMO ',
-  ' OMMO ',
-  'OOOOOO',
-  'OBBBBO',
-  'OOOOOO',
   ' OWWO ',
   ' OWWO ',
-  ' OBBO ',
-  ' OOOO ',
-]);
-
-const WEAPON_BOW = template(13, 13, [
-  '  OOO ',
   ' OWWO ',
-  ' OWO  ',
-  'OWWO  ',
-  'OWO   ',
-  'OWO   ',
-  'OWO   ',
-  'OWO   ',
-  'OWO   ',
-  'OWO   ',
-  'OWO   ',
-  'OWWO  ',
-  ' OWO  ',
   ' OWWO ',
+  ' OWWO ',
+  ' OWWO ',
+  ' OWWO ',
+  '  OWO ',
+  '  OWO ',
+  '  OWO ',
+  '  OWO ',
+  '  OWO ',
+  '  OWO ',
   '  OOO ',
 ]);
 
-const WEAPON_STAFF = template(14, 6, [
-  ' OOO ',
-  'OMMMO',
-  'OMMMO',
-  ' OOO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OOO ',
-]);
-
-const WEAPON_DAGGER = template(14, 16, [
+const WEAPON_KNIFE = template(14, 16, [
   ' OOO ',
   ' OMO ',
   ' OMO ',
@@ -413,39 +435,37 @@ const WEAPON_DAGGER = template(14, 16, [
   ' OOO ',
 ]);
 
-const WEAPON_CLUB = template(14, 12, [
+const WEAPON_PIPE = template(14, 10, [
   ' OOO ',
-  'OWWWO',
-  'OWWWO',
-  'OWWWO',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
-  ' OWO ',
+  ' OMO ',
+  ' OMO ',
+  ' OMO ',
+  ' OMO ',
+  ' OMO ',
+  ' OMO ',
+  ' OMO ',
   ' OWO ',
   ' OWO ',
   ' OWO ',
   ' OOO ',
+]);
+
+const WEAPON_CAN = template(14, 17, [
+  ' OOO ',
+  ' OMO ',
+  'OOOOO',
+  'OMFMO',
+  'OMFMO',
+  'OMFMO',
+  'OOOOO',
 ]);
 
 const WEAPONS: Record<Exclude<WeaponId, 'none'>, Template> = {
-  sword: WEAPON_SWORD,
-  bow: WEAPON_BOW,
-  staff: WEAPON_STAFF,
-  dagger: WEAPON_DAGGER,
-  club: WEAPON_CLUB,
+  bat: WEAPON_BAT,
+  knife: WEAPON_KNIFE,
+  pipe: WEAPON_PIPE,
+  can: WEAPON_CAN,
 };
-
-const SHIELD = template(1, 19, [
-  ' OOOO ',
-  'OBAAAO',
-  'OBAAAO',
-  'OBAAAO',
-  'OBAAAO',
-  ' OAAO ',
-  ' OAAO ',
-  '  OO  ',
-]);
 
 // ---------------------------------------------------------------------------
 // Painting
@@ -473,29 +493,47 @@ function drawTemplate(
 }
 
 /**
- * How far headgear, weapon and shield have to move to stay attached to the
- * recoil pose: the head rides a row higher, and the hands swing up and outward.
- * Without this the helmet floats off the skull and the sword hangs in mid-air.
+ * How far the accessories move to stay attached to the recoil pose: the head
+ * rides a row higher and the hands swing up and outward. Without this the cap
+ * floats off the skull and the bat hangs in mid-air.
  */
 const RECOIL_OFFSET = {
   hat: { dx: 0, dy: -1 },
+  face: { dx: 0, dy: -1 },
   weapon: { dx: 1, dy: -3 },
-  shield: { dx: -1, dy: -3 },
 };
+
+const BODIES = {
+  plain: { front: PLAIN_FRONT, back: PLAIN_BACK, hurtFront: PLAIN_FRONT, hurtBack: PLAIN_BACK },
+  warrior: {
+    front: WARRIOR_FRONT,
+    back: WARRIOR_BACK,
+    hurtFront: WARRIOR_HURT_FRONT,
+    hurtBack: WARRIOR_HURT_BACK,
+  },
+  fury: {
+    front: FURY_FRONT,
+    back: FURY_BACK,
+    hurtFront: FURY_HURT_FRONT,
+    hurtBack: FURY_HURT_BACK,
+  },
+} as const;
 
 /**
  * Paints one sprite cell at 1:1 pixel scale.
  *
- * `flip` mirrors the whole cell instead of authoring left-facing art: with only
- * two poses (toward and away from the camera) and a horizontal flip we cover
- * the four views the isometric camera can produce.
+ * `flip` mirrors the whole cell instead of authoring left-facing art: with two
+ * poses — toward and away from the camera — and a horizontal flip we cover the
+ * four views the isometric camera can produce.
  */
 export function renderUnitCanvas(
   jobId: JobId,
   palette: Palette,
   pose: Pose,
   flip: boolean,
-  hurt = false
+  hurt = false,
+  weapon: WeaponId = 'none',
+  hat?: HatId
 ): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = SPRITE_W;
@@ -509,41 +547,23 @@ export function renderUnitCanvas(
   }
 
   const job = JOBS[jobId];
-  const monster = job.sprite.body === 'monster';
+  const set = BODIES[job.sprite.body];
   const front = pose === 'front';
-  const body = monster
-    ? hurt
-      ? front
-        ? MONSTER_HURT_FRONT
-        : MONSTER_HURT_BACK
-      : front
-        ? MONSTER_FRONT
-        : MONSTER_BACK
-    : hurt
-      ? front
-        ? HUMAN_HURT_FRONT
-        : HUMAN_HURT_BACK
-      : front
-        ? HUMAN_FRONT
-        : HUMAN_BACK;
-
+  const body = hurt ? (front ? set.hurtFront : set.hurtBack) : front ? set.front : set.back;
   const nudge = hurt ? RECOIL_OFFSET : null;
 
   drawTemplate(ctx, body, palette);
-  if (job.sprite.shield) {
-    drawTemplate(ctx, SHIELD, palette, nudge?.shield.dx ?? 0, nudge?.shield.dy ?? 0);
+
+  // Paint goes on before the cap, so the brim sits over the forehead.
+  if (job.sprite.face && front) {
+    drawTemplate(ctx, FACES[job.sprite.face], palette, nudge?.face.dx ?? 0, nudge?.face.dy ?? 0);
   }
-  if (job.sprite.hat) {
-    drawTemplate(ctx, HATS[job.sprite.hat], palette, nudge?.hat.dx ?? 0, nudge?.hat.dy ?? 0);
+  const worn = hat !== undefined ? hat : job.sprite.hat;
+  if (worn) {
+    drawTemplate(ctx, HATS[worn], palette, nudge?.hat.dx ?? 0, nudge?.hat.dy ?? 0);
   }
-  if (job.sprite.weapon !== 'none') {
-    drawTemplate(
-      ctx,
-      WEAPONS[job.sprite.weapon],
-      palette,
-      nudge?.weapon.dx ?? 0,
-      nudge?.weapon.dy ?? 0
-    );
+  if (weapon !== 'none') {
+    drawTemplate(ctx, WEAPONS[weapon], palette, nudge?.weapon.dx ?? 0, nudge?.weapon.dy ?? 0);
   }
 
   return canvas;
@@ -565,7 +585,9 @@ function cacheKey(
   override: Partial<Palette> | undefined,
   pose: Pose,
   flip: boolean,
-  hurt: boolean
+  hurt: boolean,
+  weapon: WeaponId,
+  hat: HatId | undefined
 ) {
   const tint = override
     ? Object.entries(override)
@@ -573,12 +595,12 @@ function cacheKey(
         .sort()
         .join('')
     : '';
-  return `${jobId}|${tint}|${pose}|${flip ? 'f' : 'n'}|${hurt ? 'h' : 'r'}`;
+  return `${jobId}|${tint}|${pose}|${flip ? 'f' : 'n'}|${hurt ? 'h' : 'r'}|${weapon}|${hat ?? '-'}`;
 }
 
 /**
- * A GPU texture for one (job, recolor, pose, flip) combination. Cached, since a
- * battle re-derives which pose to show every time the camera turns and a fresh
+ * A GPU texture for one (role, recolor, pose, flip, hurt, weapon) combination.
+ * Cached, since the pose is re-derived whenever the camera turns and a fresh
  * canvas upload per frame would be wasteful.
  */
 export function getUnitTexture(
@@ -586,13 +608,23 @@ export function getUnitTexture(
   override: Partial<Palette> | undefined,
   pose: Pose,
   flip: boolean,
-  hurt = false
+  hurt = false,
+  weapon: WeaponId = 'none',
+  hat?: HatId
 ): Texture {
-  const key = cacheKey(jobId, override, pose, flip, hurt);
+  const key = cacheKey(jobId, override, pose, flip, hurt, weapon, hat);
   const cached = textureCache.get(key);
   if (cached) return cached;
 
-  const canvas = renderUnitCanvas(jobId, paletteFor(jobId, override), pose, flip, hurt);
+  const canvas = renderUnitCanvas(
+    jobId,
+    paletteFor(jobId, override),
+    pose,
+    flip,
+    hurt,
+    weapon,
+    hat
+  );
   const texture = new CanvasTexture(canvas);
   // Nearest on both filters is the whole point: hard pixel edges at any zoom.
   texture.magFilter = NearestFilter;
@@ -615,14 +647,25 @@ const portraitCache = new Map<string, string>();
 export function getPortraitUrl(
   jobId: JobId,
   override?: Partial<Palette>,
-  scale = 4
+  scale = 4,
+  hat?: HatId
 ): string {
   if (typeof document === 'undefined') return '';
-  const key = cacheKey(jobId, override, 'front', false, false) + '|' + scale;
+  const key = cacheKey(jobId, override, 'front', false, false, 'none', hat) + '|' + scale;
   const cached = portraitCache.get(key);
   if (cached) return cached;
 
-  const source = renderUnitCanvas(jobId, paletteFor(jobId, override), 'front', false);
+  // Weaponless on purpose: a portrait is a face, and a bat swinging through the
+  // frame would crop as a brown bar across it.
+  const source = renderUnitCanvas(
+    jobId,
+    paletteFor(jobId, override),
+    'front',
+    false,
+    false,
+    'none',
+    hat
+  );
   const out = document.createElement('canvas');
   out.width = PORTRAIT_CROP.w * scale;
   out.height = PORTRAIT_CROP.h * scale;

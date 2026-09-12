@@ -8,7 +8,7 @@
   import { T, useTask } from '@threlte/core';
   import { interactivity } from '@threlte/extras';
   import CameraRig from './CameraRig.svelte';
-  import Chapel from './Chapel.svelte';
+  import ComfortStation from './ComfortStation.svelte';
   import FloatingNumber from './FloatingNumber.svelte';
   import Terrain from './Terrain.svelte';
   import TileCursor from './TileCursor.svelte';
@@ -29,7 +29,7 @@
     renderPosition,
   } from './battle.svelte';
   import { LEVEL, TILE, tileToWorld, type Tile } from './grid';
-  import { CHAPEL_ANCHOR } from './maps';
+  import { BUILDING_ANCHOR } from './maps';
   import { landableTiles, tilesInBurst } from './pathfinding';
   import { isAlive } from './units';
 
@@ -116,8 +116,8 @@
     confirmTile(tile.x, tile.y);
   }
 
-  const chapelPos = $derived.by(() => {
-    const c = CHAPEL_ANCHOR;
+  const buildingPos = $derived.by(() => {
+    const c = BUILDING_ANCHOR;
     const w = tileToWorld(map, c.x + (c.w - 1) / 2, c.y + (c.d - 1) / 2, c.height);
     return [w.x, w.y, w.z] as [number, number, number];
   });
@@ -129,16 +129,17 @@
 
 <CameraRig {yawIndex} {pitchHigh} {zoom} target={cameraTarget} bind:yaw />
 
-<!-- Bright, low-contrast key light with a warm tint and a cool sky bounce —
-     the flat, readable lighting a tactics grid needs. It sits east and slightly
-     south so the tile faces the camera can see stay lit, while cliffs and the
-     chapel still throw a shadow back across the board. -->
-<T.AmbientLight intensity={0.55} color="#c9d8f0" />
-<T.HemisphereLight intensity={0.9} color="#cfe4ff" groundColor="#6b5a3f" />
+<!-- Night in the park, but a readable one. The key is moonlight: cold, still
+     strong enough to separate the terraces, and still coming from the east so
+     the tile faces the camera can see stay lit and the ledges keep throwing
+     shadows across the board. The ambient carries a sodium tint, which is the
+     only warmth out here — the park lamps. -->
+<T.AmbientLight intensity={0.5} color="#8fa4c8" />
+<T.HemisphereLight intensity={0.75} color="#7f9bd0" groundColor="#4a4030" />
 <T.DirectionalLight
   castShadow
-  intensity={2}
-  color="#fff2d6"
+  intensity={1.55}
+  color="#cfd9f2"
   position={[11, 15, 4]}
   shadow.mapSize.width={2048}
   shadow.mapSize.height={2048}
@@ -154,7 +155,7 @@
 
 <Terrain {map} onTileClick={handleClick} />
 
-<Chapel position={chapelPos} />
+<ComfortStation position={buildingPos} />
 
 <!-- Layer order by lift: movement under weapon reach under the burst. -->
 <!-- Opacity is high because the texture now carries the contrast: the rim

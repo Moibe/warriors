@@ -39,7 +39,7 @@
   );
 </script>
 
-<Window title={data.healing ? 'Curación' : 'Previsión'}>
+<Window title={data.healing ? 'Arenga' : 'Previsión'}>
   <div class="head">
     <b>{abilityName}</b> → <span class:enemy={target.team === 'enemy'}>{target.name}</span>
   </div>

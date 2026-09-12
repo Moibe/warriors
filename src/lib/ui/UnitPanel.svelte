@@ -8,14 +8,14 @@
   import { FACING_NAMES } from '../grid';
   import { JOBS } from '../jobs';
   import { getPortraitUrl } from '../sprites';
-  import type { Unit } from '../units';
+  import { hatOf, type Unit } from '../units';
   import Window from './Window.svelte';
 
   let { unit, height, title = 'Unidad' }: { unit: Unit; height: number; title?: string } =
     $props();
 
   const job = $derived(JOBS[unit.job]);
-  const portrait = $derived(getPortraitUrl(unit.job, unit.paletteOverride));
+  const portrait = $derived(getPortraitUrl(unit.job, unit.paletteOverride, 4, hatOf(unit)));
   const hpPct = $derived(Math.max(0, (unit.hp / unit.hpMax) * 100));
   const mpPct = $derived(unit.mpMax ? Math.max(0, (unit.mp / unit.mpMax) * 100) : 0);
   const ctPct = $derived(Math.min(100, unit.ct));
@@ -41,7 +41,7 @@
       </div>
 
       <div class="bar-line">
-        <span class="label">PM</span>
+        <span class="label">AG</span>
         <div class="bar"><div class="fill mp" style:width="{mpPct}%"></div></div>
         <span class="num">{unit.mp}<i>/{unit.mpMax}</i></span>
       </div>
@@ -55,8 +55,8 @@
   </div>
 
   <div class="stats">
-    <span>Br <b>{unit.brave}</b></span>
-    <span>Fe <b>{unit.faith}</b></span>
+    <span>Agallas <b>{unit.brave}</b></span>
+    <span>Calle <b>{unit.faith}</b></span>
     <span>Mov <b>{unit.move}</b></span>
     <span>Salto <b>{unit.jump}</b></span>
     <span>Alt <b>{height}</b></span>

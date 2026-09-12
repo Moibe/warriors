@@ -24,7 +24,7 @@
   import { LEVEL, TILE, facingAngle, facingVector } from './grid';
   import { getShadowTexture } from './textures';
   import { SPRITE_WORLD_H, SPRITE_WORLD_W, getUnitTexture, type Pose } from './sprites';
-  import type { Unit } from './units';
+  import { hatOf, type Unit } from './units';
 
   let {
     unit,
@@ -83,7 +83,15 @@
   $effect(() => {
     // The recoil frame carries the death too — a unit that is struck down is
     // still a unit being struck.
-    material.map = getUnitTexture(unit.job, unit.paletteOverride, pose, flip, hurt || dying);
+    material.map = getUnitTexture(
+      unit.job,
+      unit.paletteOverride,
+      pose,
+      flip,
+      hurt || dying,
+      unit.weapon,
+      hatOf(unit)
+    );
     // alphaTest would clip the entire sprite the moment its opacity dropped
     // below the threshold, so the fade needs it switched off.
     material.alphaTest = dying ? 0 : 0.5;

@@ -21,8 +21,8 @@ import {
   type Facing,
   type Tile,
 } from './grid';
-import { JOBS, type Ability } from './jobs';
-import { chapelHill } from './maps';
+import { JOBS, WEAPON_NAMES, type Ability } from './jobs';
+import { riversidePark } from './maps';
 import {
   bestApproach,
   computeReachable,
@@ -36,7 +36,7 @@ import {
 import { createRoster, isAlive, unitAt, unitById, type Team, type Unit } from './units';
 
 /** The battlefield. Static for now — swap in another map from `maps.ts`. */
-export const map = chapelHill;
+export const map = riversidePark;
 
 export type Phase =
   | 'clock' // CT is filling; nobody is acting
@@ -251,11 +251,25 @@ export function abilityTargetsAt(x: number, y: number): Unit[] {
   return battle.units.filter((u) => isAlive(u) && cells.has(tileKey(u.x, u.y)));
 }
 
-/** Whether confirming the aim right now would hit anything at all. */
+/**
+ * Whether this unit is who the move was meant for. An area swing still catches
+ * whoever is standing in it — that is the price of a wide swing — but it is
+ * what the move is *aimed* at that decides whether the aim is legal at all.
+ * Without this, a punch has a valid target on your own square, and the first
+ * thing a new player does is hit themselves in the face.
+ */
+function isIntendedTarget(actor: Unit, other: Unit, ability: Ability): boolean {
+  if (ability.targets === 'any') return true;
+  return (ability.targets === 'ally') === (other.team === actor.team);
+}
+
+/** Whether confirming the aim right now would hit anything worth hitting. */
 export function aimHasTarget(): boolean {
+  const actor = activeUnit();
   const aim = battle.aim;
-  if (battle.phase !== 'target' || !aim) return false;
-  return abilityTargetsAt(aim.x, aim.y).length > 0;
+  const ability = battle.ability;
+  if (battle.phase !== 'target' || !aim || !actor || !ability) return false;
+  return abilityTargetsAt(aim.x, aim.y).some((t) => isIntendedTarget(actor, t, ability));
 }
 
 /** Tiles the chosen ability could be aimed at from where the actor stands. */
@@ -416,7 +430,12 @@ export function commandList(): CommandEntry[] {
     ...JOBS[u.job].abilities.map((ability) => ({
       kind: 'ability' as const,
       ability,
-      enabled: !u.hasActed && ability.mp <= u.mp,
+      // Empty-handed moves stay greyed out until something is in that hand —
+      // which is exactly what makes taking someone's bat worth a turn.
+      enabled:
+        !u.hasActed &&
+        ability.mp <= u.mp &&
+        (!ability.needsWeapon || u.weapon !== 'none'),
     })),
     { kind: 'wait', enabled: true },
   ];
@@ -636,11 +655,12 @@ export function confirmAbility(x: number, y: number): boolean {
   if (!abilityRangeTiles().has(tileKey(x, y))) return false;
 
   const targets = abilityTargetsAt(x, y);
-  // Nothing in the burst, so the action does not happen at all. Spending a turn
-  // on empty ground is never a decision anybody meant to make — it is a misfired
-  // click — and the refusal comes before any MP or facing is touched, so the
-  // player is left exactly where they were, still aiming.
-  if (!targets.length) return false;
+  // Nothing the move was meant for, so it does not happen at all. Spending a
+  // turn on empty ground — or on your own face — is never a decision anybody
+  // meant to make; it is a misfired click. The refusal comes before any stamina
+  // or facing is touched, so the player is left exactly where they were, still
+  // aiming.
+  if (!targets.some((t) => isIntendedTarget(actor, t, ability))) return false;
 
   actor.facing = facingTo({ x: actor.x, y: actor.y }, { x, y });
   actor.mp -= ability.mp;
@@ -667,7 +687,7 @@ export function confirmAbility(x: number, y: number): boolean {
       target.hp = Math.min(target.hpMax, target.hp + result.amount);
       const healed = target.hp - before;
       pushPopup(target, '+' + healed, '#79e07a');
-      log(`${actor.name} cura ${healed} PV a ${target.name}.`);
+      log(`${actor.name} levanta a ${target.name}: +${healed} PV.`);
       continue;
     }
 
@@ -677,6 +697,21 @@ export function confirmAbility(x: number, y: number): boolean {
     log(
       `${actor.name} → ${target.name}: ${result.amount} de daño${ANGLE_TAG[result.angle]}.`
     );
+
+    // Taking the weapon is the point of the move, not a side effect: with both
+    // hands full you can still knock it loose, and either way the other one
+    // loses everything that needed it.
+    if (ability.disarm && target.weapon !== 'none') {
+      const taken = target.weapon;
+      target.weapon = 'none';
+      if (actor.weapon === 'none') {
+        actor.weapon = taken;
+        log(`${actor.name} le arrebata ${WEAPON_NAMES[taken]} a ${target.name}.`);
+        pushPopup(actor, '¡ARMA!', '#ffe27a');
+      } else {
+        log(`${actor.name} le tira ${WEAPON_NAMES[taken]} de las manos a ${target.name}.`);
+      }
+    }
     if (target.hp === 0) {
       target.deathFor = DEATH_TIME;
       log(`${target.name} cae.`);
@@ -736,6 +771,7 @@ function planAiTurn(u: Unit) {
 
   for (const ability of JOBS[u.job].abilities) {
     if (ability.mp > u.mp) continue;
+    if (ability.needsWeapon && u.weapon === 'none') continue;
     const pool = ability.targets === 'ally' ? friends : foes;
     for (const target of pool) {
       const targetTile = tileAt(map, target.x, target.y);

@@ -14,8 +14,8 @@
     <div class="ribbon">{won ? 'Victoria' : 'Derrota'}</div>
     <p class="line">
       {won
-        ? 'El campo es tuyo. La capilla queda a salvo.'
-        : 'Tu escuadra ha caído en la colina.'}
+        ? 'El parque es vuestro. Los Furies se quedan tirados en el asfalto.'
+        : 'Los Warriors no salen de Riverside. Ninguno llega a Coney Island.'}
     </p>
     <button onclick={onRestart}>Otra batalla</button>
   </div>

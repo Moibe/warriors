@@ -42,7 +42,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.12.4';
+  const APP_VERSION = '0.13.0';
 
   // ---- Camera -------------------------------------------------------------
 
@@ -376,7 +376,7 @@
 </script>
 
 <svelte:head>
-  <title>Warriors · Colina de la Capilla</title>
+  <title>The Warriors · Riverside Park</title>
 </svelte:head>
 
 <svelte:window onkeydown={onKeyDown} />
@@ -491,12 +491,13 @@
     position: fixed;
     inset: 0;
     overflow: hidden;
-    /* The sky. A cool vertical gradient with a warm haze near the horizon —
+    /* The sky. Night over the Hudson: deep blue overhead washing out to the
+       sodium glow the city throws up along the horizon —
        the canvas above it is transparent, so this is the backdrop the whole
        battlefield sits in. */
     background:
-      radial-gradient(120% 70% at 50% 100%, rgba(255, 214, 168, 0.35), transparent 60%),
-      linear-gradient(180deg, #2c4f86 0%, #5b8ec4 45%, #9dc2e0 78%, #cfe0ea 100%);
+      radial-gradient(120% 60% at 50% 100%, rgba(255, 176, 92, 0.3), transparent 62%),
+      linear-gradient(180deg, #070c1c 0%, #111a36 40%, #253356 72%, #4a4a63 100%);
     cursor: default;
     user-select: none;
   }
