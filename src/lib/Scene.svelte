@@ -10,6 +10,7 @@
   import CameraRig from './CameraRig.svelte';
   import ComfortStation from './ComfortStation.svelte';
   import FloatingNumber from './FloatingNumber.svelte';
+  import Projectile from './Projectile.svelte';
   import Terrain from './Terrain.svelte';
   import TileCursor from './TileCursor.svelte';
   import TileOverlays from './TileOverlays.svelte';
@@ -178,6 +179,12 @@
     active={battle.activeId === unit.id}
   />
 {/each}
+
+<!-- Above the fighters, below the numbers: the object is the cause and the
+     number is the consequence, and they never share a frame anyway. -->
+{#if battle.throw}
+  <Projectile fly={battle.throw} mapWidth={map.width} mapDepth={map.depth} />
+{/if}
 
 {#each battle.popups as popup (popup.id)}
   <FloatingNumber {popup} mapWidth={map.width} mapDepth={map.depth} />

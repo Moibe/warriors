@@ -45,6 +45,12 @@ export type Ability = {
   backstab?: number;
   /** Greyed out unless the fighter is holding something. */
   needsWeapon?: boolean;
+  /**
+   * What the move throws. Its only job is to be watched flying: an ability
+   * that names one waits for the thing to land before any damage is dealt, so
+   * the hit reads as caused by the object rather than appearing beside it.
+   */
+  projectile?: ProjectileId;
   /** On a hit, takes the target's weapon — the signature street move. */
   disarm?: boolean;
   desc: string;
@@ -71,6 +77,9 @@ export type Palette = {
 export type HatId = 'afro' | 'brim' | 'bandana' | 'cap' | null;
 export type FaceId = 'fury' | null;
 export type WeaponId = 'bat' | 'knife' | 'pipe' | 'can' | 'none';
+
+/** Something that leaves the hand and is seen crossing the board to land. */
+export type ProjectileId = 'bottle' | 'brick';
 
 export type JobStats = {
   hp: number;
@@ -243,6 +252,7 @@ const BOTTLE: Ability = {
   power: 2.0,
   vertical: Infinity,
   targets: 'enemy',
+  projectile: 'bottle',
   desc: 'Vuela por encima de todo. No hace falta acercarse.',
 };
 
@@ -257,6 +267,7 @@ const BRICK: Ability = {
   power: 2.8,
   vertical: Infinity,
   targets: 'enemy',
+  projectile: 'brick',
   desc: 'Pesa, llega lejos y tumba. Cuesta aguante lanzarlo.',
 };
 

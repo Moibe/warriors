@@ -16,7 +16,15 @@
 // what keeps the edges hard instead of the mush you get from upscaling in 2D.
 
 import { CanvasTexture, NearestFilter, SRGBColorSpace, type Texture } from 'three';
-import { JOBS, type FaceId, type HatId, type JobId, type Palette, type WeaponId } from './jobs';
+import {
+  JOBS,
+  type FaceId,
+  type HatId,
+  type JobId,
+  type Palette,
+  type ProjectileId,
+  type WeaponId,
+} from './jobs';
 
 /** Sprite sheet cell, in art pixels. Wide enough for hats and drawn weapons. */
 export const SPRITE_W = 20;
@@ -632,6 +640,88 @@ export function getUnitTexture(
   texture.generateMipmaps = false;
   texture.colorSpace = SRGBColorSpace;
   textureCache.set(key, texture);
+  return texture;
+}
+
+// ---------------------------------------------------------------------------
+// Thrown things
+// ---------------------------------------------------------------------------
+//
+// These do not take a gang's palette. A bottle is glass and a brick is a brick
+// whoever throws it, and tinting them by team would say the wrong thing — what
+// matters in flight is reading *what* is coming, not who sent it.
+
+/** Art box for a thrown object, in pixels. Square, so it can spin. */
+const PROJECTILE_BOX = 10;
+
+/** World size of the quad, in tile widths — a fist-sized thing at this scale. */
+export const PROJECTILE_WORLD = 0.52;
+
+const THROWN_COLORS: Record<string, string> = {
+  O: '#15111a',
+  G: '#3f7a4a', // glass
+  L: '#8fd0a0', // where the light catches it
+  N: '#2b5637', // the neck, in shadow
+  R: '#9c4c37', // fired clay
+  D: '#74341f', // its shadowed face
+  S: '#c9b9a2', // a fleck of mortar still stuck on
+};
+
+const THROWN: Record<ProjectileId, string[]> = {
+  bottle: [
+    '    OO    ',
+    '    ON    ',
+    '   OGGO   ',
+    '   OGLO   ',
+    '  OGGGGO  ',
+    '  OGLGGO  ',
+    '  OGGGGO  ',
+    '  OGGGGO  ',
+    '   OOOO   ',
+    '          ',
+  ],
+  brick: [
+    '          ',
+    '          ',
+    '          ',
+    ' OOOOOOOO ',
+    ' ORRRRRRO ',
+    ' ORRDRRSO ',
+    ' ODDDDDDO ',
+    ' OOOOOOOO ',
+    '          ',
+    '          ',
+  ],
+};
+
+const projectileCache = new Map<ProjectileId, Texture>();
+
+export function getProjectileTexture(id: ProjectileId): Texture {
+  const cached = projectileCache.get(id);
+  if (cached) return cached;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = PROJECTILE_BOX;
+  canvas.height = PROJECTILE_BOX;
+  const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingEnabled = false;
+
+  const rows = THROWN[id];
+  for (let r = 0; r < rows.length; r++) {
+    for (let c = 0; c < rows[r].length; c++) {
+      const color = THROWN_COLORS[rows[r][c]];
+      if (!color) continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(c, r, 1, 1);
+    }
+  }
+
+  const texture = new CanvasTexture(canvas);
+  texture.magFilter = NearestFilter;
+  texture.minFilter = NearestFilter;
+  texture.generateMipmaps = false;
+  texture.colorSpace = SRGBColorSpace;
+  projectileCache.set(id, texture);
   return texture;
 }
 

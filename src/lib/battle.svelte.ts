@@ -21,7 +21,7 @@ import {
   type Facing,
   type Tile,
 } from './grid';
-import { JOBS, WEAPON_NAMES, type Ability } from './jobs';
+import { JOBS, WEAPON_NAMES, type Ability, type ProjectileId } from './jobs';
 import { riversidePark } from './maps';
 import {
   bestApproach,
@@ -67,6 +67,21 @@ export type WalkAnim = {
   t: number;
 };
 
+/** A thing in the air between the hand that threw it and where it will land. */
+export type ThrowAnim = {
+  projectile: ProjectileId;
+  from: Coord & { height: number };
+  to: Coord & { height: number };
+  /** 0 at the hand, 1 at the landing. */
+  t: number;
+  /** Seconds of flight. Longer throws take longer, within reason. */
+  duration: number;
+  /** Peak of the arc above the straight line, in levels. */
+  arc: number;
+  /** Radians of tumble over the whole flight. */
+  spin: number;
+};
+
 export const battle = $state({
   units: createRoster(),
   phase: 'clock' as Phase,
@@ -83,6 +98,8 @@ export const battle = $state({
   /** Tile being aimed at while an ability is up. Null outside the target phase. */
   aim: null as Coord | null,
   walk: null as WalkAnim | null,
+  /** Non-null only while something thrown is still in the air. */
+  throw: null as ThrowAnim | null,
   popups: [] as Popup[],
   log: [] as string[],
   winner: null as Team | null,
@@ -106,6 +123,8 @@ export const DEATH_TIME = 0.8;
 
 /** Seconds of dead air between one turn ending and the next beginning. */
 const TURN_GAP = 0.35;
+/** The beat held after an action lands, so the result can be read. */
+const RESOLVE_PAUSE = 0.75;
 /** Tiles walked per second during a move animation. */
 const WALK_SPEED = 4.5;
 
@@ -600,11 +619,32 @@ export function advanceAnimations(dt: number) {
     battle.popups = battle.popups.filter((p) => p.t < POPUP_LIFE);
   }
 
+  // Something in the air holds everything else: the hit is not rolled, the
+  // numbers do not pop and the turn does not move on until it lands.
+  const fly = battle.throw;
+  if (fly) {
+    fly.t += dt / fly.duration;
+    if (fly.t >= 1) {
+      battle.throw = null;
+      const land = pendingImpact;
+      pendingImpact = null;
+      land?.();
+      resolveTimer = RESOLVE_PAUSE;
+    }
+  }
+
   if (resolveTimer > 0) {
     resolveTimer -= dt;
     if (resolveTimer <= 0) onResolveFinished();
   }
 }
+
+/**
+ * What to do when the thrown thing arrives. Held here rather than on `battle`
+ * because it is a closure, not state anything renders — and putting a function
+ * inside a deep reactive proxy is asking for trouble.
+ */
+let pendingImpact: (() => void) | null = null;
 
 const POPUP_LIFE = 1.5;
 
@@ -669,6 +709,36 @@ export function confirmAbility(x: number, y: number): boolean {
   battle.ability = null;
   battle.aim = null;
 
+  // Thrown moves commit here but land later: the object has to cross the board
+  // first, and only then is anything rolled. Everything else resolves on the
+  // spot, the way a punch does.
+  if (ability.projectile) {
+    const to = { x, y, height: tileAt(map, x, y)?.height ?? heightOf(actor) };
+    const from = { x: actor.x, y: actor.y, height: heightOf(actor) };
+    const dist = gridDistance(from, to);
+    battle.throw = {
+      projectile: ability.projectile,
+      from,
+      to,
+      t: 0,
+      // Far throws take longer, but not proportionally — a five-tile lob that
+      // took five times as long as a two-tile one would just feel slow.
+      duration: Math.min(0.75, 0.34 + dist * 0.08),
+      arc: 1.1 + dist * 0.3,
+      // A bottle tumbles end over end; a brick is too heavy to spin much.
+      spin: ability.projectile === 'bottle' ? Math.PI * 2.5 : Math.PI * 0.8,
+    };
+    pendingImpact = () => resolveHits(actor, ability, targets);
+    return true;
+  }
+
+  resolveHits(actor, ability, targets);
+  resolveTimer = RESOLVE_PAUSE;
+  return true;
+}
+
+/** Rolls the ability against everyone caught in it and applies what happens. */
+function resolveHits(actor: Unit, ability: Ability, targets: Unit[]) {
   const actorHeight = heightOf(actor);
   for (const target of targets) {
     const friendly = target.team === actor.team;
@@ -718,9 +788,6 @@ export function confirmAbility(x: number, y: number): boolean {
       pushPopup(target, 'K.O.', '#ff6b6b');
     }
   }
-
-  resolveTimer = 0.75;
-  return true;
 }
 
 function onResolveFinished() {
@@ -900,6 +967,8 @@ export function restart() {
   battle.aim = null;
   battle.walk = null;
   battle.popups = [];
+  battle.throw = null;
+  pendingImpact = null;
   battle.log = [];
   battle.winner = null;
   battle.turn = 0;
