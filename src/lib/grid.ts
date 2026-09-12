@@ -35,6 +35,7 @@ export type Surface =
   | 'dark' // asfalto — the courts and the road
   | 'sand' // tierra batida — the infield
   | 'wood' // tarima — the bandstand deck
+  | 'metal' // chapa — the roof of something you climbed onto
   | 'water'; // charco — impassable under the base rules
 
 export type Facing = 'n' | 'e' | 's' | 'w';
@@ -72,6 +73,7 @@ export const SURFACE_NAMES: Record<Surface, string> = {
   dark: 'Asfalto',
   sand: 'Tierra batida',
   wood: 'Tarima',
+  metal: 'Chapa',
   water: 'Charco',
 };
 
@@ -90,6 +92,11 @@ export const SURFACE_COLORS: Record<Surface, { top: string; side: string }> = {
   stone: { top: '#77756f', side: '#4e4d49' },
   dark: { top: '#43454d', side: '#2c2d33' },
   sand: { top: '#8d7551', side: '#5e4d35' },
+  // Sheet metal is the one surface a prop's own mesh sits on top of, so these
+  // two tones are only ever seen as a thin rim around the edge of a car roof.
+  // Dark on purpose: it reads as a drip rail rather than as a stripe of paint
+  // that fails to match whichever car it is on.
+  metal: { top: '#14161b', side: '#0e1014' },
   wood: { top: '#5d4126', side: '#3b2a18' },
   water: { top: '#2b4a63', side: '#1a2f40' },
 };
@@ -216,6 +223,7 @@ const SURFACE_CHARS: Record<string, Surface> = {
   k: 'dark',
   n: 'sand',
   m: 'wood',
+  x: 'metal',
   w: 'water',
 };
 

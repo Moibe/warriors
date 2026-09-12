@@ -169,10 +169,14 @@ export const STAGES: Record<StageId, Stage> = {
     // Three cars along the kerb, each a different look. Their footprints match
     // the '#' blocks in the map exactly — the mesh is decoration, the '#' is
     // what stops anybody walking through a car.
+    // A quarter turn each: the car is authored nose-south and these are parked
+    // along a street that runs east-west. Without it the bodywork lies across
+    // its own footprint and overhangs the tiles either side, which is what put
+    // people standing inside the sheet metal.
     props: [
-      { kind: 'parkedCar', x: 1, y: 3, w: 4, d: 2, height: 1, variant: 0 },
-      { kind: 'parkedCar', x: 10, y: 3, w: 4, d: 2, height: 1, variant: 1 },
-      { kind: 'parkedCar', x: 5, y: 6, w: 4, d: 2, height: 1, variant: 2 },
+      { kind: 'parkedCar', x: 1, y: 3, w: 4, d: 2, height: 1, turns: 1, variant: 0 },
+      { kind: 'parkedCar', x: 10, y: 3, w: 4, d: 2, height: 1, turns: 1, variant: 1 },
+      { kind: 'parkedCar', x: 5, y: 6, w: 4, d: 2, height: 1, turns: 1, variant: 2 },
     ],
     // The Warriors come up out of the east end of the block; the Orphans are
     // already in the doorways, on the lot and standing on the subway mouth.

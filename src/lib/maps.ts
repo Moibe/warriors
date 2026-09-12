@@ -7,7 +7,7 @@ import { parseMap, type MapSource } from './grid';
 //
 //   heights   '0'-'9','a'-'z' → levels, '.' → void (a hole in the map)
 //   surfaces  g césped · d tierra · s concreto · k asfalto · n tierra batida ·
-//             m tarima · w charco
+//             m tarima · x chapa · w charco
 //   blocked   '#' → the tile is drawn but nobody can stand on it
 //
 // Every layer must have the same number of rows and columns. Spaces are
@@ -158,9 +158,15 @@ export const gunHillRoad = parseMap(GUN_HILL_ROAD);
  *     through it every three doors. Half the gang starts standing in them,
  *     above and behind the Warriors from the first tick.
  *   · The sidewalk, then the roadway at level 1 with three cars parked along
- *     it. Their footprints are blocked, and that is the point: this is the one
- *     board where the cover is in the middle of the street rather than at the
- *     edges, so a Warrior can put his back against something.
+ *     it. The cars are not walls any more: the hood and the boot stand at
+ *     level 4 and you climb onto them, three levels over anybody still on the
+ *     asphalt. Measured: straight off the road that takes a Jump of 3, so
+ *     everyone manages it except Ajax, who at Jump 2 has to come at a car from
+ *     the kerb like a grown man. The cabin between them stays blocked, so a car
+ *     is a perch with two ends and no way through — you go up for the angle and
+ *     you come back down the side you went up.
+ *     They are also the only cover in the middle of the street rather than at
+ *     the edges, which is what lets a Warrior put his back against something.
  *   · The south side opens into a vacant lot — rubble at level 4, the only
  *     high ground on the board, and a puddle nobody has drained.
  *   · The subway mouth drops to level 0 at the west end. In the film the
@@ -172,11 +178,11 @@ const ORPHAN_BLOCK: MapSource = {
     '555555555555555',
     '535535535535535',
     '222222222222222',
+    '145541111145541',
+    '145541111145541',
     '111111111111111',
-    '111111111111111',
-    '111111111111111',
-    '111111111111111',
-    '331111111111111',
+    '111114554111111',
+    '331114554111111',
     '012222222223322',
     '012222222223322',
     '332222442224422',
@@ -188,11 +194,11 @@ const ORPHAN_BLOCK: MapSource = {
     'sssssssssssssss',
     'sssssssssssssss',
     'sssssssssssssss',
+    'kxxxxkkkkkxxxxk',
+    'kxxxxkkkkkxxxxk',
     'kkkkkkkkkkkkkkk',
-    'kkkkkkkkkkkkkkk',
-    'kkkkkkkkkkkkkkk',
-    'kkkkkkkkkkkkkkk',
-    'sskkkkkkkkkkkkk',
+    'kkkkkxxxxkkkkkk',
+    'sskkkxxxxkkkkkk',
     'kssssssssssddss',
     'kssssssssssddss',
     'ssddddssdddssdd',
@@ -204,11 +210,11 @@ const ORPHAN_BLOCK: MapSource = {
     '###############',
     '#.##.##.##.##.#',
     '...............',
-    '.####.....####.',
-    '.####.....####.',
+    '..##.......##..',
+    '..##.......##..',
     '...............',
-    '.....####......',
-    '##...####......',
+    '......##.......',
+    '##....##.......',
     '...........##..',
     '...........##..',
     '##....##...##..',

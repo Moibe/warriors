@@ -178,7 +178,13 @@
   const TAIL_Z = -BODY_L / 2;
 
   const ROCKER_Y = 0.2; // underside of the body; ground clearance lives below it
-  const DECK_Y = 0.84; // beltline, and the height of the hood and trunk decks
+  // Beltline, and the top of the hood and trunk — which are terrain now, since
+  // people stand on them. Left at the height the car wants rather than dragged
+  // onto a grid level: pulling it down to land exactly on level 4 cost the body
+  // a sixth of its depth and the whole thing started reading as a slab. The
+  // grid puts its walkable surface a hair inside the sheet metal instead, which
+  // just tucks the feet behind the lip of the hood.
+  const DECK_Y = 0.84;
   const BODY_H = DECK_Y - ROCKER_Y;
   const BODY_CY = ROCKER_Y + BODY_H / 2;
 
