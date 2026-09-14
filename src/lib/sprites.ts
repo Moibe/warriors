@@ -482,6 +482,21 @@ const WEAPON_PIPE = template(14, 10, [
   ' OOO ',
 ]);
 
+/**
+ * The nickel revolver, and the only thing in the room that shines. Drawn small
+ * and held low: at this size a gun has to be read by its outline — barrel,
+ * cylinder, grip — because there is no room for a gun to look like anything.
+ */
+const WEAPON_PISTOL = template(14, 17, [
+  ' OOO ',
+  ' OMO ',
+  'OOMOO',
+  'OMMMO',
+  'OWMOO',
+  'OWWO ',
+  ' OOO ',
+]);
+
 const WEAPON_CAN = template(14, 17, [
   ' OOO ',
   ' OMO ',
@@ -497,6 +512,7 @@ const WEAPONS: Record<Exclude<WeaponId, 'none'>, Template> = {
   knife: WEAPON_KNIFE,
   pipe: WEAPON_PIPE,
   can: WEAPON_CAN,
+  pistol: WEAPON_PISTOL,
 };
 
 // ---------------------------------------------------------------------------
@@ -906,6 +922,143 @@ const ORPHAN_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   'HOHHOKKOHHOGSSO     ',
 ]);
 
+/**
+ * A Lizzie.
+ *
+ * The other three gangs are a garment repeated nine times — that is what makes
+ * them gangs, and it is how you read them across a dark board. These have no
+ * shared garment at all, which is the truth about them and a problem for a
+ * sprite. So the recognition is carried by the silhouette instead: they are the
+ * only people in the game with hair this wide, this much skin showing, and eye
+ * makeup where the Furies have war paint. `A` is the one slot that varies from
+ * woman to woman here — the board cannot be read by colour in this battle,
+ * which is exactly what the room is for.
+ */
+const LIZZIE_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '   OOOOOOOOOO   ',
+  '  OHHHHHHHHHHO  ',
+  ' OHHHHHHHHHHHHO ',
+  '  OHHSSSSSSHHO  ',
+  '   OHSGSSGSHO   ',
+  '   OHGESSEGHO   ',
+  '   OHSSFFSSHO   ',
+  '    OSSSSSSO    ',
+  '     OFFFFO     ',
+  '   OSSSSSSSSO   ',
+  '  OSSAAAAAASSO  ',
+  '  OSAAAAAAAASO  ',
+  '  OSAAAAAAAASO  ',
+  '   OKAAAAAAKO   ',
+  '    OSAAAASO    ',
+  '    OBBBBBBO    ',
+  '   OCCCCCCCCO   ',
+  '   OCCCOOCCCO   ',
+  '    OSSOOSSO    ',
+  '    OSSOOSSO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+/** From behind: no emblem, no letters. There was never anything to sew on. */
+const LIZZIE_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '   OOOOOOOOOO   ',
+  '  OHHHHHHHHHHO  ',
+  ' OHHHHHHHHHHHHO ',
+  '  OFFFFFFFFFFO  ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHJJJJHHO   ',
+  '    OHJJJJHO    ',
+  '     OFFFFO     ',
+  '   OSSSSSSSSO   ',
+  '  OSSAAAAAASSO  ',
+  '  OSAAAAAAAASO  ',
+  '  OSAAAAAAAASO  ',
+  '   OKAAAAAAKO   ',
+  '    OSAAAASO    ',
+  '    OBBBBBBO    ',
+  '   OCCCCCCCCO   ',
+  '   OCCCOOCCCO   ',
+  '    OSSOOSSO    ',
+  '    OSSOOSSO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+
+const LIZZIE_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '   OOOOOOOOOO   ',
+  '  OHHHHHHHHHHO  ',
+  ' OHHHHHHHHHHHHO ',
+  '  OHHSSSSSSHHO  ',
+  '   OHSGSSGSHO   ',
+  '   OHGOOOOGHO   ',
+  '   OHSSSSSSHO   ',
+  '    OFSOOSFO    ',
+  '     OFFFFO     ',
+  '   OSSSSSSSSO   ',
+  ' OSOSAAAAAASOSO ',
+  ' OSOSAAAAAASOSO ',
+  '  OSAAAAAAAASO  ',
+  '   OKAAAAAAKO   ',
+  '    OSAAAASO    ',
+  '    OBBBBBBO    ',
+  '   OCCCCCCCCO   ',
+  '  OCCCOOOOCCCO  ',
+  '  OSSOOOOOOSSO  ',
+  '  OSSOOOOOOSSO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
+
+const LIZZIE_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '   OOOOOOOOOO   ',
+  '  OHHHHHHHHHHO  ',
+  ' OHHHHHHHHHHHHO ',
+  '  OFFFFFFFFFFO  ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHJJJJHHO   ',
+  '    OHJJJJHO    ',
+  '     OFFFFO     ',
+  '   OSSSSSSSSO   ',
+  ' OSOSAAAAAASOSO ',
+  ' OSOSAAAAAASOSO ',
+  '  OSAAAAAAAASO  ',
+  '   OKAAAAAAKO   ',
+  '    OSAAAASO    ',
+  '    OBBBBBBO    ',
+  '   OCCCCCCCCO   ',
+  '  OCCCOOOOCCCO  ',
+  '  OSSOOOOOOSSO  ',
+  '  OSSOOOOOOSSO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
+/** Down: the hair spreads and the band stays. It is all she ever wore of theirs. */
+const LIZZIE_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '                OBBO',
+  '  OOOOOOOOOO    OBBO',
+  ' OHHHHHHHHHHO  OBBBO',
+  ' OHFFFFFFFFHO OSSBBO',
+  ' OHHSSSSSSHHO OSSCO ',
+  '  OHSSSSSSHO OACCCO ',
+  '  OHGOSSOGHOOAAAABO ',
+  '  OHSSSSSSHOOAAABAO ',
+  '   OKSOOSKOOFFAAAO  ',
+  '    OKKKKO OKSSO    ',
+]);
+
 const BODIES = {
   plain: {
     front: PLAIN_FRONT,
@@ -941,6 +1094,13 @@ const BODIES = {
     hurtFront: ORPHAN_HURT_FRONT,
     hurtBack: ORPHAN_HURT_BACK,
     down: ORPHAN_DOWN,
+  },
+  lizzie: {
+    front: LIZZIE_FRONT,
+    back: LIZZIE_BACK,
+    hurtFront: LIZZIE_HURT_FRONT,
+    hurtBack: LIZZIE_HURT_BACK,
+    down: LIZZIE_DOWN,
   },
 } as const;
 

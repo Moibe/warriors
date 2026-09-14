@@ -34,7 +34,7 @@ import {
   tilesInBurst,
   type ReachMap,
 } from './pathfinding';
-import { isAlive, unitAt, unitById, type Team, type Unit } from './units';
+import { hasLeft, inPlay, isAlive, unitAt, unitById, type Team, type Unit } from './units';
 
 /**
  * Which battle is installed.
@@ -164,8 +164,8 @@ export function activeUnit(): Unit | undefined {
   return unitById(battle.units, battle.activeId);
 }
 
-export function livingUnits(): Unit[] {
-  return battle.units.filter(isAlive);
+export function unitsInPlay(): Unit[] {
+  return battle.units.filter(inPlay);
 }
 
 export function tileOf(u: Unit): Tile {
@@ -252,7 +252,7 @@ function defaultAim(ability: Ability): Coord | null {
   let best: Coord | null = null;
   let bestDist = Infinity;
   for (const other of battle.units) {
-    if (!isAlive(other) || other.id === u.id) continue;
+    if (!inPlay(other) || other.id === u.id) continue;
     if (!range.has(tileKey(other.x, other.y))) continue;
     if (ability.targets !== 'any' && wantsAlly !== (other.team === u.team)) continue;
     const d = gridDistance(u, other);
@@ -291,7 +291,7 @@ export function abilityTargetsAt(x: number, y: number): Unit[] {
   if (!ability) return [];
   const cells =
     ability.aoe > 0 ? tilesInBurst(map, { x, y }, ability.aoe) : new Set([tileKey(x, y)]);
-  return battle.units.filter((u) => isAlive(u) && cells.has(tileKey(u.x, u.y)));
+  return battle.units.filter((u) => inPlay(u) && cells.has(tileKey(u.x, u.y)));
 }
 
 /**
@@ -355,7 +355,7 @@ function log(line: string) {
  * in a tactics game.
  */
 export function upcomingTurns(count = 7): { unit: Unit; ct: number }[] {
-  const sim = livingUnits().map((u) => ({ unit: u, ct: u.ct, speed: u.speed }));
+  const sim = unitsInPlay().map((u) => ({ unit: u, ct: u.ct, speed: u.speed }));
   const out: { unit: Unit; ct: number }[] = [];
   // Guard against a pathological all-zero-speed roster rather than spinning.
   for (let guard = 0; guard < 2000 && out.length < count; guard++) {
@@ -388,13 +388,13 @@ export function advanceClock(dt: number) {
   }
 
   for (let guard = 0; guard < 1000; guard++) {
-    const ready = livingUnits().filter((u) => u.ct >= 100);
+    const ready = unitsInPlay().filter((u) => u.ct >= 100);
     if (ready.length) {
       ready.sort((a, b) => b.ct - a.ct || b.speed - a.speed);
       beginTurn(ready[0]);
       return;
     }
-    for (const u of livingUnits()) u.ct += u.speed;
+    for (const u of unitsInPlay()) u.ct += u.speed;
   }
 }
 
@@ -439,14 +439,46 @@ export function endTurn() {
   clockDelay = TURN_GAP;
 }
 
-function checkVictory(): boolean {
-  const allies = battle.units.some((u) => u.team === 'ally' && isAlive(u));
-  const enemies = battle.units.some((u) => u.team === 'enemy' && isAlive(u));
-  if (allies && enemies) return false;
-  battle.winner = allies ? 'ally' : 'enemy';
+function decide(winner: Team, line: string): boolean {
+  battle.winner = winner;
   battle.phase = 'over';
-  log(allies ? '¡Victoria! El campo es tuyo.' : 'Derrota. Tu escuadra ha caído.');
+  log(line);
   return true;
+}
+
+/**
+ * Who has won, if anybody has.
+ *
+ * Two battles in one function, because there are two kinds. A stage with no
+ * door is a fight to the last man and comes out of the bottom branch exactly as
+ * it always did. A stage with a door is won by walking out of it — and lost the
+ * moment the count can no longer be filled, which is not the same as losing
+ * when the last man drops. Saying so on the beat somebody goes down is the
+ * whole point of a battle you are meant to run away from.
+ */
+function checkVictory(): boolean {
+  const exit = stage().exit;
+  const standing = battle.units.filter((u) => u.team === 'ally' && inPlay(u)).length;
+  const out = battle.units.filter((u) => u.team === 'ally' && hasLeft(u)).length;
+  const enemies = battle.units.some((u) => u.team === 'enemy' && inPlay(u));
+
+  if (exit) {
+    if (out >= exit.needed) return decide('ally', 'Fuera. La puerta queda atrás.');
+    if (out + standing < exit.needed) {
+      return decide('enemy', 'Ya no salís los que hacéis falta.');
+    }
+    // Clearing the room still ends it. Nobody is expected to manage that
+    // against guns, but a board with nobody left on it must never be a battle
+    // you are still required to walk out of.
+    if (!enemies) return decide('ally', 'No queda nadie disparando.');
+    return false;
+  }
+
+  if (standing && enemies) return false;
+  return decide(
+    standing ? 'ally' : 'enemy',
+    standing ? '¡Victoria! El campo es tuyo.' : 'Derrota. Tu escuadra ha caído.'
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -672,9 +704,32 @@ let pendingImpact: (() => void) | null = null;
 
 const POPUP_LIFE = 1.5;
 
+/** Whether this square is part of the way out. */
+function onExitTile(u: Unit): boolean {
+  const e = stage().exit;
+  return !!e && u.x >= e.x && u.x < e.x + e.w && u.y >= e.y && u.y < e.y + e.d;
+}
+
+/**
+ * Through the door, and out of the fight.
+ *
+ * It costs him the rest of his turn, which is the decision: you either shoot
+ * back or you leave. He keeps his square so that everything doing `tileAt(...)!`
+ * on a unit stays total — nothing draws him and nothing stands on him.
+ */
+function escapeThrough(u: Unit) {
+  u.leftOnTurn = battle.turn;
+  pushPopup(u, '¡FUERA!', '#79e07a');
+  log(`${u.name} cruza la puerta.`);
+  endTurn();
+}
+
 function onWalkFinished() {
   const u = activeUnit();
   if (!u) return;
+  // Landing on the doorway is the whole decision: no order to confirm and no
+  // key to learn. The tile is the verb.
+  if (u.team === 'ally' && onExitTile(u)) return escapeThrough(u);
   if (u.team === 'ally') {
     battle.phase = 'command';
   } else {
@@ -797,9 +852,11 @@ function resolveHits(actor: Unit, ability: Ability, targets: Unit[]) {
     target.hp = Math.max(0, target.hp - result.amount);
     target.hurtFor = HURT_TIME;
     pushPopup(target, String(result.amount), friendly ? '#ffb35c' : '#ffffff');
-    log(
-      `${actor.name} → ${target.name}: ${result.amount} de daño${ANGLE_TAG[result.angle]}.`
-    );
+    // The angle only means something to a swing. It was already lying about
+    // bottles and bricks; on a gunshot it would teach the exact opposite of
+    // what this battle exists to teach.
+    const angle = ability.kind === 'physical' ? ANGLE_TAG[result.angle] : '';
+    log(`${actor.name} → ${target.name}: ${result.amount} de daño${angle}.`);
 
     // Taking the weapon is the point of the move, not a side effect: with both
     // hands full you can still knock it loose, and either way the other one
@@ -865,8 +922,8 @@ let aiPlan: AiPlan | null = null;
  */
 function planAiTurn(u: Unit) {
   const reach = computeReachable(map, battle.units, u);
-  const foes = battle.units.filter((o) => isAlive(o) && o.team !== u.team);
-  const friends = battle.units.filter((o) => isAlive(o) && o.team === u.team);
+  const foes = battle.units.filter((o) => inPlay(o) && o.team !== u.team);
+  const friends = battle.units.filter((o) => inPlay(o) && o.team === u.team);
 
   let best: { score: number; plan: AiPlan } | null = null;
 

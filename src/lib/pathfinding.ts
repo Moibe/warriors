@@ -9,7 +9,7 @@ import {
 } from './grid';
 import { angleOf } from './combat';
 import type { Ability } from './jobs';
-import { isAlive, type Unit } from './units';
+import { hasLeft, isAlive, type Unit } from './units';
 
 /**
  * One reachable cell in a movement search.
@@ -63,6 +63,10 @@ export function computeReachable(map: BattleMap, units: Unit[], unit: Unit): Rea
   const bodies = new Set<string>();
   for (const u of units) {
     if (u.id === unit.id) continue;
+    // Somebody who already went through the door is not standing in it. Without
+    // this the first man out plugs the doorway for the two behind him, which is
+    // the opposite of what a way out is for.
+    if (hasLeft(u)) continue;
     if (isAlive(u)) blockers.set(tileKey(u.x, u.y), u);
     else bodies.add(tileKey(u.x, u.y));
   }
@@ -166,6 +170,9 @@ export function tilesInAbilityRange(
       const tile = tileAt(map, x, y);
       if (!tile) continue;
       if (Math.abs(tile.height - originHeight) > ability.vertical) continue;
+      if (ability.sight && !hasLineOfFire(map, origin, originHeight, { x, y }, tile.height)) {
+        continue;
+      }
       out.add(tileKey(x, y));
     }
   }
@@ -229,6 +236,9 @@ export function bestApproach(
     const dist = gridDistance(entry, targetTile);
     if (dist < ability.minRange || dist > ability.range) continue;
     if (Math.abs(targetTile.height - from.height) > ability.vertical) continue;
+    if (ability.sight && !hasLineOfFire(map, entry, from.height, targetTile, targetTile.height)) {
+      continue;
+    }
 
     if (wantsAngle) {
       // Trade steps for the angle. Everything else still prefers the cheapest
@@ -243,6 +253,52 @@ export function bestApproach(
 
 function approachScore(entry: ReachEntry, target: Unit): number {
   return ANGLE_RANK[angleOf(entry, target)] * ANGLE_DETOUR - entry.cost;
+}
+
+/**
+ * Whether a shot from one tile to another has anything in the way.
+ *
+ * Only the board blocks, and only a tile nobody can stand on that rises above
+ * BOTH ends of the line: a partition, the back of the sofa, the bar. A kerb
+ * does not, and neither does a mattress you could be standing on.
+ *
+ * Two consequences worth knowing before touching this. Climbing onto the
+ * furniture raises your end of the line and gives away the cover that furniture
+ * was giving you — the one board in the game where getting up high is the
+ * mistake. And people never block: the AI plans a shot on one tick and fires it
+ * on the next, with a walk in between, so a line that depended on who was
+ * standing where could be legal when planned and illegal when taken, and she
+ * would lose her turn with nothing on screen to explain it.
+ *
+ * When in doubt the wall wins. A player has to be able to trust a partition; a
+ * bullet that clips a corner one time in twenty turns cover into a gamble.
+ */
+export function hasLineOfFire(
+  map: BattleMap,
+  from: Coord,
+  fromHeight: number,
+  to: Coord,
+  toHeight: number
+): boolean {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const steps = (Math.abs(dx) + Math.abs(dy)) * 4;
+  if (steps === 0) return true;
+  const ceiling = Math.max(fromHeight, toHeight);
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    // Both roundings, worst case wins: sampling one of them lets a bullet slip
+    // through the corner of a wall on an exact diagonal.
+    for (const x of [Math.floor(from.x + dx * t), Math.ceil(from.x + dx * t)]) {
+      for (const y of [Math.floor(from.y + dy * t), Math.ceil(from.y + dy * t)]) {
+        if ((x === from.x && y === from.y) || (x === to.x && y === to.y)) continue;
+        const tile = tileAt(map, x, y);
+        if (!tile) continue; // a hole in the floor is not a wall
+        if (!tile.walkable && tile.height > ceiling) return false;
+      }
+    }
+  }
+  return true;
 }
 
 /**

@@ -51,7 +51,6 @@ for (const id of targets.filter((t) => ids.includes(t))) {
     const walkable = m.tiles.filter((t) => t && t.walkable).length;
     const drawn = m.tiles.filter(Boolean).length;
     notes.push(`${m.width}×${m.depth} · ${drawn} casillas dibujadas · ${walkable} pisables`);
-    if (walkable < 120) problems.push(`sólo ${walkable} casillas pisables: 9 contra 9 necesita ~140`);
 
     // Everybody starts on a square that exists, that can be stood on, and that
     // nobody else is already standing on.
@@ -67,6 +66,13 @@ for (const id of targets.filter((t) => ids.includes(t))) {
     }
     const sides = new Set(roster.map((u) => u.team));
     notes.push(`${roster.length} unidades, ${sides.size} bandos`);
+    // Room to manoeuvre, scaled to how many people are actually in it. A flat
+    // threshold called the Lizzies' flat too small when the whole point of that
+    // battle is three people in a room they cannot spread out in.
+    const need = roster.length * 8;
+    if (walkable < need) {
+      problems.push(`${walkable} casillas pisables para ${roster.length} unidades: hacen falta ~${need}`);
+    }
     if (sides.size !== 2) problems.push('una batalla necesita exactamente dos bandos');
 
     // A prop's mesh is decoration; the map's '#' is the rule. When they

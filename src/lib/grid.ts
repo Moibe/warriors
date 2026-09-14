@@ -36,6 +36,7 @@ export type Surface =
   | 'sand' // tierra batida — the infield
   | 'wood' // tarima — the bandstand deck
   | 'metal' // chapa — the roof of something you climbed onto
+  | 'carpet' // moqueta — the first indoor floor in the game
   | 'water'; // charco — impassable under the base rules
 
 export type Facing = 'n' | 'e' | 's' | 'w';
@@ -74,6 +75,7 @@ export const SURFACE_NAMES: Record<Surface, string> = {
   sand: 'Tierra batida',
   wood: 'Tarima',
   metal: 'Chapa',
+  carpet: 'Moqueta',
   water: 'Charco',
 };
 
@@ -97,6 +99,9 @@ export const SURFACE_COLORS: Record<Surface, { top: string; side: string }> = {
   // Dark on purpose: it reads as a drip rail rather than as a stripe of paint
   // that fails to match whichever car it is on.
   metal: { top: '#14161b', side: '#0e1014' },
+  // The oxblood carpet of a living room lit by one red lampshade. Warm where
+  // every other surface in the game is cold, which is most of what says indoors.
+  carpet: { top: '#4a1f24', side: '#2e1216' },
   wood: { top: '#5d4126', side: '#3b2a18' },
   water: { top: '#2b4a63', side: '#1a2f40' },
 };
@@ -224,6 +229,7 @@ const SURFACE_CHARS: Record<string, Surface> = {
   n: 'sand',
   m: 'wood',
   x: 'metal',
+  c: 'carpet',
   w: 'water',
 };
 

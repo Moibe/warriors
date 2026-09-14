@@ -10,6 +10,7 @@
   import CameraRig from './CameraRig.svelte';
   import Bus from './Bus.svelte';
   import ComfortStation from './ComfortStation.svelte';
+  import Furniture from './Furniture.svelte';
   import ParkedCar from './ParkedCar.svelte';
   import FloatingNumber from './FloatingNumber.svelte';
   import Projectile from './Projectile.svelte';
@@ -33,6 +34,7 @@
   } from './battle.svelte';
   import { LEVEL, TILE, tileToWorld, type Tile } from './grid';
   import { landableTiles, tilesInBurst } from './pathfinding';
+  import { exitTiles } from './stages';
   import { isAlive } from './units';
 
   let {
@@ -54,11 +56,18 @@
   // One derived read of the installed stage; the board and the scenery hang off
   // it, so every `map` below keeps working untouched and now tracks the swap.
   const stage = $derived(currentStage());
+  /** The way out, if this battle has one. */
+  const doorway = $derived(exitTiles(stage));
   const map = $derived(stage.map);
   const light = $derived(stage.light);
 
   /** Which component draws which prop. Stages name a kind, not a component. */
-  const PROPS = { comfortStation: ComfortStation, bus: Bus, parkedCar: ParkedCar };
+  const PROPS = {
+    comfortStation: ComfortStation,
+    bus: Bus,
+    parkedCar: ParkedCar,
+    furniture: Furniture,
+  };
 
   useTask((delta) => {
     // Clamp: a backgrounded tab hands back a huge delta on return, which would
@@ -185,7 +194,9 @@
 
 <Terrain {map} onTileClick={handleClick} />
 
-{#each scenery as { p, pos, rot, variant } (p.kind + ':' + p.x + ',' + p.y)}
+<!-- Keyed by position in the list, not by tile: a rug and the armchair standing
+     on it share a square, and so would any two pieces stacked on purpose. -->
+{#each scenery as { p, pos, rot, variant }, i (i)}
   {@const Prop = PROPS[p.kind]}
   <Prop position={pos} rotation={rot} {variant} />
 {/each}
@@ -196,6 +207,15 @@
 <TileOverlays {map} tiles={moveTiles} color="#4a9bff" opacity={0.85} lift={0.02} />
 <TileOverlays {map} tiles={rangeTiles} color="#ff4a36" opacity={0.85} lift={0.03} />
 <TileOverlays {map} tiles={burstTiles} color="#ffd24a" opacity={0.9} lift={0.045} pulse={0.25} />
+
+<!-- The way out. The only overlay that is always on: the other three describe a
+     moment — where I can walk, what I can reach, what the swing catches — and
+     this one describes a standing fact about the room. Green because it is the
+     one colour the HUD has left, and drawn above the rest at half strength so a
+     blue movement panel never hides it and it never shouts over one. -->
+{#if doorway.size}
+  <TileOverlays {map} tiles={doorway} color="#79e07a" opacity={0.5} lift={0.055} pulse={0.35} />
+{/if}
 
 <!-- No bobbing arrow: the acting unit already carries its own marker, and two
      floating arrows on the same tile read as a duplicate. -->

@@ -41,11 +41,12 @@
   import ResultBanner from '$lib/ui/ResultBanner.svelte';
   import StageSelect from '$lib/ui/StageSelect.svelte';
   import { STAGE_LIST, type StageId } from '$lib/stages';
+  import EscapeTally from '$lib/ui/EscapeTally.svelte';
   import TileInfo from '$lib/ui/TileInfo.svelte';
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.17.0';
+  const APP_VERSION = '0.18.0';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -459,6 +460,9 @@
         </p>
       </div>
       <TileInfo tile={cursorTile} occupant={cursorOccupant} body={cursorBody} />
+      {#if stage.exit}
+        <EscapeTally units={battle.units} needed={stage.exit.needed} label={stage.exit.label} />
+      {/if}
     </div>
 
     <div class="corner top-right">

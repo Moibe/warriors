@@ -7,7 +7,7 @@ import { parseMap, type MapSource } from './grid';
 //
 //   heights   '0'-'9','a'-'z' → levels, '.' → void (a hole in the map)
 //   surfaces  g césped · d tierra · s concreto · k asfalto · n tierra batida ·
-//             m tarima · x chapa · w charco
+//             m tarima · x chapa · c moqueta · w charco
 //   blocked   '#' → the tile is drawn but nobody can stand on it
 //
 // Every layer must have the same number of rows and columns. Spaces are
@@ -225,3 +225,66 @@ const ORPHAN_BLOCK: MapSource = {
 };
 
 export const orphanBlock = parseMap(ORPHAN_BLOCK);
+
+/**
+ * "El piso de las Lizzies" — the only room in the game.
+ *
+ * The other three boards are places you fight across. This one is a place
+ * people live in, and it is the first board that is won by leaving rather than
+ * by clearing: the way out is the three tiles of landing at the top, and the
+ * whole apartment is between you and them.
+ *
+ * It is small on purpose — twelve by ten, about seventy walkable squares
+ * against a hundred and fifty outdoors — because a gun that reaches six tiles
+ * turns anywhere bigger into one long corridor with nothing to hide behind.
+ * What makes it playable is the partitions: walls at level 5, furniture at 3
+ * and 4, and a pistol that cannot shoot through any of it. Every room has two
+ * ways out, without exception — one woman standing in a single-tile doorway
+ * would seal it, and there is no answer to that.
+ *
+ * North (row 0) at the top: the landing and the front door. Then the hall, the
+ * living room with the sofa and the low table, the kitchen along the east wall,
+ * the bedroom south-west and the back room south-east. The three Warriors start
+ * one to a room, which is not a deployment so much as the trap already sprung.
+ */
+const LIZZIE_PLACE: MapSource = {
+  name: 'El piso de las Lizzies',
+  heights: [
+    '555511155555',
+    '544411111111',
+    '511111111111',
+    '544411444114',
+    '533311445000',
+    '511221343000',
+    '511111343000',
+    '544114444144',
+    '522211441122',
+    '522111111122',
+  ],
+  surfaces: [
+    'ddddsssddddd',
+    'dxxxmmmmmmmm',
+    'dmmmmmmmmmmm',
+    'ddddccdddssd',
+    'dxxxccxdxsss',
+    'dccxxcxdxsss',
+    'dcccccxdxsss',
+    'dddccddddcdd',
+    'dxxxccxdccxx',
+    'dxxcccccccxx',
+  ],
+  blocked: [
+    '####...#####',
+    '####........',
+    '#...........',
+    '####..###..#',
+    '#.....###...',
+    '#......##...',
+    '#.....###...',
+    '###..####.##',
+    '#.....##....',
+    '#...........',
+  ],
+};
+
+export const lizziePlace = parseMap(LIZZIE_PLACE);

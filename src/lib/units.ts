@@ -53,7 +53,13 @@ export type Unit = {
    */
   hat?: HatId;
 
-  /** Per-person recolor. Skin and hair only — never the gang's colors. */
+  /**
+   * Per-person recolor. Skin and hair, and for three gangs out of four that is
+   * the whole of it: the cut is what makes them a gang, so nobody's is allowed
+   * to differ. The Lizzies are the exception the rule needed — they have no
+   * shared garment at all, so theirs reaches the gang slot too, and they are
+   * the one battle where the board cannot be read by colour.
+   */
   paletteOverride?: Partial<Palette>;
 
   /** Seconds left on the recoil reaction. Presentation only. */
@@ -73,14 +79,40 @@ export type Unit = {
    * start.
    */
   fellOnTurn: number | null;
+
+  /**
+   * The turn he got through the door, or null while he is still in the room.
+   *
+   * The mirror of `fellOnTurn`, and deliberately shaped the same way: a man who
+   * is out is out of the rules exactly like a man who is down — no turn, no
+   * target, no vote on who has won — except that he counts for you instead of
+   * against you, and nothing draws him.
+   */
+  leftOnTurn: number | null;
 };
 
 export function isAlive(u: Unit): boolean {
   return u.hp > 0;
 }
 
+/** Somebody who made it out. Out of the rules, and not a casualty. */
+export function hasLeft(u: Unit): boolean {
+  return u.leftOnTurn !== null;
+}
+
+/**
+ * Standing, and still in the room. The only people the rules speak to.
+ *
+ * `isAlive` was enough while the only way to leave a battle was to be carried
+ * out of it. A door makes two different kinds of gone, and almost everything
+ * that used to ask "is he alive" was really asking this.
+ */
+export function inPlay(u: Unit): boolean {
+  return isAlive(u) && !hasLeft(u);
+}
+
 export function unitAt(units: Unit[], x: number, y: number): Unit | undefined {
-  return units.find((u) => isAlive(u) && u.x === x && u.y === y);
+  return units.find((u) => inPlay(u) && u.x === x && u.y === y);
 }
 
 /**
@@ -178,6 +210,7 @@ export function createUnit(seed: UnitSeed): Unit {
     hurtFor: 0,
     deathFor: 0,
     fellOnTurn: null,
+    leftOnTurn: null,
   };
 }
 
@@ -441,6 +474,54 @@ const ORPHAN_SQUAD = () => [
   }),
 ];
 
+// ---------------------------------------------------------------------------
+// The Lizzies
+// ---------------------------------------------------------------------------
+//
+// The one gang here with nothing in common to wear. Every other squad in this
+// file overrides skin and hair and leaves the gang colour alone, because the
+// coat is what makes them a gang; these override the gang colour too, and each
+// one is dressed differently on purpose. It costs the player the thing he has
+// leaned on for three battles — reading the board by colour — in the battle
+// where the board is a room full of people who invited him in.
+//
+// Only one of them starts holding anything. The guns are hidden in the flat,
+// not on them: if you could see the bulge in the street, nobody would have come
+// upstairs.
+
+const LIZZIE_SQUAD = () => [
+  // On the sofa, on the cushion the revolver is under.
+  createUnit({
+    id: 'chrome', name: 'Chrome', job: 'gunhand', team: 'enemy',
+    x: 1, y: 4, facing: 'e', ct: 52, brave: 74,
+    paletteOverride: { A: '#241f27', H: '#17141f', J: '#0c0a11' },
+  }),
+  // Against the kitchen counter, between Rembrandt and the drawer.
+  createUnit({
+    id: 'mouse', name: 'Mouse', job: 'wallflower', team: 'enemy',
+    x: 9, y: 5, facing: 'e', ct: 20, brave: 58,
+    paletteOverride: { A: '#e6dbc6', H: '#d9d0ab', J: '#a89a72', S: '#e8bd93', K: '#c2946c' },
+  }),
+  // The one who talked to them in the street, perched on the low table.
+  createUnit({
+    id: 'starr', name: 'Starr', job: 'hostess', team: 'enemy',
+    x: 3, y: 5, facing: 'n', ct: 36, brave: 82,
+    paletteOverride: { A: '#8e2a3a', H: '#8d3b1e', J: '#5e2412' },
+  }),
+  // The one who decided who sat where, now sitting beside Vermin.
+  createUnit({
+    id: 'roxy', name: 'Roxy', job: 'hostess', team: 'enemy',
+    x: 10, y: 9, facing: 'w', ct: 26,
+    paletteOverride: { A: '#c8a34e', H: '#17141f', J: '#0c0a11', S: '#7a5030', K: '#5b3a22' },
+  }),
+  // In the back-room doorway, with no stash within reach of her.
+  createUnit({
+    id: 'dallas', name: 'Dallas', job: 'hostess', team: 'enemy',
+    x: 8, y: 8, facing: 's', ct: 8,
+    paletteOverride: { A: '#2f5e46', H: '#d9d0ab', J: '#a89a72' },
+  }),
+];
+
 /** The nine who went to the meeting. They travel from one battle to the next. */
 export function warriors(spots?: Spot[]): Unit[] {
   return placeSquad(WARRIOR_SQUAD(), spots);
@@ -459,4 +540,23 @@ export function turnbull(spots?: Spot[]): Unit[] {
 /** The Orphans, who never leave their three blocks. */
 export function orphans(spots?: Spot[]): Unit[] {
   return placeSquad(ORPHAN_SQUAD(), spots);
+}
+
+/**
+ * Some of the nine, in the order you name them.
+ *
+ * `warriors(spots)` hands out positions by index across the whole squad, which
+ * is right when all nine turn up and useless when only three do — filtering
+ * afterwards leaves the survivors holding somebody else's chair. This picks
+ * first and places second, so the spots line up with the names you asked for.
+ */
+export function warriorsNamed(ids: string[], spots: Spot[]): Unit[] {
+  const squad = WARRIOR_SQUAD();
+  const picked = ids.map((id) => squad.find((u) => u.id === id)).filter((u): u is Unit => !!u);
+  return placeSquad(picked, spots);
+}
+
+/** The Lizzies, at home, which is the only place they are dangerous. */
+export function lizzies(spots?: Spot[]): Unit[] {
+  return placeSquad(LIZZIE_SQUAD(), spots);
 }

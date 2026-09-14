@@ -46,6 +46,16 @@ export type Ability = {
   /** Greyed out unless the fighter is holding something. */
   needsWeapon?: boolean;
   /**
+   * Has to see them. A wall or a piece of furniture between the two of you
+   * refuses the shot outright.
+   *
+   * Optional, and nothing in the first three battles sets it, so their reach
+   * maths comes out exactly as it was. It exists because a gun is the first
+   * thing in this game that cannot be answered by facing, by height or by
+   * closing the distance — take the wall away and there is no answer left.
+   */
+  sight?: boolean;
+  /**
    * What the move throws. Its only job is to be watched flying: an ability
    * that names one waits for the thing to land before any damage is dealt, so
    * the hit reads as caused by the object rather than appearing beside it.
@@ -76,7 +86,7 @@ export type Palette = {
 
 export type HatId = 'afro' | 'brim' | 'bandana' | 'cap' | null;
 export type FaceId = 'fury' | null;
-export type WeaponId = 'bat' | 'knife' | 'pipe' | 'can' | 'none';
+export type WeaponId = 'bat' | 'knife' | 'pipe' | 'can' | 'pistol' | 'none';
 
 /** Something that leaves the hand and is seen crossing the board to land. */
 export type ProjectileId = 'bottle' | 'brick';
@@ -103,7 +113,7 @@ export type Job = {
   stats: JobStats;
   abilities: Ability[];
   sprite: {
-    body: 'plain' | 'warrior' | 'fury' | 'turnbull' | 'orphan';
+    body: 'plain' | 'warrior' | 'fury' | 'turnbull' | 'orphan' | 'lizzie';
     hat: HatId;
     face: FaceId;
     /** What this role starts the fight holding. Can be lost, or taken. */
@@ -125,7 +135,10 @@ export type JobId =
   | 'ringleader'
   | 'stray'
   | 'cornerboy'
-  | 'loudmouth';
+  | 'loudmouth'
+  | 'gunhand'
+  | 'wallflower'
+  | 'hostess';
 
 // ---------------------------------------------------------------------------
 // Palettes
@@ -676,6 +689,160 @@ const BLUSTER: Ability = {
   desc: 'Grita mucho más fuerte de lo que pega. Mientras siga de pie, los suyos no se van.',
 };
 
+/**
+ * The Lizzies, who do not have gang colours.
+ *
+ * Every other palette here is the point of the gang: nine men in one coat. This
+ * one only sets what they genuinely share — the outline, the jeans, the boots,
+ * the eye makeup, and the red band that is the single repeated thing on any of
+ * them. `A` is deliberately left at a neutral and overridden per woman, which
+ * is the first time in this file that the gang slot varies. It is also the
+ * whole tactical point of the room: this is the one battle the player cannot
+ * read by colour, so he has to read the turn order instead.
+ */
+const LIZZIE_COLORS: Partial<Palette> = {
+  O: '#1a141c',
+  A: '#6b4a56',
+  B: '#2a2220',
+  C: '#3d4f6d',
+  M: '#b9bdc6',
+  W: '#6a4a2c',
+  G: '#3350a8',
+  F: '#b4304a',
+};
+
+// ---------------------------------------------------------------------------
+// The Lizzies' moves
+// ---------------------------------------------------------------------------
+//
+// Three gangs taught three answers — the clock, the arc, the angle — and
+// everything below is built so that all three are worth nothing.
+//
+// A gun is not "the long-range move of this chapter". It is somebody breaking
+// the rule the whole night runs on, and it has to read that way at the table:
+// it does not fly, it does not care which way you are facing, and it does not
+// switch off when you walk into it. The only thing it needs is to see you, and
+// a wall is the one thing that can take that away.
+
+/**
+ * The nickel revolver. Six tiles, no dead zone, no flight.
+ *
+ * It is not long because of the number — the brick already reaches five. It is
+ * long because it has no minimum: the brick covers a ring, this covers a disc,
+ * and it is the part of the disc under your own feet that matters. Gun Hill
+ * Road taught the player to walk into the arc. There is no arc.
+ *
+ * No `accuracy`, deliberately: `forecast` ignores it for thrown-and-shot moves
+ * and pins the rate at 92 plus height. A number the engine never reads would be
+ * a lie sitting in the data.
+ *
+ * Two of six stamina is the whole cylinder — three shots in a battle, countable
+ * off the AGUANTE bar by anybody who thinks to look.
+ */
+const PISTOL_SHOT: Ability = {
+  id: 'pistolshot',
+  name: 'Disparar',
+  kind: 'ranged',
+  range: 6,
+  minRange: 0,
+  aoe: 0,
+  mp: 2,
+  power: 3.4,
+  vertical: Infinity,
+  targets: 'enemy',
+  needsWeapon: true,
+  sight: true,
+  desc: 'No vuela, no se ve venir y le da igual hacia dónde mires. Sólo necesita verte.',
+};
+
+/**
+ * The small automatic. Half the damage, a third of the reach, and legs behind
+ * it. The revolver is answered with geometry; this one is answered with tempo.
+ */
+const AUTO_SHOT: Ability = {
+  id: 'autoshot',
+  name: 'Tiro corto',
+  kind: 'ranged',
+  range: 3,
+  minRange: 0,
+  aoe: 0,
+  mp: 2,
+  power: 2.2,
+  vertical: Infinity,
+  targets: 'enemy',
+  needsWeapon: true,
+  sight: true,
+  desc: 'La pequeña, de cerca. Pega la mitad y le quedan el doble.',
+};
+
+/**
+ * What is left when the chambers are empty, and the reason a gun on the floor
+ * is still worth taking. Priced at nothing so the planner keeps her busy rather
+ * than parking her: the shot drops out of her options by itself the moment she
+ * runs dry, and she falls back to this.
+ */
+const PISTOL_WHIP: Ability = {
+  id: 'whip',
+  name: 'Culatazo',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 2.2,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 76,
+  needsWeapon: true,
+  desc: 'Se acabaron las balas. Sigue siendo un trozo de metal en la mano.',
+};
+
+/**
+ * Not a punch. She hangs off you.
+ *
+ * Ninety-five accuracy and four points of damage is the most useless attack in
+ * the game, on purpose: most of the women in this room cannot hurt anybody, and
+ * the player has to work that out while they are all over him. What she is
+ * actually doing is standing where he was going to walk — the movement search
+ * refuses an enemy's tile outright — and no field on Ability can say that,
+ * which is why this one does not try.
+ */
+const CLOSE_IN: Ability = {
+  id: 'closein',
+  name: 'Echarse encima',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 1.1,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 95,
+  desc: 'No te pega: se te cuelga. Casi nunca falla y casi nunca duele.',
+};
+
+/**
+ * The blade that was under the cushion she sat you on. One of them has it and
+ * the rest have the row greyed out — the same role in two states, which is what
+ * `needsWeapon` was already for.
+ */
+const CUSHION_KNIFE: Ability = {
+  id: 'cushionknife',
+  name: 'Navaja del cojín',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 3.4,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 74,
+  needsWeapon: true,
+  desc: 'Estaba debajo del sitio donde te sentó. Falla una de cada cuatro.',
+};
+
 // ---------------------------------------------------------------------------
 // The catalog
 // ---------------------------------------------------------------------------
@@ -768,6 +935,64 @@ export const JOBS: Record<JobId, Job> = {
       face: null,
       weapon: 'can',
       palette: palette(WARRIOR_COLORS),
+    },
+  },
+
+  // --- The Lizzies ---------------------------------------------------------
+  //
+  // The frailest people in the game by a long way, and the only ones who can
+  // kill you from across the room. Everything about them is that trade: a
+  // Warrior who reaches one drops her in two or three, and a Warrior who spends
+  // the night in the open never reaches anybody.
+
+  gunhand: {
+    id: 'gunhand',
+    name: 'Pistolera',
+    tag: 'PIS',
+    stats: { hp: 32, mp: 6, pa: 4, ma: 7, speed: 7, move: 3, jump: 2 },
+    abilities: [
+      PISTOL_SHOT,
+      PISTOL_WHIP,
+      punch(1.3, 'Sin el hierro es una chica de casa dando manotazos.'),
+    ],
+    sprite: {
+      body: 'lizzie',
+      hat: null,
+      face: null,
+      weapon: 'pistol',
+      palette: palette(LIZZIE_COLORS),
+    },
+  },
+
+  wallflower: {
+    id: 'wallflower',
+    name: 'La del rincón',
+    tag: 'RIN',
+    stats: { hp: 34, mp: 8, pa: 4, ma: 6, speed: 8, move: 5, jump: 3 },
+    abilities: [AUTO_SHOT, PISTOL_WHIP, punch(1.3, 'Callada también para esto.')],
+    sprite: {
+      body: 'lizzie',
+      hat: null,
+      face: null,
+      weapon: 'pistol',
+      palette: palette(LIZZIE_COLORS),
+    },
+  },
+
+  hostess: {
+    id: 'hostess',
+    name: 'Anfitriona',
+    tag: 'ANF',
+    stats: { hp: 38, mp: 6, pa: 4, ma: 3, speed: 9, move: 4, jump: 2 },
+    // The bottle is the Warriors' own, reused exactly as it stands — the same
+    // precedent as the Orphans borrowing the brick.
+    abilities: [CLOSE_IN, BOTTLE, CUSHION_KNIFE],
+    sprite: {
+      body: 'lizzie',
+      hat: null,
+      face: null,
+      weapon: 'none',
+      palette: palette(LIZZIE_COLORS),
     },
   },
 
@@ -938,4 +1163,5 @@ export const WEAPON_NAMES: Record<Exclude<WeaponId, 'none'>, string> = {
   knife: 'la navaja',
   pipe: 'el tubo',
   can: 'el spray',
+  pistol: 'la pistola',
 };

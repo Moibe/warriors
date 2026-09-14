@@ -10,12 +10,35 @@
 // to deal a fresh squad every time, never the bodies the last fight left behind
 // and never a unit somebody already took the bat off.
 
-import type { BattleMap } from './grid';
-import { gunHillRoad, orphanBlock, riversidePark } from './maps';
-import { furies, orphans, turnbull, warriors, type Unit } from './units';
+import { tileKey, type BattleMap } from './grid';
+import { gunHillRoad, lizziePlace, orphanBlock, riversidePark } from './maps';
+import { furies, lizzies, orphans, turnbull, warriors, warriorsNamed, type Unit } from './units';
 
 /** Which procedural prop draws it — one key per entry in Scene's PROPS map. */
-export type PropKind = 'comfortStation' | 'bus' | 'parkedCar';
+export type PropKind = 'comfortStation' | 'bus' | 'parkedCar' | 'furniture';
+
+/**
+ * The way out.
+ *
+ * A battle that has one is won by leaving it rather than by clearing it, and a
+ * battle without one is a fight to the last man — which is why this is optional
+ * and not a default nobody uses. Shaped like a prop footprint because it is the
+ * same kind of thing: a rectangle of tiles that means something.
+ *
+ * Never make it narrower than about three tiles. One woman standing in a
+ * one-tile doorway seals it, and a way out that can be corked is not one.
+ */
+export type Exit = {
+  /** North-west corner of the doorway, in tiles. */
+  x: number;
+  y: number;
+  w: number;
+  d: number;
+  /** How many of them have to get through it. */
+  needed: number;
+  /** Heading over the HUD counter. Player-facing, so Spanish. */
+  label: string;
+};
 
 /**
  * A prop standing on the board. The map's `blocked` layer has to agree with the
@@ -74,7 +97,7 @@ export const NIGHT_RIG: Lighting = {
   key: { color: '#cfd9f2', intensity: 1.55, position: [11, 15, 4] },
 };
 
-export type StageId = 'riverside-park' | 'gun-hill-road' | 'orphan-block';
+export type StageId = 'riverside-park' | 'gun-hill-road' | 'orphan-block' | 'lizzie-place';
 
 export type Stage = {
   id: StageId;
@@ -88,7 +111,20 @@ export type Stage = {
   sky: Sky;
   light: Lighting;
   outcome: { victory: string; defeat: string };
+  /** Present only on a battle that is won by getting out of it. */
+  exit?: Exit;
 };
+
+/** The doorway as tile keys, for the overlay. Empty on a stage without one. */
+export function exitTiles(stage: Stage): Set<string> {
+  const out = new Set<string>();
+  const e = stage.exit;
+  if (!e) return out;
+  for (let y = e.y; y < e.y + e.d; y++) {
+    for (let x = e.x; x < e.x + e.w; x++) out.add(tileKey(x, y));
+  }
+  return out;
+}
 
 export const STAGES: Record<StageId, Stage> = {
   'riverside-park': {
@@ -215,17 +251,85 @@ export const STAGES: Record<StageId, Stage> = {
       defeat: 'Tres manzanas y no las pasaste. Sully va a contarlo toda su vida.',
     },
   },
+
+  'lizzie-place': {
+    id: 'lizzie-place',
+    name: 'El piso de las Lizzies',
+    rival: 'Lizzies',
+    map: lizziePlace,
+    // Furniture indices come from PIECE in Furniture.svelte: 0 sofa, 1 armchair,
+    // 2 mattress, 3 table, 5 stereo, 7 rug, 8 beads. The climbing ones sit on
+    // the heights the map gives them and the rest of the walls are terrain.
+    props: [
+      { kind: 'furniture', x: 3, y: 4, w: 3, d: 2, height: 1, variant: 7 },
+      { kind: 'furniture', x: 1, y: 4, w: 2, d: 1, height: 3, variant: 0 },
+      { kind: 'furniture', x: 3, y: 4, w: 1, d: 1, height: 3, variant: 1 },
+      { kind: 'furniture', x: 3, y: 5, w: 1, d: 1, height: 2, variant: 3 },
+      { kind: 'furniture', x: 4, y: 5, w: 1, d: 1, height: 2, variant: 3 },
+      { kind: 'furniture', x: 6, y: 5, w: 1, d: 1, height: 3, variant: 1 },
+      { kind: 'furniture', x: 6, y: 6, w: 1, d: 1, height: 3, variant: 5 },
+      { kind: 'furniture', x: 4, y: 7, w: 1, d: 1, height: 1, variant: 8 },
+      { kind: 'furniture', x: 1, y: 8, w: 2, d: 2, height: 2, variant: 2 },
+      { kind: 'furniture', x: 3, y: 8, w: 1, d: 1, height: 2, variant: 3 },
+      { kind: 'furniture', x: 10, y: 8, w: 2, d: 2, height: 2, variant: 2 },
+    ],
+    // The doorway, and the only reason to be here.
+    exit: { x: 4, y: 0, w: 3, d: 1, needed: 3, label: 'Salir' },
+    // Three of them ever got up those stairs, and by this point in the night the
+    // nine are scattered anyway. Each one starts walled off from the other two:
+    // there is no front line here, and regrouping is the mistake.
+    roster: () => [
+      ...warriorsNamed(
+        ['cochise', 'rembrandt', 'vermin'],
+        [
+          // Sunk into the sofa, with one of them either side of him.
+          { x: 2, y: 4, facing: 's', ct: 30 },
+          // Stood in the kitchen with his back to the window, and the only one
+          // who can see the drawer being opened.
+          { x: 10, y: 5, facing: 'w', ct: 0 },
+          // On the edge of the mattress in the back room, furthest from the door.
+          { x: 9, y: 9, facing: 'n', ct: 24 },
+        ]
+      ),
+      ...lizzies(),
+    ],
+    sky: {
+      // There is no sky: it is a room. What shows past the window is the
+      // stairwell and the street, which at this hour is nothing much.
+      zenith: '#0a0910',
+      upper: '#12101a',
+      lower: '#1a1c2c',
+      horizon: '#2a2230',
+      glow: 'rgba(192, 57, 43, 0.28)',
+    },
+    light: {
+      // One red lampshade and a bulb in the hall: indoors is mostly the absence
+      // of a moon. But a room lit only warm goes to mud — every surface here is
+      // already brown — so the fill is pushed cool and the key kept strong
+      // enough to keep the floor, the furniture and the walls on three separate
+      // values. Atmosphere that costs you the board is not atmosphere.
+      ambient: { color: '#9a8fa0', intensity: 0.66 },
+      hemisphere: { sky: '#8a93b4', ground: '#4a3030', intensity: 0.72 },
+      key: { color: '#f0c079', intensity: 1.5, position: [6, 13, 8] },
+    },
+    outcome: {
+      victory: 'Fuera, y escaleras abajo. Nadie os preguntó de dónde erais por educación.',
+      defeat: 'No salisteis los tres. La recompensa de los Riffs se cobra esta noche.',
+    },
+  },
 };
 
 /**
  * The order the picker offers them, which is the order they happen on the way
  * home: the Turnbull catch them on Gun Hill Road, the train dumps them on the
- * Orphans' block, and the Furies are waiting further south in Riverside Park.
+ * Orphans' block, the Furies are waiting further south in Riverside Park, and
+ * the Lizzies ask them upstairs afterwards.
  */
 export const STAGE_LIST: Stage[] = [
   STAGES['gun-hill-road'],
   STAGES['orphan-block'],
   STAGES['riverside-park'],
+  STAGES['lizzie-place'],
 ];
 
 export const DEFAULT_STAGE: StageId = 'riverside-park';
