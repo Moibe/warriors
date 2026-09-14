@@ -21,3 +21,6 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Capturas del arnés de tools/: útiles para mirar, no para versionar
+tools/shots/
