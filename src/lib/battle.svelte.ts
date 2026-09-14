@@ -139,11 +139,11 @@ export const battle = $state({
 export const HURT_TIME = 0.5;
 
 /**
- * How long a felled unit stays on screen, recoiling and fading. Kept close to
- * the 0.75s pause after an action so the body is gone by the time the next turn
- * starts, rather than fading over somebody else's move.
+ * How long the drop itself takes. It used to be the length of a fade-out, back
+ * when a body disappeared; now nothing disappears and this only has to cover
+ * the beat between being hit and being on the floor, so it is shorter.
  */
-export const DEATH_TIME = 0.8;
+export const DEATH_TIME = 0.35;
 
 /** Seconds of dead air between one turn ending and the next beginning. */
 const TURN_GAP = 0.35;
@@ -817,6 +817,7 @@ function resolveHits(actor: Unit, ability: Ability, targets: Unit[]) {
     }
     if (target.hp === 0) {
       target.deathFor = DEATH_TIME;
+      target.fellOnTurn = battle.turn;
       log(`${target.name} cae.`);
       pushPopup(target, 'K.O.', '#ff6b6b');
     }

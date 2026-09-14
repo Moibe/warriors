@@ -32,7 +32,7 @@
   import { forecast, isValidTarget } from '$lib/combat';
   import { facingTo, tileAt, tileKey, type Coord, type Facing } from '$lib/grid';
   import { tilesInBurst } from '$lib/pathfinding';
-  import { isAlive, unitAt } from '$lib/units';
+  import { fallenAt, isAlive, unitAt } from '$lib/units';
 
   import BattleLog from '$lib/ui/BattleLog.svelte';
   import CameraControls from '$lib/ui/CameraControls.svelte';
@@ -45,7 +45,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.16.1';
+  const APP_VERSION = '0.17.0';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -361,6 +361,11 @@
   const cursorOccupant = $derived(
     cursor ? unitAt(battle.units, cursor.x, cursor.y)?.name : undefined
   );
+  // A body holds its square without standing on it: nothing can finish a move
+  // there, so calling the tile clear would be a lie the player then walks into.
+  const cursorBody = $derived(
+    cursor && !cursorOccupant ? fallenAt(battle.units, cursor.x, cursor.y)?.name : undefined
+  );
   const panelUnit = $derived(active);
   const playerTurn = $derived(!!active && active.team === 'ally' && isAlive(active));
 
@@ -453,7 +458,7 @@
           <span class="ver">v{APP_VERSION}</span>
         </p>
       </div>
-      <TileInfo tile={cursorTile} occupant={cursorOccupant} />
+      <TileInfo tile={cursorTile} occupant={cursorOccupant} body={cursorBody} />
     </div>
 
     <div class="corner top-right">

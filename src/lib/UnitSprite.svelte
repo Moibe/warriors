@@ -78,24 +78,51 @@
 
   /** Booleans, not raw timers: the texture only changes when one of them flips. */
   const hurt = $derived(unit.hurtFor > 0);
-  const dying = $derived(unit.hp <= 0 && unit.deathFor > 0);
+
+  // Three states, and only one of them is stored anywhere: `hp` is the rule.
+  // `collapsing` is the beat he goes over in, `downed` is the rest of the
+  // battle. Deliberately derived rather than kept on the unit — a stored
+  // `isDown` would have to be remembered and cleared everywhere the day
+  // somebody can be picked back up, and that is the kind of door that shuts
+  // itself.
+  const fallen = $derived(unit.hp <= 0);
+  const collapsing = $derived(fallen && unit.deathFor > 0);
+  const downed = $derived(fallen && unit.deathFor <= 0);
+
+  /**
+   * Which way a body lies, settled once from the id rather than from facing.
+   * Bodies never turn, so this has to be stable when the camera does — and
+   * three of them side by side all lying the same way read as wallpaper rather
+   * than as people.
+   */
+  const restFlip = $derived(
+    [...unit.id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7) % 2 !== 0
+  );
 
   $effect(() => {
-    // The recoil frame carries the death too — a unit that is struck down is
-    // still a unit being struck.
+    // Going over still borrows the recoil frame — a man being struck down is
+    // still a man being struck — and then it becomes its own drawing.
     material.map = getUnitTexture(
       unit.job,
       unit.paletteOverride,
-      pose,
-      flip,
-      hurt || dying,
+      downed ? 'down' : pose,
+      downed ? restFlip : flip,
+      hurt || collapsing,
       unit.weapon,
       hatOf(unit)
     );
-    // alphaTest would clip the entire sprite the moment its opacity dropped
-    // below the threshold, so the fade needs it switched off.
-    material.alphaTest = dying ? 0 : 0.5;
     material.needsUpdate = true;
+
+    // Everything the body looks like hangs off `hp` here rather than
+    // accumulating in the frame loop, and that is not tidiness. Scene keys the
+    // sprites by unit id, the ids repeat from one battle to the next, so
+    // restarting hands a *reused* component a living man while its three.js
+    // material still holds the corpse's settings. Deriving it here means the
+    // restart repaints him on its own.
+    material.opacity = 1;
+    material.alphaTest = 0.5;
+    if (!fallen) material.color.setRGB(1, 1, 1);
+    shadowMaterial.opacity = downed ? 0.45 : 0.9;
   });
 
   const shadowGeometry = new PlaneGeometry(0.8, 0.8).rotateX(-Math.PI / 2);
@@ -169,9 +196,15 @@
   /** How far the body sinks as it fades out. */
   const DEATH_SINK = 0.28;
 
-  let fade = $state(1);
+  /** How far into the drop he is, 0 upright and 1 on the floor. */
+  const sink = $derived(collapsing ? 1 - unit.deathFor / DEATH_TIME : 0);
 
   useTask((delta) => {
+    // A body has nothing to animate: no idle bob, no marker, no flash. Leaving
+    // early matters more than it used to, because the scene no longer shrinks
+    // as the fight goes on — all eighteen sprites live to the end now.
+    if (fallen) return;
+
     elapsed += delta;
     bob = active ? Math.sin(elapsed * 5) * 0.04 : 0;
     if (markerRef) markerRef.position.y = SPRITE_WORLD_H + 0.32 + Math.sin(elapsed * 4) * 0.09;
@@ -195,18 +228,6 @@
       tinted = false;
     }
 
-    // Falling: the body holds the recoil frame, sinks a little and fades. Done
-    // here rather than in an effect because it changes every frame, and an
-    // effect rerunning sixty times a second is the wrong tool.
-    if (unit.deathFor > 0) {
-      fade = unit.deathFor / DEATH_TIME;
-      material.opacity = fade;
-      shadowMaterial.opacity = 0.9 * fade;
-    } else if (fade !== 1) {
-      fade = 1;
-      material.opacity = 1;
-      shadowMaterial.opacity = 0.9;
-    }
   });
 
   // Screen-right in world XZ, so the shudder reads as sideways however the
@@ -220,7 +241,11 @@
 <T.Group position={[world.x, world.y, world.z]}>
   <!-- A body has no side and no facing: both markers go the instant it falls,
        rather than fading along with it and reading as still in play. -->
-  {#if !dying}
+  <!-- A body has no side left to fight for and is not looking anywhere, so the
+       ground markers go for good. This is also the single biggest thing keeping
+       a board with eighteen of them readable: eighteen red and blue rings is
+       noise, eighteen dark still shapes is a street after a fight. -->
+  {#if !fallen}
     <T.Mesh geometry={ringGeometry} material={ringMaterial} position.y={0.028} renderOrder={2} />
     <T.Mesh
       geometry={wedgeGeometry}
@@ -230,21 +255,34 @@
       renderOrder={2}
     />
   {/if}
-  <T.Mesh geometry={shadowGeometry} material={shadowMaterial} position.y={0.024} renderOrder={2} />
+  <!-- Flatter and wider once he is down: a man on the floor is already in
+       contact with it, so this stops being a cast shadow and becomes the line
+       that keeps the billboard from looking like it floats. -->
+  <T.Mesh
+    geometry={shadowGeometry}
+    material={shadowMaterial}
+    position.y={0.024}
+    scale={downed ? [1.25, 1, 0.8] : [1, 1, 1]}
+    renderOrder={2}
+  />
 
+  <!-- The drop of a hundredth once he is down is not visible — it is there to
+       lose the depth tie against a living man standing on the same square, which
+       the pathfinder allows and which therefore happens. The man always wins the
+       pixel. -->
   <T
     is={Sprite}
     {material}
     position={[
       shakeOffset.x,
-      SPRITE_WORLD_H / 2 + 0.02 + bob - (1 - fade) * DEATH_SINK,
+      downed ? SPRITE_WORLD_H / 2 - 0.01 : SPRITE_WORLD_H / 2 + 0.02 + bob - sink * DEATH_SINK,
       shakeOffset.z,
     ]}
     scale={[SPRITE_WORLD_W, SPRITE_WORLD_H, 1]}
-    renderOrder={3}
+    renderOrder={downed ? 2 : 3}
   />
 
-  {#if active && !dying}
+  {#if active && !fallen}
     <T.Mesh bind:ref={markerRef} geometry={markerGeometry} material={markerMaterial} renderOrder={6} />
   {/if}
 </T.Group>

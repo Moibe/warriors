@@ -48,8 +48,23 @@ export function computeReachable(map: BattleMap, units: Unit[], unit: Unit): Rea
   if (!origin) return new Map();
 
   const blockers = new Map<string, Unit>();
+  /**
+   * Squares with a body on them. You step over a man who is down — anybody's —
+   * but you do not stop on him, which is the same deal a living team-mate
+   * already gets. Two reasons it is not a plain wall: one body on a one-tile
+   * staircase would seal it for a whole gang that can only climb a level at a
+   * time, and a line of them between two melee-only gangs would leave a battle
+   * that nobody can end, since victory only ever looks at hit points.
+   * And one reason it is not nothing at all: with the body staying put, a
+   * living man landing on the same square would put two people on one tile,
+   * which is an assumption the cursor, the terrain window and `unitAt` all make
+   * and none of them check. Refusing the landing is what keeps his square his.
+   */
+  const bodies = new Set<string>();
   for (const u of units) {
-    if (u.id !== unit.id && isAlive(u)) blockers.set(tileKey(u.x, u.y), u);
+    if (u.id === unit.id) continue;
+    if (isAlive(u)) blockers.set(tileKey(u.x, u.y), u);
+    else bodies.add(tileKey(u.x, u.y));
   }
 
   const reach: ReachMap = new Map();
@@ -83,7 +98,7 @@ export function computeReachable(map: BattleMap, units: Unit[], unit: Unit): Rea
           y: ny,
           cost: cur.cost + 1,
           from: tileKey(cur.x, cur.y),
-          stoppable: !blocker,
+          stoppable: !blocker && !bodies.has(key),
         };
         reach.set(key, entry);
         next.push(entry);

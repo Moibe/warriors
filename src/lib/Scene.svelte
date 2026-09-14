@@ -146,9 +146,11 @@
   // all at once, along a visible straight edge. Derive it from the board.
   const shadowExtent = $derived(Math.max(map.width, map.depth) * 0.75 + 4);
 
-  // The fallen stay in the list until their death animation runs out. They are
-  // already gone as far as the rules are concerned — this is only the body.
-  const shownUnits = $derived(battle.units.filter((u) => isAlive(u) || u.deathFor > 0));
+  // Everybody, standing or not. A man who goes down stays down on the square it
+  // happened on for the rest of the battle: he is out of the rules — no turn, no
+  // target, no vote on who has won — but he is still lying there, and the board
+  // carries what the fight has cost so far instead of tidying it away.
+  const shownUnits = $derived(battle.units);
 </script>
 
 <CameraRig {yawIndex} {pitchHigh} {zoom} target={cameraTarget} bind:yaw />

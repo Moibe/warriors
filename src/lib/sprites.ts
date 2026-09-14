@@ -37,7 +37,7 @@ export const SPRITE_H = 32;
 export const SPRITE_WORLD_H = 1.55;
 export const SPRITE_WORLD_W = (SPRITE_WORLD_H * SPRITE_W) / SPRITE_H;
 
-export type Pose = 'front' | 'back';
+export type Pose = 'front' | 'back' | 'down';
 
 type Template = {
   /** Top-left corner in canvas pixels. */
@@ -405,8 +405,32 @@ const FACE_FURY = template(BODY_AT.ox, BODY_AT.oy + 4, [
   '    OGGGGGGO    ',
 ]);
 
+/**
+ * The same paint on a face with its eyes shut.
+ *
+ * An eye does not close by changing colour — `E` and `O` are the same value on
+ * screen — it closes by changing *shape*, growing a pixel outward until it
+ * meets the edge of the face, which is the rule the recoil frames already use.
+ *
+ * This also fixes something that was wrong before any of the fallen work: the
+ * paint goes on AFTER the body, and `FACE_FURY`'s open eye lands exactly on the
+ * row where `FURY_HURT_FRONT` has its eyes screwed shut. All nine of them were
+ * taking a bat to the head wide-eyed.
+ */
+const FACE_FURY_SHUT = template(BODY_AT.ox, BODY_AT.oy + 4, [
+  '   OGGGGGGGGO   ',
+  '   OGFFGGFFGO   ',
+  '   OOOOGGOOOO   ',
+  '   OGGGGGGGGO   ',
+  '    OGGOOGGO    ',
+]);
+
 const FACES: Record<Exclude<FaceId, null>, Template> = {
   fury: FACE_FURY,
+};
+
+const FACES_SHUT: Record<Exclude<FaceId, null>, Template> = {
+  fury: FACE_FURY_SHUT,
 };
 
 // ---------------------------------------------------------------------------
@@ -505,6 +529,15 @@ function drawTemplate(
  * rides a row higher and the hands swing up and outward. Without this the cap
  * floats off the skull and the bat hangs in mid-air.
  */
+/**
+ * Where the head went. The cap and the war paint follow it down and to the left
+ * so they stay on the face instead of hovering over the square the man used to
+ * occupy. The weapon has no entry because a body does not hold one any more:
+ * nine bats drawn upright on the pavement is exactly the clutter this is
+ * avoiding, and the unit keeps the weapon in its data either way.
+ */
+const DOWN_OFFSET = { hat: { dx: -4, dy: 14 }, face: { dx: -4, dy: 14 } };
+
 const RECOIL_OFFSET = {
   hat: { dx: 0, dy: -1 },
   face: { dx: 0, dy: -1 },
@@ -749,33 +782,202 @@ const ORPHAN_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
   '                ',
 ]);
 
+
+// ---------------------------------------------------------------------------
+// The fallen
+// ---------------------------------------------------------------------------
+//
+// A man who goes down stays down, on the square where it happened, for the rest
+// of the battle.
+//
+// The hard part is that these sprites are screen-aligned billboards: they always
+// face the camera, so a body cannot actually lie flat. It has to be *drawn*
+// lying down. Three rules do the work, and all five gangs obey them so the
+// bodies stay interchangeable:
+//
+//   · The head is not at the top. It sits at the bottom-left with the torso
+//     beside it rather than under it, which kills any reading of a man standing
+//     or crouching before the eye finishes the silhouette.
+//   · Everything below the neck is foreshortened up and to the right, the way a
+//     body lying away from this camera actually projects. The head alone stays
+//     full size: it is nearest the lens, and it is what carries who this was —
+//     which is what will matter the day somebody can be picked back up.
+//   · Eyes shut and mouth open, borrowed from the recoil frames. Without it a
+//     level head reads as resting rather than out.
+//
+// The box is wider than it is tall — that proportion is half the message — and
+// flush with the bottom of the cell, so the last row of pixels IS the pavement
+// and the existing anchoring needs no adjustment at all.
+
+/** Bodies lie in a 20x10 box pinned to the bottom of the sprite cell. */
+const DOWN_AT = { ox: 0, oy: 22 };
+
+/** The generic body, and the shape the other four are cut from. */
+const PLAIN_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '                 OBO',
+  '   OOOOOO       OBBO',
+  '  OHHHHHHO     OCBBO',
+  ' OHHHHHHHHO   OCCCCO',
+  ' OHSSSSSSHO OBBCCCO ',
+  ' OHSSSSSSHOOAAAABBO ',
+  ' OHSOSSOSHOOAAAAAO  ',
+  ' OHSSSSSSHOOAABAAO  ',
+  '  OKSOOSKOOAAAAO    ',
+  '   OKKKKO OASSO     ',
+]);
+
+/**
+ * A Warrior on his back. The winged skull is on the vest's back and this one
+ * landed face up, so it is gone — and that is the right trade: an anonymous
+ * corpse with a handsome emblem is no use to anybody, while the face and the
+ * hair are what will let you pick Cochise out from Fox. What identifies him
+ * instead is the other thing only he has: bare skin running up the middle of
+ * the torso between the two open edges of the cut.
+ */
+const WARRIOR_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '                 OBO',
+  '   OOOOOO       OBBO',
+  '  OHHHHHHO     OCBBO',
+  ' OHHHHHHHHO   OCCCCO',
+  ' OHSSSSSSHO OBBCCCO ',
+  ' OHSSSSSSHOOABSSBBO ',
+  ' OHSOSSOSHOOBSSBAO  ',
+  ' OHSSSSSSHOOSSBAAO  ',
+  '  OKSOOSKOOSSBAO    ',
+  '   OKKKKO OKSSO     ',
+]);
+
+/**
+ * A Fury on his back. The white face is the brightest thing in the game and it
+ * lands low-left, where no standing man ever has a head — on asphalt at night
+ * the eye finds that oval before it finds the shape around it. The pinstripes
+ * hold the same columns on every row so they stay lines instead of turning into
+ * checks.
+ */
+const FURY_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '                 OBO',
+  '   OOOOOO       OBBO',
+  '  OHHHHHHO     OBBBO',
+  ' OHHHHHHHHO   OCCBBO',
+  ' OHSSSSSSHO OBBCCCO ',
+  ' OHSSSSSSHOOBABABBO ',
+  ' OHSOSSOSHOOBABABO  ',
+  ' OHSSSSSSHOOBABABO  ',
+  '  OKSOOSKOOABABO    ',
+  '   OKKKKO OASSO     ',
+]);
+
+/**
+ * A Turnbull on his back, and the only pale head on the ground: his scalp lives
+ * in the hair slots, so where the other four gangs land with a dark mass above
+ * the face, this one has none. Every band is a pixel wider than the reference —
+ * he is still the biggest man on the board lying down. The gold bull is sewn on
+ * his back and does not show.
+ */
+const TURNBULL_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '                OBBO',
+  '   OOOOOO      OBBBO',
+  '  OHHSSHHO    OCCBBO',
+  ' OHHHSSHHHO  OCCCCCO',
+  ' OHSSSSSSHO OBWWCCO ',
+  ' OHSJSSJSHOOAAAABBO ',
+  ' OHSOSSOSHOOAAABAAO ',
+  ' OJSSSSSSJOOAABAAAO ',
+  '  OJJOOJJOOGGAAAO   ',
+  '   OJJJJO OKSSO     ',
+]);
+
+/**
+ * An Orphan on his back. The hair is the whole gang's silhouette and it is the
+ * one part that does not foreshorten, so their widest feature stays full size
+ * while the body compresses: a spill of hair on the pavement with a face inside
+ * it. Their hand-painted name is on the back and does not show.
+ */
+const ORPHAN_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '                 OBO',
+  '  OOOOOOOO      OBBO',
+  ' OHHHHHHHHO    OCBBO',
+  'OHHHHHHHHHHO  OCCCCO',
+  'OHHSSSSSSHHO OBBCCCO',
+  'OHHSSSSSSHHOOAAGBBO ',
+  'OHHSOSSOSHHOOAAABAO ',
+  'OHHJKSSKJHHOOAABAO  ',
+  'HOHHKOOKHHOOGAAAO   ',
+  'HOHHOKKOHHOGSSO     ',
+]);
+
 const BODIES = {
-  plain: { front: PLAIN_FRONT, back: PLAIN_BACK, hurtFront: PLAIN_FRONT, hurtBack: PLAIN_BACK },
+  plain: {
+    front: PLAIN_FRONT,
+    back: PLAIN_BACK,
+    hurtFront: PLAIN_FRONT,
+    hurtBack: PLAIN_BACK,
+    down: PLAIN_DOWN,
+  },
   warrior: {
     front: WARRIOR_FRONT,
     back: WARRIOR_BACK,
     hurtFront: WARRIOR_HURT_FRONT,
     hurtBack: WARRIOR_HURT_BACK,
+    down: WARRIOR_DOWN,
   },
   fury: {
     front: FURY_FRONT,
     back: FURY_BACK,
     hurtFront: FURY_HURT_FRONT,
     hurtBack: FURY_HURT_BACK,
+    down: FURY_DOWN,
   },
   turnbull: {
     front: TURNBULL_FRONT,
     back: TURNBULL_BACK,
     hurtFront: TURNBULL_HURT_FRONT,
     hurtBack: TURNBULL_HURT_BACK,
+    down: TURNBULL_DOWN,
   },
   orphan: {
     front: ORPHAN_FRONT,
     back: ORPHAN_BACK,
     hurtFront: ORPHAN_HURT_FRONT,
     hurtBack: ORPHAN_HURT_BACK,
+    down: ORPHAN_DOWN,
   },
 } as const;
+
+/** The value a body is mixed toward: the shadow slate the boards are lit with. */
+const NIGHT_INK = { r: 0x23, g: 0x2a, b: 0x33 };
+/**
+ * How far toward it. Measured rather than guessed: at 0.45 a Turnbull vanished
+ * outright — his denim is already almost exactly this slate — and the whole
+ * gang turned into a dark smear with a face on the end. A body has to sit a
+ * step below a man on his feet, not fall off the board.
+ */
+const NIGHT_MIX = 0.22;
+
+function mixHex(hex: string, toward: { r: number; g: number; b: number }, k: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round((n >> 16) * (1 - k) + toward.r * k);
+  const g = Math.round(((n >> 8) & 255) * (1 - k) + toward.g * k);
+  const b = Math.round((n & 255) * (1 - k) + toward.b * k);
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+/**
+ * The palette a fallen man is painted in.
+ *
+ * Every slot moves toward the night except the outline, which goes the other way
+ * and darkens: the silhouette has to hold on grass as well as it holds on
+ * asphalt, and it is the line of contact under the head and the hand that keeps
+ * the body from reading as part of the pavement.
+ */
+function nightPalette(p: Palette): Palette {
+  const out = {} as Palette;
+  for (const key of Object.keys(p) as (keyof Palette)[]) {
+    out[key] = mixHex(p[key], NIGHT_INK, NIGHT_MIX);
+  }
+  out.O = '#0d0b11';
+  return out;
+}
 
 /**
  * Paints one sprite cell at 1:1 pixel scale.
@@ -806,22 +1008,42 @@ export function renderUnitCanvas(
 
   const job = JOBS[jobId];
   const set = BODIES[job.sprite.body];
+  const down = pose === 'down';
   const front = pose === 'front';
-  const body = hurt ? (front ? set.hurtFront : set.hurtBack) : front ? set.front : set.back;
-  const nudge = hurt ? RECOIL_OFFSET : null;
 
-  drawTemplate(ctx, body, palette);
+  // A body is painted in a lower key than a man on his feet, and by mixing the
+  // palette rather than dimming the material: a darkened colour keeps its punch,
+  // and eighteen punchy bodies compete with the nine men still fighting. Mixing
+  // toward the night takes the punch out and leaves the hue, so a Fury on the
+  // ground is still visibly a Fury.
+  const ink = down ? nightPalette(palette) : palette;
+
+  const body = down
+    ? set.down
+    : hurt
+      ? front
+        ? set.hurtFront
+        : set.hurtBack
+      : front
+        ? set.front
+        : set.back;
+  const nudge = down ? DOWN_OFFSET : hurt ? RECOIL_OFFSET : null;
+
+  drawTemplate(ctx, body, ink);
 
   // Paint goes on before the cap, so the brim sits over the forehead.
-  if (job.sprite.face && front) {
-    drawTemplate(ctx, FACES[job.sprite.face], palette, nudge?.face.dx ?? 0, nudge?.face.dy ?? 0);
+  if (job.sprite.face && (front || down)) {
+    // Eyes shut whenever he is not upright and looking at you.
+    const faces = down || hurt ? FACES_SHUT : FACES;
+    drawTemplate(ctx, faces[job.sprite.face], ink, nudge?.face.dx ?? 0, nudge?.face.dy ?? 0);
   }
   const worn = hat !== undefined ? hat : job.sprite.hat;
   if (worn) {
-    drawTemplate(ctx, HATS[worn], palette, nudge?.hat.dx ?? 0, nudge?.hat.dy ?? 0);
+    drawTemplate(ctx, HATS[worn], ink, nudge?.hat.dx ?? 0, nudge?.hat.dy ?? 0);
   }
-  if (weapon !== 'none') {
-    drawTemplate(ctx, WEAPONS[weapon], palette, nudge?.weapon.dx ?? 0, nudge?.weapon.dy ?? 0);
+  // Whatever he was holding is on the floor somewhere and no longer matters.
+  if (weapon !== 'none' && !down) {
+    drawTemplate(ctx, WEAPONS[weapon], ink, RECOIL_OFFSET.weapon.dx * (hurt ? 1 : 0), RECOIL_OFFSET.weapon.dy * (hurt ? 1 : 0));
   }
 
   return canvas;

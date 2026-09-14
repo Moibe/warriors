@@ -7,7 +7,12 @@
   import { SURFACE_NAMES, type Tile } from '../grid';
   import Window from './Window.svelte';
 
-  let { tile, occupant }: { tile: Tile | null; occupant?: string } = $props();
+  let {
+    tile,
+    occupant,
+    /** Somebody lying here. Nobody can stop on his square, so it is not clear. */
+    body,
+  }: { tile: Tile | null; occupant?: string; body?: string } = $props();
 </script>
 
 <Window title="Terreno">
@@ -20,6 +25,8 @@
       <span class="v">
         {#if occupant}
           Ocupada · {occupant}
+        {:else if body}
+          <span class="down">Caído · {body}</span>
         {:else if tile.walkable}
           Transitable
         {:else}
@@ -48,6 +55,12 @@
   .v {
     color: #eef3ff;
     text-align: right;
+  }
+
+  /* Dimmer than an occupied tile, because it half-counts: you can cross it,
+     you just cannot stop. */
+  .down {
+    color: #b9a0a0;
   }
 
   .empty {

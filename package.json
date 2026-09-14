@@ -11,7 +11,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"check:stage": "node tools/check-stage.mjs",
-		"shot": "node tools/shoot.mjs"
+		"shot": "node tools/shoot.mjs",
+		"sheet": "node tools/sheet.mjs"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.1",

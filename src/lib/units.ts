@@ -60,6 +60,19 @@ export type Unit = {
   hurtFor: number;
   /** Seconds left on the going-down animation. Presentation only. */
   deathFor: number;
+
+  /**
+   * The turn he went down on, or null while he is still standing.
+   *
+   * Nothing reads it yet. It is here because it is the one thing about a body
+   * that cannot be recovered afterwards — everything else survives on its own,
+   * since a fallen unit is never removed from the roster: his square, his
+   * facing, his name, whatever weapon he still had, even the Charge Time he
+   * had banked when he dropped. If picking somebody back up ever comes with a
+   * clock on it, this is the only field that would have had to exist from the
+   * start.
+   */
+  fellOnTurn: number | null;
 };
 
 export function isAlive(u: Unit): boolean {
@@ -68,6 +81,16 @@ export function isAlive(u: Unit): boolean {
 
 export function unitAt(units: Unit[], x: number, y: number): Unit | undefined {
   return units.find((u) => isAlive(u) && u.x === x && u.y === y);
+}
+
+/**
+ * The body lying on a square, if there is one. Kept separate from `unitAt` on
+ * purpose: everything that asks "who is standing here" — targeting, the turn
+ * order, the AI — must keep getting nobody, and only the parts that describe
+ * the ground to the player should see a corpse.
+ */
+export function fallenAt(units: Unit[], x: number, y: number): Unit | undefined {
+  return units.find((u) => !isAlive(u) && u.x === x && u.y === y);
 }
 
 export function unitById(units: Unit[], id: string | null): Unit | undefined {
@@ -154,6 +177,7 @@ export function createUnit(seed: UnitSeed): Unit {
     paletteOverride: seed.paletteOverride,
     hurtFor: 0,
     deathFor: 0,
+    fellOnTurn: null,
   };
 }
 
