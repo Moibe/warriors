@@ -67,10 +67,10 @@
   //                                        flat, and the section that came away
   //                                        hangs off the lip, off the board.
   //   bin         0.34   −0.06    −0.59    nothing.
-  //   fence       1.02    0.62     0.09    nothing: it is a PALING LATTICE. The
-  //                                        0.62 is a quarter wood and three
-  //                                        quarters air (below). Stripes a man,
-  //                                        never masks him.
+  //   fence       1.02    0.62     0.09    a man one tile behind loses his legs
+  //                                        and his ring, keeps his chest, head
+  //                                        and colours. SOLID BOARDS, and the
+  //                                        one licensed mass here (below).
   //   arcade      1.25    0.85     0.32    nothing: flat on a 1.25 wall.
   //   cruiser     1.42    1.02     0.49    nothing: it is off the board.
   //   treeline    2.00    1.60     1.07    nothing: it is off the board.
@@ -85,47 +85,43 @@
   // Only two pieces on the board are in that band at all, and each buys its
   // pass with a number:
   //
-  //   · fence — a WOODEN PALING lattice, and it buys its pass with arithmetic
-  //     the same shape as the chain-link's, because the rule never cared what
-  //     the fence is made of, only how much of a tile it fills. Per tile:
+  //   · fence — SOLID VERTICAL BOARDS, and it is the one piece on this board
+  //     that is a mass rather than a pole. It does not slip the rule on a
+  //     technicality; it takes the exception, and here is the whole argument
+  //     for it.
   //
-  //        5 palings   × 0.05  = 0.25   of wood
-  //        4 gaps      × 0.15  = 0.60   of night, between them
-  //        2 half-gaps × 0.075 = 0.15   at the seams — each meets the next
-  //                                     tile's and makes another 0.15
-  //        ——————————————————————————————— 1.00, the tile
+  //     It was a lattice twice: chain-link first, then palings a quarter of a
+  //     tile wide with three times their own width of park between them. Both
+  //     were the same mistake seen from two sides. A run that is three quarters
+  //     air does not read as a fence at all — it reads as a HANDRAIL, which is
+  //     what it was called when it came back from the person looking at it —
+  //     and a barrier the player cannot see is a barrier he will not think to
+  //     hit. On the one board whose first lesson is "hit the thing in your way",
+  //     the thing in the way has to look like a thing.
   //
-  //     A QUARTER of the width occluded, against the chain-link's eighth, and
-  //     every gap is THREE TIMES the widest thing standing in it. The only
-  //     other member crossing the band is one 70 mm post per tile — a pole, and
-  //     thinner than the lamp column this file already licenses at 0.09.
-  //     Nothing continuous is over 0.07; nothing a man could hide behind is
-  //     over 0.05.
+  //     So: five boards, 0.185 wide at 0.20 pitch, 15 mm of shadow between them.
+  //     Ninety-three per cent of the tile is timber. It is opaque and it is
+  //     meant to be.
   //
-  //     The one place a gap narrows is at a post, which stands at the tile seam
-  //     and takes 0.07 out of that 0.15, leaving 0.04 of air either side of it.
-  //     That is a POLE STANDING IN A GAP, which the rule above allows in so many
-  //     words. It is also why the post is set BEHIND the paling plane rather
-  //     than in it, which is how a paling fence is built anyway: the run stays
-  //     five identical sticks to a tile, and the post reads as a dark thing SEEN
-  //     THROUGH a gap. A post in the paling plane would read as a sixth, fatter
-  //     stick, and a fat stick is the one thing this fence may not have.
+  //     WHAT THAT COSTS, STATED PLAINLY. H − 0.40 = 0.62: of a man standing one
+  //     tile behind it at the default camera, the fence covers the bottom 0.62
+  //     of his 1.55 — his legs and his team ring, and it leaves his chest, his
+  //     head and his colours. Raised to 53° it is H − 0.93 = 0.09 and it is at
+  //     his boot tops. One camera rotation puts it behind him entirely.
   //
-  //     Now the case the rule exists for. Row 13 IS the fence line and it is
-  //     blocked except the four exit tiles, so the men who matter stand at row
-  //     12, ONE TILE BEHIND the fence, with the fence between them and the
-  //     default camera. H − 0.40 = 0.62: the run covers the bottom 0.62 of a
-  //     1.55 man, to the hip — but it covers it with five separate sticks and
-  //     three times their own width of park between them, so what the player
-  //     sees is a man STRIPED, never a man MASKED. Raised to 53° it is
-  //     H − 0.93 = 0.09 and the fence is at his boot tops.
+  //     THE PRECEDENT, and it is what makes this safe rather than merely
+  //     wanted: the men's room partitions are 1.00 of continuous ceramic, they
+  //     hide to 0.60, and SEVEN PLAYER UNITS START THE BATTLE STANDING BEHIND
+  //     THEM. That board shipped and reads fine, because a man identified from
+  //     the chest up is still identified. This is two centimetres taller and
+  //     the same answer.
   //
-  //     Which is exactly why A SOLID BOARD FENCE IS FORBIDDEN HERE. Close the
-  //     gaps and the same 1.02 becomes 1.00 of continuous mass across the one
-  //     line of tiles nine men have to walk out over, and the tutorial hides
-  //     its own lesson behind a wall. Palings, not boards. If somebody ever
-  //     widens these to 0.08 "so the fence reads better", the quarter-tile
-  //     budget is spent by the fourth paling of five.
+  //     THE NUMBER THAT MAY NOT MOVE IS THE HEIGHT, not the width. 1.02 is
+  //     already the tallest thing a man on this row can be behind, and every
+  //     board added above it comes straight off his chest. Widen these, split
+  //     them, paint them — but do not raise them. And the hash keeps one board
+  //     in five missing and one in three snapped short, which is carpentry
+  //     rather than mercy, but it does leave real gaps along the run.
   //
   //   · lamp — a 0.09 column with the lantern above the band entirely. The
   //     head's bottom is at 1.96, and the arithmetic is: a man one tile behind
@@ -260,7 +256,7 @@
   //                                   bin, the cruiser's ironmongery. Near-black,
   //                                   never black: pure black reads as a tear in
   //                                   the board.
-  //   weathered   #8e8677 / #6a6357   The paling fence, and the LIGHTEST thing
+  //   weathered   #9c8358 / #6f5b3b   The board fence, and the LIGHTEST thing
   //   timber                          on the board on purpose — the fence is the
   //                                   way out and has to be findable from the far
   //                                   corner of the bowl at a glance. That is the
@@ -512,21 +508,38 @@
     flatShading: true,
   });
 
-  // Weathered timber, and the lightest thing on the board by a distance. That
-  // is a decision, not an accident: the fence is the way out, and a player who
-  // cannot find it from the far side of the bowl has not been taught anything.
-  // Greyed almost to the bone — see the palette note in the header for why this
-  // is 16% saturated where the lavatory's pine is 58%. roughness 1 on both:
-  // there is no sheen left on a park paling, which is half of what separates it
-  // from the galvanised wire that used to stand here.
+  // Weathered timber, and it has to read as WOOD before it reads as weathered.
+  //
+  // It was #8e8677 — sixteen per cent saturated, greyed almost to the bone on
+  // the argument that a forty-year-old park fence has no colour left in it.
+  // True of the fence and false of the picture: against this board's stone at
+  // #77756f and its arcade at #6b6963, a grey-brown fence is not a weathered
+  // fence, it is more masonry, and the person looking at it said so. Wood that
+  // nobody can tell is wood has spent its whole palette budget on realism and
+  // bought nothing.
+  //
+  // So: 38% saturated. Enough brown that it is timber at a glance from the far
+  // side of the bowl; far enough from the lavatory's pine at 58% and from the
+  // Lizzies' varnished veneer that it still reads as something left out in the
+  // weather rather than as furniture. It stays the LIGHTEST thing on the board,
+  // which is the older decision and the right one — the fence is the way out.
+  //
+  // The pair keeps its 35 points of value gap, and that gap is doing more work
+  // than it used to: with the boards butted, the only thing separating one from
+  // the next is a 15 mm shadow line and which of these two faces the `grain`
+  // roll gave it. One tone and no seam is a wall. Two tones and a seam is a
+  // fence.
+  //
+  // roughness 1 on both: there is no sheen left on a park board, which is half
+  // of what separates it from the galvanised wire that used to stand here.
   const timber = new MeshStandardMaterial({
-    color: '#8e8677',
+    color: '#9c8358',
     roughness: 1,
     metalness: 0,
     flatShading: true,
   });
   const timberShade = new MeshStandardMaterial({
-    color: '#6a6357',
+    color: '#6f5b3b',
     roughness: 1,
     metalness: 0,
     flatShading: true,
@@ -737,7 +750,7 @@
   // Transparent, so the green exit overlay reads THROUGH them even at the one
   // yaw where sorting might otherwise argue.
   const plankFlat = new MeshBasicMaterial({
-    color: '#7c7466',
+    color: '#836b47',
     transparent: true,
     opacity: 0.6,
     depthWrite: false,
@@ -750,7 +763,7 @@
   // wider than 30 mm and never over half opacity, so nothing it paints is a
   // thing the eye finds before it finds the fence.
   const splinterFlat = new MeshBasicMaterial({
-    color: '#a1977f',
+    color: '#b09a6e',
     transparent: true,
     opacity: 0.5,
     depthWrite: false,
@@ -827,59 +840,50 @@
   const GATE_BARS = [-0.24, -0.08, 0.08, 0.24];
 
   // ---- Valla (1×1, standing on the level-5 fence line) --------------------
-  // WOOD, and it must be a LATTICE, not a mass. A city park boundary is a run
-  // of vertical palings on two arris rails, which is also the only wooden fence
-  // that answers both halves of this board's problem: post-and-rail you would
-  // simply CLIMB, so the hole would mean nothing, and a solid board fence is a
-  // WALL, which the rule in the header forbids outright on this row.
+  // SOLID VERTICAL BOARDS on two arris rails. Not palings, not chain-link: a
+  // run of five 0.185 boards at 0.20 pitch, so 93% of the tile is timber and
+  // the 15 mm between each pair is a shadow line, not a view. See the header
+  // bullet for what that costs and why it is licensed anyway; the short version
+  // is that a fence you can see through is a handrail, and a barrier nobody
+  // reads as a barrier is one nobody thinks to hit.
   //
-  // THE BUDGET, PER TILE, AND IT IS THE WHOLE LICENCE THIS PIECE HAS:
-  //
-  //   5 palings × 0.05 wide  = 0.25   a quarter of the tile, occluded
-  //   6 gaps    × 0.15 wide  = 0.75   three quarters of it, open park
-  //   1 post    × 0.07              a POLE, not a mass — the lamp column is
-  //                                 0.09 and the header already licenses it
-  //   2 rails   × 0.055 deep        poles too, and lying the flat way
-  //
-  // Palings are 0.05 × 0.02 in section: a board is WIDE AND THIN, so even at
-  // 45° of yaw, where a stick shows its edge as well as its face, one paling
-  // only ever eats 0.07 of the run. Five of them stripe a man; not one of them
-  // masks him. If you widen a paling, you have changed the rule, not the mesh.
+  // What makes it read as BOARDS rather than as one painted plank is the seam
+  // and the tone, not the gap: each board takes its face from one bit of the
+  // `grain` roll, so a run of sixty alternates the way sawn timber does. Two
+  // tones and a dark line is a fence; one tone and no line is a wall.
   //
   // Near-symmetric about local z = 0, because a fence has no front and `turns`
   // here only decides which way the RUN lies: 0 or 2 east–west, 1 or 3
-  // north–south. The palings sit on the centre plane and the rails 33 mm behind
-  // them — less than one paling width of offset, which cannot read as a face at
-  // any yaw, and it buys the thing that makes this read as carpentry: you can
-  // see the rails THROUGH the gaps.
+  // north–south. The rails sit 33 mm behind the board plane — they are now
+  // hidden by it except where a board is missing, which is exactly where
+  // carpentry should show.
 
-  const FENCE_TOP = 1.02; // unchanged from the chain-link: the height table's
-  // row does not move, and it must not — it has to stay taller than a man can
-  // step over or the hole in it is not a way out, it is a gate.
+  const FENCE_TOP = 1.02; // THE number that may not move. It has to clear a
+  // man's step or the hole is a gate, and every centimetre above this comes
+  // straight off the chest of whoever stands behind it.
   const FENCE_POST_H = FENCE_TOP; // a sawn post IS its own cap. The chain-link
   // needed a cap because a galvanised tube is a hole in the weather; a 4×4 cut
   // square and left forty years just goes grey on top.
-  const PALING_W = 0.05;
-  const PALING_T = 0.02;
-  const PALING_FOOT = 0.1; // clear of the stone, the way palings rot off first
-  const PALING_H = 0.86; // 0.10 → 0.96, stopping under the post's own top
+  const BOARD_W = 0.185; // was 0.05 as a paling. The seam is the 0.015 left over.
+  const BOARD_T = 0.022;
+  const BOARD_FOOT = 0.06; // barely clear of the stone: a board fence sits low,
+  // and the gap under a paling fence was most of what made this read as a rail.
+  const BOARD_H = 0.92; // 0.06 → 0.98, stopping just under the post's own top
   const RAIL_Z = -0.033;
-  const POST_Z = -0.055; // behind the rails, the way a post actually stands:
-  // the palings run PAST it, so on screen it fills a gap instead of widening a
-  // paling, and a gap is where the board can afford it.
+  const POST_Z = -0.055; // behind the rails and behind the boards, so it reads
+  // as the thing the run is nailed TO rather than as a sixth, fatter board.
 
-  const fencePostGeometry = new BoxGeometry(0.07, FENCE_POST_H, 0.07);
+  const fencePostGeometry = new BoxGeometry(0.075, FENCE_POST_H, 0.075);
   const fenceRailGeometry = new BoxGeometry(1.01, 0.055, 0.045);
-  const palingGeometry = new BoxGeometry(PALING_W, PALING_H, PALING_T);
+  const palingGeometry = new BoxGeometry(BOARD_W, BOARD_H, BOARD_T);
   // Kicked in and snapped off above the top rail. 0.26 shorter, so it tops out
-  // at 0.70 where its neighbours reach 0.96. That is a hole in the TOP of the
-  // run, which is the half of the fence nobody was hiding behind — the piece
-  // gets its wear for free and the silhouette never notices.
-  const palingSnappedGeometry = new BoxGeometry(PALING_W, PALING_H - 0.26, PALING_T);
-  // The splinter left standing on a snapped one. Three sides, 44 mm across, so
-  // it stays inside the paling it grew out of.
-  const palingSplinterGeometry = new ConeGeometry(0.022, 0.09, 3);
-  /** Paling centres. 0.20 pitch, 0.15 of night between each pair. */
+  // at 0.72 where its neighbours reach 0.98 — a bite out of the TOP of the run,
+  // which is the half nobody was hiding behind, and a real hole to see through.
+  const palingSnappedGeometry = new BoxGeometry(BOARD_W, BOARD_H - 0.26, BOARD_T);
+  // The splinter left standing on a snapped board. Wider than a paling's was,
+  // because the board it grew out of is nearly four times the width.
+  const palingSplinterGeometry = new ConeGeometry(0.055, 0.1, 3);
+  /** Board centres. 0.20 pitch, 0.015 of shadow between each pair. */
   const FENCE_PALINGS = [-0.4, -0.2, 0, 0.2, 0.4];
   const RAIL_HIGH = 0.84;
   const RAIL_LOW = 0.26;
@@ -1365,12 +1369,12 @@
       {/each}
     {/each}
   {:else if piece === PIECE.fence}
-    <!-- WOOD. Five palings at 0.05, two rails at 0.055, one post at 0.07, and
-         0.15 of open park between every pair of palings. A quarter of the tile
-         is timber and three quarters of it is night, which is the whole reason
-         a 1.02 object is legal on the line the player walks out over: it
-         stripes a man, it does not mask him. Widen a paling and you have
-         repealed that, so do not. -->
+    <!-- WOOD, and SOLID. Five boards at 0.185 on 0.20 pitch: 93% of the tile
+         is timber and the 15 mm between each pair is a shadow line. The header
+         bullet carries the whole argument — what it costs a man standing one
+         tile behind, and why the men's room partitions are the precedent that
+         makes it safe. The height is the number that may not move; the width
+         is the number that made this stop looking like a handrail. -->
     <!-- The lean pivots at the post's FOOT, not at the tile centre. A rotation
          about the group origin would lift a post standing half a tile away off
          the stone by a couple of centimetres, and a fence post hovering over
@@ -1402,13 +1406,13 @@
       {#each FENCE_PALINGS as px, i (i)}
         {#if i !== panel.gone}
           {@const snapped = i === panel.snapped}
-          {@const h = snapped ? PALING_H - 0.26 : PALING_H}
+          {@const h = snapped ? BOARD_H - 0.26 : BOARD_H}
           <!-- One bit of `grain` per paling picks the face. Two tones down a
                run of sixty boards is the difference between a fence and a comb. -->
           <T.Mesh
             geometry={snapped ? palingSnappedGeometry : palingGeometry}
             material={((panel.grain >> i) & 1) === 1 ? timber : timberShade}
-            position={[px, PALING_FOOT + h / 2, 0]}
+            position={[px, BOARD_FOOT + h / 2, 0]}
           />
           {#if snapped}
             <!-- The splinter left standing where somebody's boot went through.
@@ -1418,7 +1422,7 @@
             <T.Mesh
               geometry={palingSplinterGeometry}
               material={timber}
-              position={[px, PALING_FOOT + h + 0.035, 0]}
+              position={[px, BOARD_FOOT + h + 0.035, 0]}
               rotation.z={0.18}
             />
           {/if}
