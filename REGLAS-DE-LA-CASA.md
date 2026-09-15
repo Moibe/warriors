@@ -72,6 +72,17 @@ lo comprueba.
 La malla es decoración. Si el `blocked` del mapa y la huella del prop no coinciden,
 tienes gente andando a través de un autobús o un agujero invisible en la calle.
 
+**Le pasó a la valla de Van Cortlandt.** Al añadir el mecanismo de romperla a
+golpes, la fila entera de la valla se dejó **abierta** en el mapa base, y sólo
+las cuatro casillas de la barrera se sellaban en tiempo de ejecución mientras
+tenía vida. El resultado: los tramos que nunca se rompen —el resto de esa misma
+fila— eran caminables de verdad, y un Warrior podía plantarse encima de la
+madera. El propio comentario de diseño del tablero decía *"la valla, bloqueada,
+EXCEPTO por cuatro casillas"* — el código llevaba tiempo sin cumplirlo. Se
+arregla igual que los demás: la fila entera bloqueada, con el mismo patrón de
+la fila de la salida, y sólo la barrera sellándose y abriéndose por encima de
+eso en tiempo real.
+
 ### La superficie `x` (chapa) **no dibuja columna**
 
 Sólo una placa fina hundida dentro de la malla del prop. Sirve **exclusivamente**
