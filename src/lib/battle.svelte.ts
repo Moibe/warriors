@@ -1110,11 +1110,22 @@ function resolveHits(actor: Unit, ability: Ability, targets: Unit[]) {
       const before = target.hp;
       target.hp = Math.min(target.hpMax, target.hp + result.amount);
       const healed = target.hp - before;
-      // Somebody already on their feet has nothing to get up from, and a line
-      // in the report saying "+0" reads as a bug rather than as a full bar.
+      // A ZERO SAYS SO, and it used to say nothing at all. The argument for
+      // silence was that a "+0" over a man at full health reads as a bug rather
+      // than as a full bar, which is true about the number and false about the
+      // turn: the aguante comes off the shouter whether or not anybody needed
+      // picking up, and a player who watches six points go and sees NOTHING
+      // over anybody cannot tell a rally he wasted from a rally that broke.
+      // The cost staying is the deliberate part — reading who actually needs it
+      // is the whole skill of the move — so the feedback has to be deliberate
+      // too. Bone white, the same colour as a miss, because that is what this
+      // is: it connected, and there was nothing to give.
       if (healed > 0) {
         pushPopup(target, '+' + healed, '#79e07a');
         log(`${actor.name} levanta a ${target.name}: +${healed} PV.`);
+      } else {
+        pushPopup(target, '0', '#d8d2c4');
+        log(`${target.name} ya está entero: no le hace nada.`);
       }
       continue;
     }
