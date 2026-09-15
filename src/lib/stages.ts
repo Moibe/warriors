@@ -428,9 +428,10 @@ export const STAGES: Record<StageId, Stage> = {
     //
     // AND IT STARTS SHUT. The four fence tiles in front of it, on row 12, are
     // the only squares row 13 can be entered from - x=10 and x=15 on row 13
-    // are blocked - so sealing them seals the door. Forty points is three
-    // Warrior punches, give or take: two men stop and hit while the other six
-    // walk up behind them, and the Riffs get the two turns that costs.
+    // are blocked - so sealing them seals the door. Sixty points is four
+    // Warrior punches or two Scrapper kicks: two or three men stop and hit
+    // while the others walk up behind them, and the Riffs get the turns that
+    // costs. The kick doing it in half the time is the reason the kick exists.
     exit: {
       x: 11,
       y: 13,
@@ -443,7 +444,7 @@ export const STAGES: Record<StageId, Stage> = {
         y: 12,
         w: 4,
         d: 1,
-        hp: 40,
+        hp: 60,
         label: 'La valla',
         line: 'La valla cede. Ya hay por dónde salir.',
       },

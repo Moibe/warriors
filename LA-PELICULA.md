@@ -183,11 +183,14 @@ Fox, Cochise, Vermin, Rembrandt, Snow, Cowboy. Después de Swan, el segundo es
 **Snow**, no Ajax.
 
 **Una libertad declarada: la valla empieza entera.** En la película el agujero ya
-está ahí; en el tablero los Warriors lo abren a golpes (cuarenta puntos, dos o
-tres puñetazos) antes de poder cruzarlo. El motivo es de tutorial: con el hueco
+está ahí; en el tablero los Warriors lo abren a golpes (sesenta puntos: cuatro
+puñetazos o dos patadas) antes de poder cruzarlo. El motivo es de tutorial: con el hueco
 abierto la primera lección es "corre" y nadie aprende a golpear hasta la segunda
 escena. Con la valla cerrada el orden es golpear y después salir, y los dos turnos
-que cuesta son la única presión que los Riffs llegan a ejercer.
+que cuesta son la única presión que los Riffs llegan a ejercer. Y la **Patada** de
+los Peleadores (Snow, Cochise, Cowboy) le hace el doble: dos patadas la abren. En
+Riverside las patadas sí salen en pantalla, Swan y Ajax las reparten a los Furies;
+contra la valla no, y esa parte también es nuestra.
 
 **No hay persecución dentro del parque.** Los Riffs cazan a los Warriors *después*,
 por radio y con una recompensa por toda la ciudad. En el parque hay caos, focos y

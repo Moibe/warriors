@@ -6,7 +6,7 @@
   // a tile into whatever the current phase says a click means.
 
   import { T, useTask } from '@threlte/core';
-  import { interactivity } from '@threlte/extras';
+  import { HTML, interactivity } from '@threlte/extras';
   import CameraRig from './CameraRig.svelte';
   import Bus from './Bus.svelte';
   import ComfortStation from './ComfortStation.svelte';
@@ -16,6 +16,7 @@
   import Furniture from './Furniture.svelte';
   import ParkedCar from './ParkedCar.svelte';
   import FloatingNumber from './FloatingNumber.svelte';
+  import HoverCard from './HoverCard.svelte';
   import Projectile from './Projectile.svelte';
   import Terrain from './Terrain.svelte';
   import TileCursor from './TileCursor.svelte';
@@ -36,10 +37,12 @@
     renderPosition,
     setHoverTile,
     barrierStanding,
-  } from './battle.svelte';
+  hoveredUnit,
+} from './battle.svelte';
   import { LEVEL, TILE, tileToWorld, type Tile } from './grid';
   import { landableTiles, tilesInBurst } from './pathfinding';
   import { barrierTiles, exitTiles } from './stages';
+  import { SPRITE_WORLD_H } from './sprites';
   import { hasLeft } from './units';
 
   let {
@@ -69,6 +72,8 @@
   const barrier = $derived(shut ? barrierTiles(stage) : new Set<string>());
   /** The one the battle is decided by, if it is decided by one. */
   const headId = $derived(stage.head?.id ?? null);
+  /** Whoever the mouse is resting on, for the card that floats over his head. */
+  const hoverUnit = $derived(hoveredUnit());
   const map = $derived(stage.map);
   const light = $derived(stage.light);
 
@@ -280,6 +285,18 @@
      number is the consequence, and they never share a frame anyway. -->
 {#if battle.throw}
   <Projectile fly={battle.throw} mapWidth={map.width} mapDepth={map.depth} />
+{/if}
+
+<!-- The card over the hovered man's head. DOM, not a sprite: it has to be crisp
+     at any zoom and it has to sit on top of everything, and an <HTML> element
+     reprojected every frame does both for free. `pointerEvents="none"` so the
+     card can never be the thing under the pointer - a tooltip you can hover is a
+     tooltip that flickers. -->
+{#if hoverUnit}
+  {@const hw = tileToWorld(map, hoverUnit.x, hoverUnit.y, heightOf(hoverUnit))}
+  <HTML position={[hw.x, hw.y + SPRITE_WORLD_H + 0.1, hw.z]} pointerEvents="none">
+    <HoverCard unit={hoverUnit} />
+  </HTML>
 {/if}
 
 {#each battle.popups as popup (popup.id)}

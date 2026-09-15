@@ -30,7 +30,8 @@
     stepAimCursor,
     stepMoveCursor,
     upcomingTurns,
-  } from '$lib/battle.svelte';
+  hoveredUnit,
+} from '$lib/battle.svelte';
   import { forecast, isValidTarget } from '$lib/combat';
   import { facingTo, tileAt, tileKey, type Coord, type Facing } from '$lib/grid';
   import { tilesInBurst } from '$lib/pathfinding';
@@ -50,7 +51,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.7.0';
+  const APP_VERSION = '1.7.1';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -432,9 +433,7 @@
   const cursorUnit = $derived(cursor ? unitAt(battle.units, cursor.x, cursor.y) : undefined);
   const cursorOccupant = $derived(cursorUnit?.name);
   /** Whoever the MOUSE is on, which is a different question from the cursor. */
-  const hovered = $derived(
-    battle.hover ? unitAt(battle.units, battle.hover.x, battle.hover.y) : undefined
-  );
+  const hovered = $derived(hoveredUnit());
   // A body holds its square without standing on it: nothing can finish a move
   // there, so calling the tile clear would be a lie the player then walks into.
   const cursorBody = $derived(

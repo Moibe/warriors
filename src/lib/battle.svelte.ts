@@ -142,6 +142,17 @@ export const battle = $state({
    */
   hover: null as Coord | null,
   /**
+   * The unit whose SPRITE the pointer is over, by id, or null.
+   *
+   * A second source for the same question, and it exists because a man is
+   * taller than his tile. Rest the pointer on his chest and the ray goes
+   * through the billboard to the plate BEHIND him, so the tile alone names the
+   * wrong square. The sprites report themselves; the plates keep reporting the
+   * ground; `hoveredUnit()` prefers the man. Two fields rather than one so the
+   * two writers can never clobber each other in the same pointer event.
+   */
+  hoverUnit: null as string | null,
+  /**
    * What the stage's barrier has left, 0 when it is down or there never was one.
    * The one number that decides whether the way out is a way out yet: while it
    * is above zero the barrier's tiles are sealed in `map` and the door behind
@@ -215,6 +226,36 @@ export function setHoverTile(c: Coord | null) {
   const h = battle.hover;
   if (c === null ? h === null : h !== null && h.x === c.x && h.y === c.y) return;
   battle.hover = c;
+}
+
+/**
+ * The pointer entered a unit's sprite, or left it.
+ *
+ * Leaving only clears the field if it still names the man who is leaving.
+ * Sliding from one sprite straight onto its neighbour delivers a leave and an
+ * enter in the same pass, in an order this code does not get to choose, and
+ * without the guard the leave could wipe the enter and the card would blink.
+ */
+export function setHoverUnit(id: string | null, leaving?: string) {
+  if (id === null) {
+    if (leaving !== undefined && battle.hoverUnit !== leaving) return;
+    if (battle.hoverUnit === null) return;
+    battle.hoverUnit = null;
+    return;
+  }
+  if (battle.hoverUnit !== id) battle.hoverUnit = id;
+}
+
+/**
+ * Whoever the mouse is resting on: the man whose sprite it is over, or failing
+ * that the man standing on the tile under it. Only somebody still in the fight.
+ */
+export function hoveredUnit(): Unit | undefined {
+  const byId = battle.hoverUnit ? unitById(battle.units, battle.hoverUnit) : undefined;
+  if (byId && inPlay(byId)) return byId;
+  const h = battle.hover;
+  const byTile = h ? unitAt(battle.units, h.x, h.y) : undefined;
+  return byTile && inPlay(byTile) ? byTile : undefined;
 }
 
 /**
@@ -772,7 +813,7 @@ export function barrierStanding(): boolean {
 
 /** What one blow from `actor` with `ability` takes off the barrier. */
 export function barrierDamage(actor: Unit, ability: Ability): number {
-  return Math.max(1, Math.round(actor.pa * ability.power));
+  return Math.max(1, Math.round(actor.pa * ability.power * (ability.barrierMul ?? 1)));
 }
 
 /** Whether the current aim is a swing at the barrier, for the forecast. */
@@ -828,7 +869,9 @@ function hitBarrier(actor: Unit, ability: Ability, x: number, y: number) {
   battle.barrierHp = Math.max(0, battle.barrierHp - dmg);
   const height = tileAt(map, x, y)?.height ?? heightOf(actor);
   pushPopupAt(x, y, height, String(dmg), '#ffe27a');
-  log(`${actor.name} golpea ${b.label.toLowerCase()}: ${dmg} de daño.`);
+  // Same shape as a hit on a man, with the order named: the fence is the one
+  // place where WHICH blow you used is the whole lesson.
+  log(`${actor.name} → ${b.label.toLowerCase()} (${ability.name}): ${dmg} de daño.`);
   if (battle.barrierHp > 0) return;
   // Down. The stage's own map comes back, and with it the tiles the copy
   // sealed - and the door behind them.
@@ -1235,6 +1278,7 @@ export function restart() {
   battle.winner = null;
   battle.turn = 0;
   battle.hover = null;
+  battle.hoverUnit = null;
   facingBeforePreview = null;
   aiPlan = null;
   resolveTimer = 0;

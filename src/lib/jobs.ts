@@ -63,6 +63,12 @@ export type Ability = {
   projectile?: ProjectileId;
   /** On a hit, takes the target's weapon — the signature street move. */
   disarm?: boolean;
+  /**
+   * Multiplier against a stage's barrier - the fence in Van Cortlandt. A boot
+   * opens a thing a fist only dents, and this is the one number that says so.
+   * Absent means 1: the punch works on the fence, it just takes longer.
+   */
+  barrierMul?: number;
   desc: string;
 };
 
@@ -287,6 +293,37 @@ const DISARM: Ability = {
   accuracy: 74,
   disarm: true,
   desc: 'Le quitas el arma de las manos. Si tienes libres, te la quedas.',
+};
+
+/**
+ * The Warriors' kick, and the reason it is not another punch.
+ *
+ * Riverside is fought with legs and bats, not knuckles - Swan and Ajax kick
+ * Furies off the path - so the Scrappers get one. But a kick that only hit
+ * harder would be Golpear with a stamina cost, and nobody would take it. This
+ * one is THE BLOW THAT OPENS THINGS: twice the damage to a barrier, so the
+ * fence in Van Cortlandt comes down in two kicks instead of three punches, and
+ * the tutorial's first board teaches two orders in that order - kick the fence,
+ * then walk out of it. Against a man it is a punch and a half with a slightly
+ * worse aim, paid for with the stamina a Scrapper would otherwise keep for
+ * Arrebatar.
+ *
+ * Declared liberty: in the film the hole was already there.
+ */
+const KICK: Ability = {
+  id: 'kick',
+  name: 'Patada',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 2,
+  power: 2.8,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 78,
+  barrierMul: 2,
+  desc: 'Abre lo que un puño sólo abolla. Contra una valla, el doble.',
 };
 
 const LOW_BLOW: Ability = {
@@ -1469,7 +1506,7 @@ export const JOBS: Record<JobId, Job> = {
     name: 'Peleador',
     tag: 'PEL',
     stats: { hp: 52, mp: 10, pa: 7, ma: 3, speed: 8, move: 4, jump: 3 },
-    abilities: [punch(2.4, 'Corto y seco, como se aprende en la calle.'), WEAPON_HIT, LOW_BLOW, DISARM],
+    abilities: [punch(2.4, 'Corto y seco, como se aprende en la calle.'), KICK, WEAPON_HIT, LOW_BLOW, DISARM],
     sprite: {
       body: 'warrior',
       hat: null,

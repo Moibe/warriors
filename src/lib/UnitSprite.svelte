@@ -20,7 +20,7 @@
     Sprite,
     SpriteMaterial,
   } from 'three';
-  import { DEATH_TIME, HURT_TIME } from './battle.svelte';
+  import { DEATH_TIME, HURT_TIME, setHoverUnit } from './battle.svelte';
   import { LEVEL, TILE, facingAngle, facingVector } from './grid';
   import { getShadowTexture } from './textures';
   import { SPRITE_WORLD_H, SPRITE_WORLD_W, getUnitTexture, type Pose } from './sprites';
@@ -174,6 +174,21 @@
   // The ring carries team identity, the wedge carries direction — so the wedge
   // gets the brighter tint and the ring steps back, rather than both competing
   // in the same colour at the same weight.
+  // Hover, reported by the man rather than by the tile under him.
+  //
+  // The terrain's plates say which tile the pointer is on, but a sprite is a
+  // standing rectangle and most of it is above its tile: rest the pointer on
+  // his chest and the ray goes through the billboard to the plate BEHIND him.
+  // So the sprite names itself, and `hoveredUnit()` prefers that name to the
+  // ground's. A man on the floor names nobody - he is a body on a square the
+  // plate can speak for.
+  function enterHover() {
+    if (!downed) setHoverUnit(unit.id);
+  }
+  function leaveHover() {
+    setHoverUnit(null, unit.id);
+  }
+
   $effect(() => {
     const ally = unit.team === 'ally';
     ringMaterial.color.set(ally ? '#5ea8ff' : '#e8564e');
@@ -298,6 +313,8 @@
       shakeOffset.z,
     ]}
     scale={[SPRITE_WORLD_W, SPRITE_WORLD_H, 1]}
+    onpointerenter={enterHover}
+    onpointerleave={leaveHover}
     renderOrder={downed ? 2 : 3}
   />
 
