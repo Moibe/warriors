@@ -351,29 +351,36 @@ export const STAGES: Record<StageId, Stage> = {
       { kind: 'conclave', x: 5, y: 1, w: 2, d: 1, height: 0, variant: 0 },
       { kind: 'conclave', x: 7, y: 1, w: 2, d: 1, height: 0, variant: 0 },
       { kind: 'conclave', x: 9, y: 1, w: 2, d: 1, height: 0, variant: 0 },
-      // THE FENCE along the south rim, one tile per placement so each can bow on
-      // its own hash and no post gets doubled where two bays meet. Six tiles
-      // north of the hole and three south of it, so the player reads a boundary
-      // before he reads the break in it.
-      { kind: 'conclave', x: 5, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
-      { kind: 'conclave', x: 6, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
-      { kind: 'conclave', x: 7, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
-      { kind: 'conclave', x: 8, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
-      { kind: 'conclave', x: 9, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
-      { kind: 'conclave', x: 10, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      // THE PERMANENT BOUNDARY, six tiles north of the barrier and three south
+      // of it, is MURO (PIECE.wall, variant 9): the arcade's own cut stone,
+      // stacked to the fence's exact height, no prop that could ever look like
+      // something you swing at. That is a deliberate reversal of what this run
+      // used to be: it used to be wood everywhere, on the argument that a
+      // fence dressed the same from end to end tells the player nothing about
+      // where it gives, and the lamp plus the amber panel were the only hint.
+      // Wood standing at every tile you cannot break was the thing that
+      // argument cost, and it read as the one question this board should
+      // never raise - "why can I open this plank and not that one, they are
+      // the same plank." Stone answers it before it is asked: nine tiles of
+      // park wall, and then four tiles that are visibly, unmistakably wood.
+      { kind: 'conclave', x: 5, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 6, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 7, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 8, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 9, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 10, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
       // THE FOUR THAT COME DOWN. The run is whole when the battle starts: these
       // stand on the `barrier` rectangle below and vanish on the beat it falls,
-      // and the gap piece takes their place. Same tile, same piece, same turns
-      // as the rest of the run, so until somebody hits it there is no way to
-      // tell from the fence alone where the hole is going to be - the lamp and
-      // the amber panel behind it do that job.
+      // and the gap piece takes their place. They are the ONLY wood on this
+      // wall now, which is the point - a fighter reads "this part is timber,
+      // the rest is stone" before he reads a single number.
       { kind: 'conclave', x: 11, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
       { kind: 'conclave', x: 12, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
       { kind: 'conclave', x: 13, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
       { kind: 'conclave', x: 14, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
-      { kind: 'conclave', x: 15, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
-      { kind: 'conclave', x: 16, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
-      { kind: 'conclave', x: 17, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      { kind: 'conclave', x: 15, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 16, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 17, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
       // THE WAY OUT — exactly the `exit` rectangle above, and the two must never
       // drift apart or the broken fence stops being where the green tiles are.
       // Nothing it draws inside that rectangle rises above 0.013, under all four

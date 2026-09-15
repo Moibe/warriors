@@ -71,6 +71,11 @@
   //                                        and his ring, keeps his chest, head
   //                                        and colours. SOLID BOARDS, and the
   //                                        one licensed mass here (below).
+  //   wall        1.02    0.62     0.09    the same row exactly. `wall` is
+  //                                        `fence`'s silhouette in stone: same
+  //                                        height, same licence, same cost to
+  //                                        whoever stands behind it. Only the
+  //                                        material tells the two apart.
   //   arcade      1.25    0.85     0.32    nothing: flat on a 1.25 wall.
   //   cruiser     1.42    1.02     0.49    nothing: it is off the board.
   //   treeline    2.00    1.60     1.07    nothing: it is off the board.
@@ -122,6 +127,23 @@
   //     them, paint them — but do not raise them. And the hash keeps one board
   //     in five missing and one in three snapped short, which is carpentry
   //     rather than mercy, but it does leave real gaps along the run.
+  //
+  //   · wall - fence's exact height in stone, and it is what the run either
+  //     side of the barrier is made of now. It used to be the same wood the
+  //     whole way along, on the argument that a fence dressed the same from
+  //     end to end tells the player nothing about where it gives, and the lamp
+  //     and the amber panel were the only hint. That argument cost the one
+  //     thing a tutorial cannot spend: a fighter looking at nine tiles of
+  //     identical timber and wondering why he can open four of them and not
+  //     the other five, which is a question about the RULES dressed up as a
+  //     question about the WOOD. Ashlar answers it before it is asked, with
+  //     the same three courses the arcade already stands on - ashlarDark at
+  //     the foot, ashlar for the body, ashlarLit for the coping - so the
+  //     boundary reads as the same masonry the park was built from, and the
+  //     four tiles of timber in the middle of it are the only thing on this
+  //     wall that was ever going to move. No hash, no missing course, no
+  //     snapped block: uniform is the point. A wall that varied tile to tile
+  //     would be a wall inviting the question fence used to raise.
   //
   //   · lamp — a 0.09 column with the lantern above the band entirely. The
   //     head's bottom is at 1.96, and the arithmetic is: a man one tile behind
@@ -258,6 +280,12 @@
   //                                   the board.
   //   weathered   #9c8358 / #6f5b3b   The board fence, and the LIGHTEST thing
   //   timber                          on the board on purpose — the fence is the
+  //                                   way out. `wall` - the stone either side of
+  //                                   it - spends none of its own budget: it is
+  //                                   the arcade's cut stone, ashlar / ashlarLit
+  //                                   / ashlarDark, reused exactly so the
+  //                                   boundary and the arcade read as one
+  //                                   material rather than two.
   //                                   way out and has to be findable from the far
   //                                   corner of the bowl at a glance. That is the
   //                                   one thing the wood inherits from the
@@ -330,6 +358,7 @@
     treeline: 6,
     litter: 7,
     bin: 8,
+    wall: 9,
   } as const;
 
   /**
@@ -371,6 +400,21 @@
     },
     fence: {
       name: 'Valla',
+      w: 1,
+      d: 1,
+      top: 1.02,
+      steps: false,
+      caps: false,
+      wall: true,
+      offBoard: false,
+    },
+    // The permanent boundary, same footprint and the SAME top as `fence` on
+    // purpose: it is licensed by the identical argument (see the header rule
+    // bullet), and the height-table row for `fence` already covers it. Nothing
+    // downstream reads this `wall` boolean; it is the same descriptive flag
+    // `fence` and `arcade` already carry, kept for whoever reads the table.
+    wall: {
+      name: 'Muro',
       w: 1,
       d: 1,
       top: 1.02,
@@ -887,6 +931,25 @@
   const FENCE_PALINGS = [-0.4, -0.2, 0, 0.2, 0.4];
   const RAIL_HIGH = 0.84;
   const RAIL_LOW = 0.26;
+
+  // ---- Muro (1x1, the same footprint and the same 1.02 as the fence) ------
+  // Three courses, stacked to the exact millimetre the fence tops out at, so
+  // the height-table row above needs no second entry: 0.12 of plinth, 0.80 of
+  // body, 0.10 of coping, 1.02 total. Full width and no gap between courses or
+  // between adjacent tiles - the one deliberate difference from the fence,
+  // which is built to be seen through. A wall is built not to be: nothing
+  // behind it should read as anything but gone.
+  //
+  // No hash reads these. The fence varies board to board because a fence this
+  // long, perfectly uniform, would look painted rather than built; a wall does
+  // not have that problem; a wall that varied would just look unstable.
+  const WALL_PLINTH_H = 0.12;
+  const WALL_BODY_H = 0.8;
+  const WALL_COPING_H = 0.1; // 0.12 + 0.80 + 0.10 = 1.02 = FENCE_TOP, exactly.
+
+  const wallPlinthGeometry = new BoxGeometry(0.98, WALL_PLINTH_H, 0.2);
+  const wallBodyGeometry = new BoxGeometry(0.94, WALL_BODY_H, 0.16);
+  const wallCopingGeometry = new BoxGeometry(1.02, WALL_COPING_H, 0.24);
 
   // ---- Valla rota (1×3, ON the exit tiles) --------------------------------
   // The hole they went through, and the most rule-bound object on the board.
@@ -1429,6 +1492,31 @@
         {/if}
       {/each}
     </T.Group>
+  {:else if piece === PIECE.wall}
+    <!-- The same 1.02 the fence stands at, in the arcade's own stone. Three
+         plain courses, full width, no gap to the next tile - solid where the
+         fence is deliberately a lattice you can see the park through. -->
+    <T.Mesh
+      geometry={wallPlinthGeometry}
+      material={ashlarDark}
+      position={[0, WALL_PLINTH_H / 2, 0]}
+      castShadow
+      receiveShadow
+    />
+    <T.Mesh
+      geometry={wallBodyGeometry}
+      material={ashlar}
+      position={[0, WALL_PLINTH_H + WALL_BODY_H / 2, 0]}
+      castShadow
+      receiveShadow
+    />
+    <T.Mesh
+      geometry={wallCopingGeometry}
+      material={ashlarLit}
+      position={[0, WALL_PLINTH_H + WALL_BODY_H + WALL_COPING_H / 2, 0]}
+      castShadow
+      receiveShadow
+    />
   {:else if piece === PIECE.fenceGap}
     <!-- THE EXIT. Nothing in this block that stands on a tile goes over 0.013,
          because the green exit overlay lifts at 0.055 and a prop drawn over it
