@@ -5,7 +5,10 @@
 // back to the wrong default — which has happened twice — or whether a body
 // still looks like the man it was. Those show up here and nowhere else.
 //
-//   npm run sheet      ->  tools/shots/hoja.png
+//   npm run sheet                      ->  one man from every gang
+//   npm run sheet -- vance hog beanie  ->  exactly those, by unit id
+//
+// Writes tools/shots/hoja.png.
 //
 // The dev server has to be up: it draws with the game's own modules, so what
 // you are looking at is what the board will show.
@@ -22,32 +25,42 @@ const browser = await chromium.launch({
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
 });
 const page = await browser.newPage({ viewport: { width: 1100, height: 600 } });
+
+// Naming ids on the command line draws those instead of the default sheet.
+// A new gang is always the reason you are running this, and hard-coding the
+// cast meant editing the tool every time one arrived.
+const wanted = process.argv.slice(2);
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 await page.goto(ORIGIN, { waitUntil: 'networkidle', timeout: 60000 });
 
-const url = await page.evaluate(async () => {
+const url = await page.evaluate(async (wanted) => {
   const sprites = await import('/src/lib/sprites.ts');
   const units = await import('/src/lib/units.ts');
   const jobs = await import('/src/lib/jobs.ts');
 
-  // One per body type, and both Turnbull roles because the bald head is the
-  // slot most likely to go wrong.
-  const pick = [
-    ['swan', 'warchief'],
-    ['ajax', 'bruiser'],
-    ['fury-3', 'slugger'],
-    ['bull', 'ringleader'],
-    ['moose', 'wrecker'],
-    ['sully', 'loudmouth'],
-    ['tino', 'cornerboy'],
-  ];
+  // Everybody in the game, so an id is enough to find a man and the job comes
+  // off the unit instead of being repeated here and going stale.
   const roster = [
     ...units.warriors(),
     ...units.furies(),
     ...units.turnbull(),
     ...units.orphans(),
+    ...units.lizzies(),
+    ...units.punks(),
+    ...units.rogues(),
+    ...units.mercy(),
   ];
+
+  // The default sheet: one man per body type. Both Turnbull roles, because the
+  // bald head is the slot most likely to go wrong, and both Punk bodies,
+  // because the only thing between them is a pair of skates.
+  const DEFAULT = ['swan', 'fury-3', 'bull', 'moose', 'tino', 'starr', 'hog', 'vance', 'luther'];
+  const ids = wanted.length ? wanted : DEFAULT;
+  const missing = ids.filter((id) => !roster.some((r) => r.id === id));
+  const pick = ids
+    .filter((id) => !missing.includes(id))
+    .map((id) => [id, roster.find((r) => r.id === id).job]);
 
   const S = 6;
   const W = 20 * S;
@@ -68,6 +81,7 @@ const url = await page.evaluate(async () => {
 
   pick.forEach(([id, job], i) => {
     const u = roster.find((r) => r.id === id);
+    void job;
     const base = jobs.JOBS[job].sprite.palette;
     const palette = u?.paletteOverride ? { ...base, ...u.paletteOverride } : base;
     const hat = u && u.hat !== undefined ? u.hat : jobs.JOBS[job].sprite.hat;
@@ -86,9 +100,10 @@ const url = await page.evaluate(async () => {
     });
   });
 
-  return out.toDataURL('image/png');
-});
+  return { url: out.toDataURL('image/png'), missing };
+}, wanted);
 
-writeFileSync(dir + '/hoja.png', Buffer.from(url.split(',')[1], 'base64'));
+writeFileSync(dir + '/hoja.png', Buffer.from(url.url.split(',')[1], 'base64'));
+if (url.missing.length) console.log('no existen: ' + url.missing.join(', '));
 console.log(errors.length ? 'ERRORES: ' + errors.join(' | ') : dir + '/hoja.png');
 await browser.close();

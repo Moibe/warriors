@@ -37,6 +37,7 @@ export type Surface =
   | 'wood' // tarima — the bandstand deck
   | 'metal' // chapa — the roof of something you climbed onto
   | 'carpet' // moqueta — the first indoor floor in the game
+  | 'tile' // azulejo — the tiled floor of a subway lavatory
   | 'beach' // arena de playa — lighter than 'sand', which Riverside still uses
   | 'deck'
   | 'water'; // charco — impassable under the base rules
@@ -78,6 +79,7 @@ export const SURFACE_NAMES: Record<Surface, string> = {
   wood: 'Tarima',
   metal: 'Chapa',
   carpet: 'Moqueta',
+  tile: 'Azulejo',
   beach: 'Arena',
   deck: 'Tarima de mar',
   water: 'Charco',
@@ -106,6 +108,16 @@ export const SURFACE_COLORS: Record<Surface, { top: string; side: string }> = {
   // The oxblood carpet of a living room lit by one red lampshade. Warm where
   // every other surface in the game is cold, which is most of what says indoors.
   carpet: { top: '#4a1f24', side: '#2e1216' },
+  // Subway ceramic, and the one place a real colour would have been a mistake.
+  // A men's room floor is white, and white here is unusable: the Coney Island
+  // sand already sits at the top of what a board can be lit to before the
+  // Warriors' bone skull stops reading on it, and tile would be lighter still.
+  // So this is that tile after forty years underground — institutional green
+  // gone grey, grouted with the black that collects in the lines. It lands a
+  // step DARKER than the beach on purpose, because it is the only board lit
+  // from a tube rather than from the sky, and a cold light on a pale floor is
+  // how a board goes to glare.
+  tile: { top: '#7d8a80', side: '#4e5852' },
   // Beach sand at dawn, and #b59a74 is a ceiling rather than a preference:
   // any lighter and the Warriors' bone skull stops reading on top of it. It is
   // its own surface instead of a brighter 'sand' because Riverside's infield
@@ -242,6 +254,7 @@ const SURFACE_CHARS: Record<string, Surface> = {
   m: 'wood',
   x: 'metal',
   c: 'carpet',
+  t: 'tile',
   b: 'beach',
   p: 'deck',
   w: 'water',

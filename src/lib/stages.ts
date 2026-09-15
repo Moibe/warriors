@@ -11,12 +11,20 @@
 // and never a unit somebody already took the bat off.
 
 import { tileKey, type BattleMap } from './grid';
-import { coneyIsland, gunHillRoad, lizziePlace, orphanBlock, riversidePark } from './maps';
+import {
+  coneyIsland,
+  gunHillRoad,
+  lizziePlace,
+  orphanBlock,
+  riversidePark,
+  unionSquare,
+} from './maps';
 import {
   furies,
   lizzies,
   mercy,
   orphans,
+  punks,
   rogues,
   turnbull,
   warriors,
@@ -25,7 +33,13 @@ import {
 } from './units';
 
 /** Which procedural prop draws it — one key per entry in Scene's PROPS map. */
-export type PropKind = 'comfortStation' | 'bus' | 'parkedCar' | 'furniture' | 'coneyIsland';
+export type PropKind =
+  | 'comfortStation'
+  | 'bus'
+  | 'parkedCar'
+  | 'furniture'
+  | 'coneyIsland'
+  | 'mensRoom';
 
 /**
  * The way out.
@@ -145,6 +159,7 @@ export type StageId =
   | 'gun-hill-road'
   | 'orphan-block'
   | 'lizzie-place'
+  | 'union-square'
   | 'coney-island';
 
 export type Stage = {
@@ -392,6 +407,145 @@ export const STAGES: Record<StageId, Stage> = {
     },
   },
 
+  'union-square': {
+    id: 'union-square',
+    name: 'El baño de Union Square',
+    rival: 'Punks',
+    map: unionSquare,
+    // Piece indices come from PIECE in MensRoom.svelte:
+    //   0 stalls · 1 sinks · 2 urinal · 3 radiator · 4 bench · 5 tube
+    //   6 tubeDead · 7 bin · 8 pipes · 9 graffiti · 10 wet
+    props: [
+      // The stall run, one placement per partition-and-its-pocket. The
+      // partitions themselves are TERRAIN - blocked tiles at level 4 with an
+      // ordinary surface - so the column already draws them solid and the prop
+      // only hangs the doors. That matters: seven player units start behind
+      // those doors, and a partition drawn by a prop on an 'x' tile would be a
+      // slab floating over a hole.
+      { kind: 'mensRoom', x: 1, y: 1, w: 2, d: 1, height: 1, variant: 0 },
+      { kind: 'mensRoom', x: 3, y: 1, w: 2, d: 1, height: 1, variant: 0 },
+      { kind: 'mensRoom', x: 5, y: 1, w: 2, d: 1, height: 1, variant: 0 },
+      { kind: 'mensRoom', x: 7, y: 1, w: 2, d: 1, height: 1, variant: 0 },
+      { kind: 'mensRoom', x: 9, y: 1, w: 2, d: 1, height: 1, variant: 0 },
+      { kind: 'mensRoom', x: 11, y: 1, w: 2, d: 1, height: 1, variant: 0 },
+      { kind: 'mensRoom', x: 13, y: 1, w: 2, d: 1, height: 1, variant: 0 },
+      // The sinks and the cracked mirror, west wall, facing the room.
+      { kind: 'mensRoom', x: 1, y: 3, w: 1, d: 3, height: 1, turns: 1, variant: 1 },
+      // The trough, south wall, hung off the front of its own blocked pier.
+      { kind: 'mensRoom', x: 5, y: 10, w: 1, d: 1, height: 1, turns: 2, variant: 2 },
+      { kind: 'mensRoom', x: 6, y: 10, w: 1, d: 1, height: 1, turns: 2, variant: 2 },
+      { kind: 'mensRoom', x: 7, y: 10, w: 1, d: 1, height: 1, turns: 2, variant: 2 },
+      { kind: 'mensRoom', x: 8, y: 10, w: 1, d: 1, height: 1, turns: 2, variant: 2 },
+      // The two islands you can actually climb, and they are made of the only
+      // two materials in here that are not ceramic: black iron and pine. On a
+      // board where the walls and the floor are the same tile, colour is the
+      // only thing left to tell a man which safe square he is looking at.
+      { kind: 'mensRoom', x: 14, y: 3, w: 1, d: 2, height: 1, turns: 3, variant: 3 },
+      { kind: 'mensRoom', x: 13, y: 7, w: 1, d: 2, height: 1, turns: 3, variant: 4 },
+      { kind: 'mensRoom', x: 1, y: 8, w: 1, d: 1, height: 1, turns: 1, variant: 7 },
+      // WALL PIECES HANG OFF A FLOOR TILE WITH A WALL BEHIND IT, never off the
+      // wall tile itself: placed on the wall, the terrain column swallows them
+      // whole and the room comes out with no lighting at all. Learned the hard
+      // way, in a screenshot with three invisible fluorescent tubes in it.
+      { kind: 'mensRoom', x: 1, y: 6, w: 1, d: 2, height: 1, turns: 1, variant: 5 },
+      { kind: 'mensRoom', x: 2, y: 10, w: 2, d: 1, height: 1, turns: 2, variant: 5 },
+      // And one of them dead. A lit half and a dark half of the same room costs
+      // nothing and is the only thing in here that says the MTA stopped coming.
+      { kind: 'mensRoom', x: 11, y: 10, w: 2, d: 1, height: 1, turns: 2, variant: 6 },
+      { kind: 'mensRoom', x: 1, y: 2, w: 1, d: 1, height: 1, turns: 1, variant: 8 },
+      { kind: 'mensRoom', x: 14, y: 9, w: 1, d: 1, height: 1, turns: 3, variant: 8 },
+      // 1979. This room is covered.
+      { kind: 'mensRoom', x: 1, y: 9, w: 1, d: 1, height: 1, turns: 1, variant: 9 },
+      { kind: 'mensRoom', x: 9, y: 10, w: 1, d: 1, height: 1, turns: 2, variant: 9 },
+      { kind: 'mensRoom', x: 13, y: 10, w: 1, d: 1, height: 1, turns: 2, variant: 9 },
+      { kind: 'mensRoom', x: 14, y: 2, w: 1, d: 1, height: 1, turns: 3, variant: 9 },
+      // Wet floor. It blocks nothing, and it is the thesis of the board in
+      // paint: the open middle is lit, wet, and theirs.
+      { kind: 'mensRoom', x: 7, y: 5, w: 1, d: 1, height: 1, variant: 10 },
+      { kind: 'mensRoom', x: 11, y: 8, w: 1, d: 1, height: 1, variant: 10 },
+      { kind: 'mensRoom', x: 4, y: 7, w: 1, d: 1, height: 1, variant: 10 },
+    ],
+    // Six of them, and Mercy, already in the cubicles with the doors shut.
+    //
+    // The deployment IS the scene. Swan does not get cornered in that lavatory,
+    // he walks them into it; the Punks come through the east door thinking they
+    // are springing a trap. So the player opens the battle with seven units in
+    // seven dead ends and the whole enemy squad in the open, and the first
+    // decision of the board is the only one that matters on it: who steps out.
+    //
+    // Rembrandt has the highest Charge Time in the room because in the film he
+    // is the starting gun - the leader pulls his door and takes the can in the
+    // face at arm's length. Mercy is at the far end, as far from the way in as
+    // the room allows, which is the most this board can do for somebody who
+    // said she could not come in here.
+    roster: () => [
+      ...warriorsNamed(
+        ['rembrandt', 'swan', 'snow', 'cowboy', 'cochise', 'vermin'],
+        [
+          { x: 10, y: 1, facing: 's', ct: 56 },
+          { x: 8, y: 1, facing: 's', ct: 44 },
+          { x: 14, y: 1, facing: 's', ct: 40 },
+          { x: 12, y: 1, facing: 's', ct: 34 },
+          { x: 6, y: 1, facing: 's', ct: 28 },
+          { x: 4, y: 1, facing: 's', ct: 22 },
+        ]
+      ),
+      ...mercy([{ x: 2, y: 1, facing: 's', ct: 12 }]),
+      ...punks(),
+    ],
+    sky: {
+      // The first board in the game with no sky at all, and the gradient says
+      // so by having almost no span: four stops crawling from #070a09 to
+      // #243029. Every other sky here is a DISTANCE - Riverside runs #070c1c to
+      // #4a4a63, the dawn #2b3f6b to #f2c98a - and span reads as air, and air
+      // reads as outdoors. What is behind this board is a tiled passage you
+      // could put your hand on.
+      zenith: '#070a09',
+      upper: '#0e1412',
+      lower: '#18211d',
+      horizon: '#243029',
+      // The only green-white glow in the game; every other one is sodium or
+      // fire. It is the platform's own tubes further down the passage, and it
+      // is the faintest here at 0.22 against a range of 0.28 to 0.42, because a
+      // bright rim along the bottom edge reads as daylight outside and there is
+      // none. It is a spill under a door, and it is the only thing in the frame
+      // that says the way out exists.
+      glow: 'rgba(214, 236, 214, 0.22)',
+    },
+    light: {
+      // Cold white from overhead, and both halves of that are the point.
+      //
+      // COLD: the floor is #7d8a80, the walls are ceramic, the partitions are
+      // ceramic - the room is green before a light touches it. Key it green too
+      // and every value collapses onto one hue and the board goes to tin, which
+      // is this room's version of the mud the Lizzies' rig was written against.
+      // Every rig in this file is pushed AWAY from its own surfaces, so this
+      // key is the palest thing in the frame with only a whisper of green in
+      // it. The ambient is a dead neutral for the same reason: tint it amber
+      // for the sodium off the platform and a ceramic room turns beige, at
+      // which point it is the fourth brown board in a row.
+      //
+      // OVERHEAD: every other key in the game rakes, because every other key is
+      // a moon or a sun - Gun Hill is 52 degrees off vertical, the Lizzies 38,
+      // the dawn 53. This one is 27, by a distance the steepest here, because a
+      // fluorescent tube in a ceiling is the first light in this project that
+      // is genuinely above you. That one number is most of what makes the board
+      // feel roofed, before a single hex is looked at.
+      //
+      // The hemisphere carries the widest sky/ground spread of any rig here and
+      // it has to: this is the only board where a wall and a floor are THE SAME
+      // MATERIAL, and without that gradient the room is one grey box with a
+      // fighter standing in it.
+      ambient: { color: '#8d928c', intensity: 0.6 },
+      hemisphere: { sky: '#c3d2c6', ground: '#3b443f', intensity: 0.7 },
+      key: { color: '#eef6ea', intensity: 1.45, position: [5, 17, 7] },
+    },
+    outcome: {
+      victory: 'Los nueve en el suelo y los seis de pie. La única que ganáis a gusto.',
+      defeat: 'Os pillaron en los retretes. Nadie coge el último tren.',
+    },
+  },
+
   'coney-island': {
     id: 'coney-island',
     name: 'Coney Island',
@@ -454,13 +608,16 @@ export const STAGES: Record<StageId, Stage> = {
  * The order the picker offers them, which is the order they happen on the way
  * home: the Turnbull catch them on Gun Hill Road, the train dumps them on the
  * Orphans' block, the Furies are waiting further south in Riverside Park, and
- * the Lizzies ask them upstairs afterwards. Coney Island is the morning.
+ * the Lizzies ask them upstairs afterwards, and the Punks are waiting in the
+ * lavatory at Union Square on the way to the last train. Coney Island is the
+ * morning.
  */
 export const STAGE_LIST: Stage[] = [
   STAGES['gun-hill-road'],
   STAGES['orphan-block'],
   STAGES['riverside-park'],
   STAGES['lizzie-place'],
+  STAGES['union-square'],
   STAGES['coney-island'],
 ];
 

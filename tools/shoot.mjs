@@ -46,34 +46,47 @@ await page.waitForTimeout(3500);
 await page.mouse.move(720, 280);
 
 if (stageId) {
-  // The picker starts on whatever is installed, so walk to the one asked for
-  // rather than assuming where the cursor is.
-  const names = await page.evaluate(async () => {
+  // Pick the battle by CLICKING ITS NAME, never by counting arrow presses.
+  //
+  // Two separate traps make the arrow-walk wrong, and both of them bit:
+  //   1. The picker's rows carry `onmouseenter={() => (index = i)}`, so the
+  //      parked mouse pointer silently selects whatever row happens to open
+  //      underneath it. Add a stage, the list grows, the rows shift under the
+  //      pointer, and a harness that worked yesterday now opens a different
+  //      battle — which is exactly what happened the day Union Square arrived.
+  //   2. Asking battle.svelte.ts which stage is installed does not work from
+  //      here at all: a dynamic import inside page.evaluate returns a SECOND
+  //      module instance, so it answers with the default rather than with what
+  //      is on screen. stages.ts is safe to read that way because it is frozen
+  //      data; battle state never is.
+  //
+  // A click needs neither the cursor's position nor the live module. It only
+  // needs the name, which is on the button.
+  const list = await page.evaluate(async () => {
     const stages = await import('/src/lib/stages.ts');
-    return stages.STAGE_LIST.map((s) => s.id);
+    return stages.STAGE_LIST.map((s) => ({ id: s.id, name: s.name }));
   });
-  const current = await page.evaluate(async () => {
-    const battle = await import('/src/lib/battle.svelte.ts');
-    return battle.stage().id;
-  });
-  const from = names.indexOf(current);
-  const to = names.indexOf(stageId);
-  if (to < 0) {
-    console.log(`no existe la escena "${stageId}". Hay: ${names.join(', ')}`);
+  const wanted = list.find((s) => s.id === stageId);
+  if (!wanted) {
+    console.log(`no existe la escena "${stageId}". Hay: ${list.map((s) => s.id).join(', ')}`);
     await browser.close();
     process.exit(1);
   }
-  if (to !== from) {
-    await page.keyboard.press('m');
-    await page.waitForTimeout(600);
-    const steps = (to - from + names.length) % names.length;
-    for (let i = 0; i < steps; i++) {
-      await page.keyboard.press('ArrowDown');
-      await page.waitForTimeout(220);
-    }
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(4000);
+  await page.keyboard.press('m');
+  await page.waitForTimeout(600);
+  await page.locator('.panel button', { hasText: wanted.name }).first().click();
+  await page.waitForTimeout(4000);
+  // And prove it, because opening the wrong battle is a failure that looks
+  // exactly like a successful screenshot.
+  const got = ((await page.locator('.stage-name').first().textContent()) || '').trim();
+  if (got !== wanted.name) {
+    console.log(`pedí "${wanted.name}" y salió "${got}"`);
+    await browser.close();
+    process.exit(1);
   }
+  // The pointer sat over the picker; park it somewhere that is only board.
+  await page.mouse.move(720, 700);
+  await page.waitForTimeout(400);
 }
 
 if (wide) {
@@ -85,7 +98,7 @@ if (wide) {
   await page.waitForTimeout(1600);
 }
 
-const name = ((await page.locator('.stage-name').textContent()) || 'escena').trim();
+const name = ((await page.locator('.stage-name').first().textContent()) || 'escena').trim();
 const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const file = resolve(outDir, `${slug}${wide ? '-conjunto' : ''}.png`);
 await page.screenshot({ path: file });

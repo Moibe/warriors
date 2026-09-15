@@ -507,7 +507,28 @@ const WEAPON_CAN = template(14, 17, [
   'OOOOO',
 ]);
 
+/**
+ * A length of chain, and the one weapon here drawn as a gap rather than a bar.
+ *
+ * The pipe is a solid column of metal; if the chain were one too, at five
+ * pixels across they would be the same object under two names. Links alternate
+ * with outline the whole way down, so what the eye gets is a dashed line that
+ * hangs - which is the only thing a chain does that a pipe cannot.
+ */
+const WEAPON_CHAIN = template(13, 12, [
+  ' OOOO ',
+  ' OMMO ',
+  ' OOOO ',
+  ' OMMO ',
+  ' OOOO ',
+  ' OMMO ',
+  ' OOOO ',
+  ' OMMO ',
+  ' OOOO ',
+]);
+
 const WEAPONS: Record<Exclude<WeaponId, 'none'>, Template> = {
+  chain: WEAPON_CHAIN,
   bat: WEAPON_BAT,
   knife: WEAPON_KNIFE,
   pipe: WEAPON_PIPE,
@@ -1340,6 +1361,230 @@ const LUTHER_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   '   OKKKKO OKSSO     ',
 ]);
 
+// ---------------------------------------------------------------------------
+// The Punks
+// ---------------------------------------------------------------------------
+//
+// One gang, two bodies, and the seam between them is the knee.
+//
+// Everybody remembers the Punks as the gang on roller skates. The film gives
+// skates to exactly ONE of them - the leader, the man Mercy points out to Swan
+// as "that dude over there with the skates", singular, one man among several.
+// The rest walk in. The myth comes from the 1970s concept album, where it is
+// the Hurricanes who are drawn on wheels in overalls and striped shirts, and
+// from a toy sold as "Punks Leader (Roller Skate Gang)". A record sleeve named
+// this gang; the film never did.
+//
+// So the shared parts are authored ONCE and the two bodies differ only in the
+// last five rows. That is not a saving, it is the statement: these are the same
+// seven men in the same dungarees, and one of them is standing on wheels. Build
+// them as two independent templates and the day somebody widens a shoulder, the
+// leader quietly stops being one of his own gang.
+//
+// What they wear is a bib-and-brace over a long-sleeved rugby shirt. The bib is
+// the read - a rectangle of denim up the chest with a strap over each shoulder,
+// which no other body in this game has - and the sleeves are hooped, because
+// about half the gang's shirts are and a hoop the player can see beats a plain
+// shirt he cannot.
+
+const PUNK_TORSO_FRONT = [
+  '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSESSESHO   ',
+  '   OHSSSSSSHO   ',
+  '    OSSSSSSO    ',
+  '     OKKKKO     ',
+  '   OGAGGGGAGO   ',
+  '  OFFAAGGAAFFO  ',
+  '  OGGAAAAAAGGO  ',
+  '  OFFAACCAAFFO  ',
+  '  OSOAAAAAAOSO  ',
+  '   OOAAAAAAOO   ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+];
+
+/** From behind: nothing. Nobody sews an emblem onto a pair of dungarees. */
+const PUNK_TORSO_BACK = [
+  '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHHHHHHHO   ',
+  '    OHHHHHHO    ',
+  '     OKKKKO     ',
+  '   OGAGGGGAGO   ',
+  '  OFFGAGGAGFFO  ',
+  '  OGGGGAAGGGGO  ',
+  '  OFFGAGGAGFFO  ',
+  '  OSOAAAAAAOSO  ',
+  '   OOAAAAAAOO   ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+];
+
+/** Six men in work boots. Narrow, dark and completely unremarkable, which is
+ *  the whole point: the seventh pair is not. */
+const PUNK_BOOTS = [
+  '    OBBOOBBO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+];
+
+/**
+ * And the seventh pair.
+ *
+ * Quad skates, 1979: four wheels on two axles under a laced leather boot, with
+ * a toe stop. NOT an inline - those do not exist yet, and drawing one would be
+ * the yellow school bus all over again.
+ *
+ * Two pixels wider than a boot on each side and a row of wheels underneath, and
+ * that is the entire silhouette. At sixteen pixels a Warrior, a Rogue and a
+ * Punk are all "a person"; what says which one is the feet, and this pair says
+ * it from the other end of the room.
+ */
+const PUNK_SKATES = [
+  '   OBWBOOBWBO   ',
+  '  OBBWBOOBWBBO  ',
+  '  OBBBBOOBBBBO  ',
+  '  MMOMMOOMMOMM  ',
+  '  OOOOO  OOOOO  ',
+];
+
+const PUNK_FRONT = template(BODY_AT.ox, BODY_AT.oy, [...PUNK_TORSO_FRONT, ...PUNK_BOOTS]);
+const PUNK_BACK = template(BODY_AT.ox, BODY_AT.oy, [...PUNK_TORSO_BACK, ...PUNK_BOOTS]);
+const SKATER_FRONT = template(BODY_AT.ox, BODY_AT.oy, [...PUNK_TORSO_FRONT, ...PUNK_SKATES]);
+const SKATER_BACK = template(BODY_AT.ox, BODY_AT.oy, [...PUNK_TORSO_BACK, ...PUNK_SKATES]);
+
+// --- Recoil ----------------------------------------------------------------
+// One row up and the legs splayed, exactly the way every other body in this
+// file takes a hit. The trailing blank row keeps the feet off the bottom edge.
+
+const PUNK_HURT_TORSO_FRONT = [
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHOOSSOOHO   ',
+  '   OHSSSSSSHO   ',
+  '    OSSOOSSO    ',
+  '     OKKKKO     ',
+  '   OGAGGGGAGO   ',
+  ' OSOFAAGGAAFOSO ',
+  ' OFOGAAAAAAGOFO ',
+  '  OFFAACCAAFFO  ',
+  '  OGGAAAAAAGGO  ',
+  '   OOAAAAAAOO   ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '  OCCOOOOOOCCO  ',
+];
+
+const PUNK_HURT_TORSO_BACK = [
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHHHHHHHO   ',
+  '    OHHHHHHO    ',
+  '     OKKKKO     ',
+  '   OGAGGGGAGO   ',
+  ' OSOFGAGGAGFOSO ',
+  ' OFOGGGAAGGGOFO ',
+  '  OFFGAGGAGFFO  ',
+  '  OGGAAAAAAGGO  ',
+  '   OOAAAAAAOO   ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '  OCCOOOOOOCCO  ',
+];
+
+const PUNK_HURT_BOOTS = [
+  '  OBBOOOOOOBBO  ',
+  '  OBBOOOOOOBBO  ',
+  ' OBBBOOOOOOBBBO ',
+  ' OBBBOOOOOOBBBO ',
+  ' OOOO      OOOO ',
+  '                ',
+];
+
+const PUNK_HURT_SKATES = [
+  ' OBWBOOOOOOBWBO ',
+  'OBBWBOOOOOOBWBBO',
+  'OBBBBOOOOOOBBBBO',
+  'MMOMM      MMOMM',
+  'OOOOO      OOOOO',
+  '                ',
+];
+
+const PUNK_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  ...PUNK_HURT_TORSO_FRONT,
+  ...PUNK_HURT_BOOTS,
+]);
+const PUNK_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  ...PUNK_HURT_TORSO_BACK,
+  ...PUNK_HURT_BOOTS,
+]);
+const SKATER_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  ...PUNK_HURT_TORSO_FRONT,
+  ...PUNK_HURT_SKATES,
+]);
+const SKATER_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  ...PUNK_HURT_TORSO_BACK,
+  ...PUNK_HURT_SKATES,
+]);
+
+const PUNK_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '                 OBO',
+  '   OOOOOO       OBBO',
+  '  OHHHHHHO     OCBBO',
+  ' OHHHHHHHHO   OCCCCO',
+  ' OHSSSSSSHO OBBCCCO ',
+  ' OHSSSSSSHOOGAAABBO ',
+  ' OHSOSSOSHOOFAAAAO  ',
+  ' OHKSSSSKHOOGFAAAO  ',
+  '  OKSOOSKOOGGAAO    ',
+  '   OKKKKO OGSSO     ',
+]);
+
+/**
+ * The leader, on the floor, with his wheels in the air - and it is the only
+ * DOWN template in this game that is a scene rather than a pose.
+ *
+ * He goes down in the film because his skates catch on a stall door mid-kick:
+ * stuck, flailing, off his wheels, and Cowboy drops him with one punch. The
+ * gang's whole advantage is the thing that finishes him. A man face down in
+ * boots is a casualty; a man face down with four wheels pointing at the ceiling
+ * is that joke, told once, at exactly the moment it lands.
+ */
+const SKATER_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '               MMOMO',
+  '   OOOOOO      OBWBO',
+  '  OHHHHHHO    OMOMBO',
+  ' OHHHHHHHHO   OCCCCO',
+  ' OHSSSSSSHO OBBCCCO ',
+  ' OHSSSSSSHOOGAAABBO ',
+  ' OHSOSSOSHOOFAAAAO  ',
+  ' OHKSSSSKHOOGFAAAO  ',
+  '  OKSOOSKOOGGAAO    ',
+  '   OKKKKO OGSSO     ',
+]);
+
+
 const BODIES = {
   plain: {
     front: PLAIN_FRONT,
@@ -1389,6 +1634,20 @@ const BODIES = {
     hurtFront: ROGUE_HURT_FRONT,
     hurtBack: ROGUE_HURT_BACK,
     down: ROGUE_DOWN,
+  },
+  punk: {
+    front: PUNK_FRONT,
+    back: PUNK_BACK,
+    hurtFront: PUNK_HURT_FRONT,
+    hurtBack: PUNK_HURT_BACK,
+    down: PUNK_DOWN,
+  },
+  skater: {
+    front: SKATER_FRONT,
+    back: SKATER_BACK,
+    hurtFront: SKATER_HURT_FRONT,
+    hurtBack: SKATER_HURT_BACK,
+    down: SKATER_DOWN,
   },
   luther: {
     front: LUTHER_FRONT,

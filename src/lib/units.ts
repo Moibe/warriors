@@ -543,6 +543,89 @@ export function orphans(spots?: Spot[]): Unit[] {
 }
 
 // ---------------------------------------------------------------------------
+// The Punks
+// ---------------------------------------------------------------------------
+//
+// One cut of dungaree and seven different shirts, which is the exact inverse of
+// every other gang in this file. The Warriors, the Furies and the Turnbull are
+// told apart by skin and hair while the garment stays untouched; the Lizzies
+// have no shared garment at all. These have the most uniform uniform in the
+// game from the collar down and the loudest individuality from the collar up:
+// four plain shirts and three hooped, yellow and navy and red and green, which
+// is what the film puts on them. So the overrides here reach `G` and `F` - the
+// shirt and its hoops - and never touch `A` or `C`, the denim.
+//
+// Every one of them walks in holding something, and that is the battle. The
+// Warriors come in with fists; `Arrebatar` stops being a flourish here and
+// becomes the opening move.
+//
+// TWO CHAINS, and the film gives one. That is a declared liberty and the reason
+// is mechanical: the cubicles are safe from anything that swings at arm's
+// length, so with a single chain six of the seven are free parking and the
+// board stops being a decision. The second one is what keeps a hole in the wall
+// honest.
+
+const PUNK_SQUAD = () => [
+  // The leader. Out in front of his own men because he is the only one who does
+  // not have to walk, and the highest Charge Time on his side: he tailed Swan
+  // through the station and he is the one who pulls the first door.
+  createUnit({
+    id: 'vance', name: 'Vance', job: 'kingpin', team: 'enemy',
+    x: 11, y: 3, facing: 'n', ct: 48, brave: 76,
+    // Black shirt with yellow bands round the upper sleeves - the only dark
+    // shirt in the gang, and it finds him across the room without a marker.
+    paletteOverride: { G: '#2f2f3a', F: '#d8b23a', H: '#4a3524', J: '#2e2016' },
+  }),
+  // Yellow with navy hoops, and the one everybody remembers as "the striped
+  // one". Straight behind the leader, which is where he is in the frame.
+  createUnit({
+    id: 'hog', name: 'Hog', job: 'roughneck', team: 'enemy',
+    x: 13, y: 3, facing: 'n', ct: 30,
+    paletteOverride: { G: '#d9bf52', F: '#22314f', H: '#6b4a28', J: '#46301a' },
+  }),
+  // Plain red, and the big one. Bare hands: he did not think he would need
+  // anything, which is why the bat ends up being Snow's.
+  createUnit({
+    id: 'ed', name: 'Ed', job: 'roughneck', team: 'enemy',
+    x: 13, y: 4, facing: 'n', ct: 20, brave: 84, weapon: 'none',
+    paletteOverride: { G: '#9e3128', F: '#7a241d', H: '#2a211c', J: '#17120f' },
+  }),
+  // Green over dark blue, with the chain.
+  createUnit({
+    id: 'hornet', name: 'Hornet', job: 'chainman', team: 'enemy',
+    x: 12, y: 5, facing: 'n', ct: 26,
+    paletteOverride: { G: '#4a7a45', F: '#1c2740', H: '#8d6a3a', J: '#5e4524' },
+  }),
+  // Royal blue under a grey tweed flat cap - the only Punk wearing anything on
+  // his head, and on a board where seven men share one garment that cap is
+  // worth more than any recolour.
+  createUnit({
+    id: 'maurice', name: 'Maurice', job: 'roughneck', team: 'enemy',
+    x: 14, y: 6, facing: 'n', ct: 14, hat: 'cap', weapon: 'none',
+    paletteOverride: { G: '#2f4ea0', F: '#2f4ea0', H: '#3a2f26', J: '#241c16' },
+  }),
+  // Plain green, at the back, and slow to get going.
+  createUnit({
+    id: 'lumpy', name: 'Lumpy', job: 'roughneck', team: 'enemy',
+    x: 12, y: 7, facing: 'n', ct: 8,
+    paletteOverride: { G: '#3f6b3a', F: '#2d4d2a', H: '#7a3f22', J: '#4f2814' },
+  }),
+  // Red, white and black barber stripes under a dark knit beanie, still in the
+  // doorway when it starts. The second chain, and the one that reaches the far
+  // end of the stall run once he gets there.
+  createUnit({
+    id: 'beanie', name: 'Beanie', job: 'chainman', team: 'enemy',
+    x: 15, y: 6, facing: 'n', ct: 18,
+    paletteOverride: { G: '#d8d2c4', F: '#9e2f2c', H: '#17141f', J: '#0c0a11' },
+  }),
+];
+
+/** The Punks, who only ever come through one door. */
+export function punks(spots?: Spot[]): Unit[] {
+  return placeSquad(PUNK_SQUAD(), spots);
+}
+
+// ---------------------------------------------------------------------------
 // The Rogues
 // ---------------------------------------------------------------------------
 //

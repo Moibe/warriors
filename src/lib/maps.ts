@@ -362,3 +362,87 @@ const CONEY_ISLAND: MapSource = {
 };
 
 export const coneyIsland = parseMap(CONEY_ISLAND);
+
+/**
+ * "El baño de Union Square" - the night they stopped running and enjoyed it.
+ *
+ * The one board in this game with a roof, and the only one whose best square is
+ * a hole. North (row 0) at the top:
+ *   - A run of SEVEN CUBICLES along the north wall, each one tile, walled by a
+ *     partition either side and by the wall behind. That is the whole board.
+ *     Nobody flanks you in a cubicle, nobody gets behind you, and exactly one
+ *     man at a time can reach you - which for a squad outnumbered in a room
+ *     with no space is the best offer on the table. For five battles cover has
+ *     been a thing you stand behind and height a thing you stand on. Here it is
+ *     a hole you stand IN, and the only answer to a man in one is something
+ *     that reaches further than an arm. That is what the chain is for.
+ *   - THE WAY IN is three tiles of the east wall, and the Punks come through
+ *     it. It is not an exit and nothing is won by using it; it is only where
+ *     they are, so the room reads as a room with one end.
+ *   - THE SINKS run down the WEST wall at level 3, and they are on that wall
+ *     rather than the south for one reason: at the default camera the south and
+ *     east faces are seen from behind. The cracked mirror is the best object in
+ *     the room and it would have spent the whole battle facing away.
+ *   - THE TROUGH takes the south wall instead, blocked, because a urinal read
+ *     from behind loses nothing.
+ *   - A RADIATOR and a BENCH at level 2: the two islands that CAN be climbed,
+ *     so height is a choice rather than a bunker. The sinks at level 3 are the
+ *     one place the leader can never follow you - Jump 1 does not do two steps
+ *     - and they are deliberately at the far end from the door he comes in by.
+ *
+ * Everything else is open tiled floor, and it is big and dull on purpose. That
+ * floor is where a man gets surrounded, and every good decision on this board
+ * is about how long you can stay off it.
+ *
+ * The cubicles are not a clever reading of the scene, they are the scene: the
+ * Warriors do not get cornered in that lavatory, Swan walks them into it and
+ * they shut the doors. The gang that came to spring a trap walks into one.
+ */
+const UNION_SQUARE: MapSource = {
+  name: 'El baño de Union Square',
+  heights: [
+    '5555555555555555',
+    '5414141414141415',
+    '5111111111111115',
+    '5311111111111125',
+    '5311111111111125',
+    '5311111111111111',
+    '5111111111111111',
+    '5111111111111211',
+    '5211111111111215',
+    '5111111111111115',
+    '5111133331111115',
+    '5555555555555555',
+  ],
+  surfaces: [
+    'ssssssssssssssss',
+    'stttttttttttttts',
+    'stttttttttttttts',
+    'sxttttttttttttxs',
+    'sxttttttttttttxs',
+    'sxttttttttttttts',
+    'stttttttttttttts',
+    'sttttttttttttxts',
+    'sttttttttttttxts',
+    'stttttttttttttts',
+    'stttttttttttttts',
+    'ssssssssssssssss',
+  ],
+  blocked: [
+    '################',
+    '##.#.#.#.#.#.#.#',
+    '#..............#',
+    '#..............#',
+    '#..............#',
+    '#...............',
+    '#...............',
+    '#...............',
+    '##.............#',
+    '#..............#',
+    '#....####......#',
+    '################',
+  ],
+};
+
+export const unionSquare = parseMap(UNION_SQUARE);
+

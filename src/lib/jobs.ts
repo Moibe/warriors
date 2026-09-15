@@ -86,7 +86,7 @@ export type Palette = {
 
 export type HatId = 'afro' | 'brim' | 'bandana' | 'cap' | null;
 export type FaceId = 'fury' | null;
-export type WeaponId = 'bat' | 'knife' | 'pipe' | 'can' | 'pistol' | 'none';
+export type WeaponId = 'bat' | 'knife' | 'pipe' | 'chain' | 'can' | 'pistol' | 'none';
 
 /** Something that leaves the hand and is seen crossing the board to land. */
 export type ProjectileId = 'bottle' | 'brick';
@@ -113,7 +113,17 @@ export type Job = {
   stats: JobStats;
   abilities: Ability[];
   sprite: {
-    body: 'plain' | 'warrior' | 'fury' | 'turnbull' | 'orphan' | 'lizzie' | 'rogue' | 'luther';
+    body:
+      | 'plain'
+      | 'warrior'
+      | 'fury'
+      | 'turnbull'
+      | 'orphan'
+      | 'lizzie'
+      | 'rogue'
+      | 'luther'
+      | 'punk'
+      | 'skater';
     hat: HatId;
     face: FaceId;
     /** What this role starts the fight holding. Can be lost, or taken. */
@@ -142,7 +152,10 @@ export type JobId =
   | 'coward'
   | 'minder'
   | 'chaser'
-  | 'tagalong';
+  | 'tagalong'
+  | 'roughneck'
+  | 'chainman'
+  | 'kingpin';
 
 // ---------------------------------------------------------------------------
 // Palettes
@@ -847,6 +860,189 @@ const CUSHION_KNIFE: Ability = {
   desc: 'Estaba debajo del sitio donde te sentó. Falla una de cada cuatro.',
 };
 
+
+/**
+ * The Punks, and the first gang in the game wearing one garment from the
+ * collar to the boot.
+ *
+ * The room chose this palette, not the film. `tile` lands at #7d8a80 -
+ * institutional green gone grey, mid-value and cold - which is the first floor
+ * here that is neither asphalt-dark nor beach-pale, and it swallows anything
+ * neutral put on top of it. So the gang slot takes the one thing that floor
+ * cannot absorb: a saturated indigo on the far side of the wheel from it. Seven
+ * blue men in a green room. Nothing else on this board is blue above the waist
+ * - the Warriors' blue is only their legs under a brown cut - so the two
+ * silhouettes never collapse into each other.
+ *
+ * `A` is the bib and `C` the legs of the SAME garment, one step apart. That is
+ * not decoration. One denim from collar to boot reads as a slab with a head on
+ * it and the bib stops existing, and the bib is the whole point: a rectangle up
+ * the chest with a strap over each shoulder is the thing no other body in this
+ * game has.
+ *
+ * `G` and `F` are the shirt under it - base and hoop - and they are the two
+ * slots every Punk overrides in units.ts, because the film puts the gang's
+ * individuality exactly there. One cut of dungaree, nine different shirts:
+ * four plain, five hooped, yellow and navy and red and green. These values are
+ * a floor so that the one somebody forgets does not grow the base palette's
+ * #ece4dc, which against this floor is not a shirt, it is a light switched on
+ * inside the man. That slot has now bitten this file four times.
+ *
+ * `M` is on exactly one man. It is the trucks and the wheels under the leader,
+ * and it is the only metal in the gang.
+ */
+const PUNK_COLORS: Partial<Palette> = {
+  O: '#13151c', // outline - a hair bluer than the Turnbull's, for a tiled room
+  S: '#e0b489',
+  K: '#b98a63',
+  E: '#241a2a',
+  H: '#3f2c1e', // hair - a floor; every Punk overrides it
+  J: '#261a11', // and it has to move with H or the head goes flat
+  A: '#3a5f9c', // the dungarees: bib, straps, the back panel. The gang, in one colour
+  B: '#33262a', // boots, and the belt of the bib. Dark, so the feet anchor the man
+  C: '#2e4a7c', // the same denim below the belt, one step down so legs read as legs
+  M: '#9aa2ad', // the trucks and the toe stop. The leader's alone
+  W: '#8a5a32', // the leather of a skate boot, and the laces
+  P: '#3b3d36', // a tweed flat cap. Maurice is the only one who wears anything
+  G: '#c2b9a6', // the rugby shirt at the collar and down the sleeves
+  F: '#b8863a', // and its hoops. Overridden per man; this is only the fallback
+};
+
+// ---------------------------------------------------------------------------
+// Union Square
+// ---------------------------------------------------------------------------
+//
+// Five gangs taught five geometries - the edge, the angle, the terrace, the
+// line of fire, the name. This board teaches the one thing none of them could,
+// because all five were fought in the open: A DEAD END IS THE BEST SQUARE ON
+// THE BOARD. A stall is one tile with a wall behind it and a partition either
+// side. Nobody flanks you in there, nobody gets behind you, and exactly one man
+// at a time can reach you. For five battles cover has been something you stood
+// behind and height something you stood on; here it is a hole you stand in.
+//
+// Which is also, exactly, how the scene goes: the Warriors do not get cornered
+// in that lavatory. Swan walks them into it and they shut the doors, and the
+// gang that came to spring a trap walks into one.
+//
+// The Punks' answer to a man in a hole is the only answer there is - something
+// that reaches further than an arm - and that is what the chain is for.
+
+/**
+ * What they came in to do.
+ *
+ * They line up along the row and kick every door at once; the film opens the
+ * fight on the sound of it. Two stamina and 74 to hit, so it is not free and it
+ * is not reliable - a boot at a closed door swung by somebody who does not know
+ * there is a man behind it braced to come out.
+ */
+const DOOR_KICK: Ability = {
+  id: 'doorkick',
+  name: 'Patada',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 2,
+  power: 2.6,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 74,
+  desc: 'Vinieron a echar abajo las puertas. Da igual si ya está abierta.',
+};
+
+/**
+ * Two metres of chain, and the reason the stalls are not an exploit.
+ *
+ * Everything else in this game that reaches past arm's length is thrown - a
+ * bottle, a brick, a bullet - and a man in a cubicle with a wall behind him is
+ * safe from every one of them the moment the door frame breaks the line. This
+ * is the exception: range 2, no minimum, and it is a SWING, so the angle still
+ * counts. It reaches the back of a stall without stepping into it, which means
+ * the player's best square costs him something to sit on after all.
+ *
+ * `needsWeapon`, so it dies the moment somebody takes the chain off him - and
+ * taking it off him is what Cochise does in the film.
+ */
+const THE_CHAIN: Ability = {
+  id: 'chain',
+  name: 'Cadenazo',
+  kind: 'physical',
+  range: 2,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 2.2,
+  vertical: 1,
+  targets: 'enemy',
+  accuracy: 72,
+  needsWeapon: true,
+  desc: 'Dos metros de cadena. Llega al fondo del retrete sin tener que entrar.',
+};
+
+/**
+ * The switchblade, and the only object in this game that outlives its battle.
+ *
+ * He drops it on that floor and Swan picks it up, and it is the knife Swan puts
+ * through Luther's wrist on the beach two stages later. Nothing in the code
+ * carries it across - the Warriors are dealt fresh every restart - but the
+ * player who disarms him here is doing, move for move, the thing the film does,
+ * and the description is the only place to say so.
+ */
+const SWITCHBLADE: Ability = {
+  id: 'switchblade',
+  name: 'Navaja',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 2.9,
+  vertical: 0,
+  targets: 'enemy',
+  accuracy: 80,
+  needsWeapon: true,
+  desc: 'La misma que Swan recogerá del suelo y acabará en la muñeca de Luther.',
+};
+
+/**
+ * Eight tiles of momentum arriving at once.
+ *
+ * `vertical: 0` is the whole man. A skate cannot step, so he cannot hit up and
+ * he cannot hit down - not one level, not half of one. He owns the flat and
+ * nothing else, and a kerb answers him. In the film his skates catch on a stall
+ * door mid-kick and Cowboy drops him with one punch; this is that, as a number.
+ */
+const ROLL_IN: Ability = {
+  id: 'rollin',
+  name: 'Se viene encima',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 3,
+  power: 2.5,
+  vertical: 0,
+  targets: 'enemy',
+  accuracy: 70,
+  desc: 'Cruza el cuarto sin dar un paso y llega con todo el peso encima.',
+};
+
+/** And the same limit on his fists: on wheels, a kerb is a wall. */
+const WHEELED_PUNCH: Ability = {
+  id: 'punch',
+  name: 'Golpear',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 1.8,
+  vertical: 0,
+  targets: 'enemy',
+  accuracy: 78,
+  desc: 'Pega bien, mientras el suelo esté a la misma altura que él.',
+};
+
 /**
  * The Rogues, who have no colours.
  *
@@ -1090,6 +1286,69 @@ export const JOBS: Record<JobId, Job> = {
       face: null,
       weapon: 'can',
       palette: palette(WARRIOR_COLORS),
+    },
+  },
+
+  // --- The Punks -----------------------------------------------------------
+  //
+  // The only gang in the game where EVERY man walks in holding something. The
+  // Warriors arrive with fists and whatever the last fight left them, and the
+  // difference is the fight: `Arrebatar` stops being a flourish and becomes the
+  // opening move. Six of the seven are one role, because the film's Punks are
+  // six interchangeable men in the same dungarees and one who is not.
+
+  roughneck: {
+    id: 'roughneck',
+    name: 'Peto',
+    tag: 'PET',
+    // Fast for their weight and no better than that. Jump 2 gets them onto the
+    // bench and the radiator but never onto the sinks, which is the one place
+    // on this board that is genuinely out of everybody's reach.
+    stats: { hp: 44, mp: 4, pa: 8, ma: 2, speed: 8, move: 5, jump: 2 },
+    abilities: [DOOR_KICK, WEAPON_HIT, punch(1.9, 'Un chaval del Bowery con las manos grandes.')],
+    sprite: {
+      body: 'punk',
+      hat: null,
+      face: null,
+      weapon: 'bat',
+      palette: palette(PUNK_COLORS),
+    },
+  },
+
+  chainman: {
+    id: 'chainman',
+    name: 'Cadenero',
+    tag: 'CAD',
+    // One point of PA below the others and two tiles of reach instead, which on
+    // this board is the better trade and the player finds that out the first
+    // time he sits in a cubicle thinking he is safe.
+    stats: { hp: 42, mp: 6, pa: 7, ma: 3, speed: 8, move: 5, jump: 2 },
+    abilities: [THE_CHAIN, punch(1.7, 'Sin la cadena es uno más, y más flojo.')],
+    sprite: {
+      body: 'punk',
+      hat: null,
+      face: null,
+      weapon: 'chain',
+      palette: palette(PUNK_COLORS),
+    },
+  },
+
+  kingpin: {
+    id: 'kingpin',
+    name: 'El de los patines',
+    tag: 'PAT',
+    // Move 8 is the longest stride in the game by two tiles, and Jump 1 is the
+    // shortest. He goes anywhere on the flat in one turn and he cannot get up a
+    // kerb, which is the entire character: the fastest man on the board loses
+    // to a step. Thirty-eight points of him, because he is not the big one.
+    stats: { hp: 38, mp: 6, pa: 7, ma: 4, speed: 11, move: 8, jump: 1 },
+    abilities: [SWITCHBLADE, ROLL_IN, WHEELED_PUNCH],
+    sprite: {
+      body: 'skater',
+      hat: null,
+      face: null,
+      weapon: 'knife',
+      palette: palette(PUNK_COLORS),
     },
   },
 
@@ -1390,6 +1649,7 @@ export const WEAPON_NAMES: Record<Exclude<WeaponId, 'none'>, string> = {
   bat: 'el bate',
   knife: 'la navaja',
   pipe: 'el tubo',
+  chain: 'la cadena',
   can: 'el spray',
   pistol: 'la pistola',
 };
