@@ -1098,8 +1098,15 @@ const LUTHER_COLORS: Partial<Palette> = {
  *
  * No `accuracy` on purpose: the maths ignores it for shots and pins the rate at
  * ninety-two plus height, and a number nothing reads would be a lie sitting in
- * the data. Two of six stamina, and nothing in the engine ever gives stamina
- * back: two bullets, for the whole battle, and they are Cyrus's leftovers.
+ * the data.
+ *
+ * TWO BULLETS, for the whole battle, and they are Cyrus's leftovers. The count
+ * is not written here — it is two of Luther's four stamina, and nothing in the
+ * engine ever gives stamina back. His other two moves are free, so this is the
+ * only thing he ever spends it on and the bar under his name is a magazine: it
+ * goes half, empty, and then he is a man with a slap. Move the cost or move his
+ * sheet and you have changed how many times the finale can shoot you, which is
+ * most of what the finale is.
  */
 const CYRUS_REVOLVER: Ability = {
   id: 'luthershot',
@@ -1367,7 +1374,11 @@ export const JOBS: Record<JobId, Job> = {
     tag: 'LUT',
     // The weakest sheet of any enemy in the game, and the fastest man on the
     // board. Every point of his budget went on not being where you are.
-    stats: { hp: 36, mp: 6, pa: 4, ma: 7, speed: 10, move: 3, jump: 2 },
+    //
+    // Four stamina, not six, and the four IS the cylinder: the revolver costs
+    // two and both of his other moves are free, so his whole bar is bullets. At
+    // six he was quietly getting a third shot nobody ever meant him to have.
+    stats: { hp: 36, mp: 4, pa: 4, ma: 7, speed: 10, move: 3, jump: 2 },
     abilities: [CYRUS_REVOLVER, COME_OUT_TO_PLAY, FLAIL],
     sprite: {
       body: 'luther',
