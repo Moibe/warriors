@@ -109,6 +109,38 @@ for (const id of targets.filter((t) => ids.includes(t))) {
       problems.push(`sólo ${reach.size} de ${walkable} casillas son alcanzables: hay zonas aisladas`);
     }
 
+    // A door behind a barrier has to be a door once the barrier is gone and a
+    // wall until then: every exit tile reachable only through barrier tiles,
+    // and every barrier tile hittable from a walkable square beside it within
+    // a punch's two levels. Otherwise the fence is either decoration or a
+    // wall nobody can touch.
+    const barrier = stage.exit?.barrier;
+    if (barrier) {
+      const inRect = (r, x, y) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.d;
+      const sealedTiles = m.tiles.map((t) => (t && inRect(barrier, t.x, t.y) ? { ...t, walkable: false } : t));
+      const sealedReach = pf.computeReachable({ ...m, tiles: sealedTiles }, [], { ...ally, move: 400, jump: 4 });
+      const leaks = [];
+      const unhittable = [];
+      for (let y = stage.exit.y; y < stage.exit.y + stage.exit.d; y++) {
+        for (let x = stage.exit.x; x < stage.exit.x + stage.exit.w; x++) {
+          if (sealedReach.has(`${x},${y}`)) leaks.push(`${x},${y}`);
+        }
+      }
+      for (let y = barrier.y; y < barrier.y + barrier.d; y++) {
+        for (let x = barrier.x; x < barrier.x + barrier.w; x++) {
+          const t = grid.tileAt(m, x, y);
+          const ok = grid.NEIGHBORS.some((n) => {
+            const s = grid.tileAt(m, x + n.x, y + n.y);
+            return s && s.walkable && !inRect(barrier, s.x, s.y) && Math.abs(s.height - t.height) <= 2;
+          });
+          if (!ok) unhittable.push(`${x},${y}`);
+        }
+      }
+      if (leaks.length) problems.push(`la barrera no cierra la salida: se llega a ${leaks.join(' ')} con la valla entera`);
+      if (unhittable.length) problems.push(`casillas de barrera sin sitio desde donde golpearlas: ${unhittable.join(' ')}`);
+      notes.push(`barrera "${barrier.label}" de ${barrier.hp} PV sobre ${barrier.w}×${barrier.d}; sella la salida`);
+    }
+
     // Anything blocked and taller than this stops being cover and becomes a
     // wall that hides your own people from the camera. Measured the hard way on
     // Gun Hill Road, where the elevated columns started at level 7.

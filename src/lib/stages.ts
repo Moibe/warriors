@@ -66,6 +66,41 @@ export type Exit = {
   needed: number;
   /** Heading over the HUD counter. Player-facing, so Spanish. */
   label: string;
+  /**
+   * Something standing in the way that has to be knocked down first. While it
+   * stands its tiles cannot be walked on, so a doorway that can only be reached
+   * through them is sealed; the moment it falls they open and the exit is just
+   * an exit again.
+   */
+  barrier?: Barrier;
+};
+
+/**
+ * The fence before it is a hole in a fence.
+ *
+ * Shaped like {@link Exit} and for the same reason: it is a rule of THIS
+ * battle. The Warriors did not find a gap in Van Cortlandt, they made one, and
+ * a board whose way out is already open teaches the player to run before it
+ * has taught him to hit. A fence with hit points makes the first lesson
+ * "Golpear" and the second "salir", in that order, and it costs two or three men
+ * a turn each with six Riffs on the way, which is the only pressure this
+ * tutorial ever puts on anybody.
+ *
+ * It takes punches and weapon blows - anything `physical` - from the player's
+ * side only. It does not dodge, it has no back, and it never fights back.
+ */
+export type Barrier = {
+  /** North-west corner, in tiles. Blocked while `hp` is above zero. */
+  x: number;
+  y: number;
+  w: number;
+  d: number;
+  /** How much it takes before it gives. */
+  hp: number;
+  /** Heading over the HUD line. Player-facing, so Spanish. */
+  label: string;
+  /** What the report prints on the beat it comes down. */
+  line: string;
 };
 
 /**
@@ -91,6 +126,12 @@ export type PropPlacement = {
    * different ones read as a street where people park.
    */
   variant?: number;
+  /**
+   * Draw this only while the stage's barrier stands (`'closed'`) or only once
+   * it is down (`'open'`). Absent means always, which is every prop but the
+   * fence over the gap and the gap itself.
+   */
+  when?: 'closed' | 'open';
 };
 
 /**
@@ -267,6 +308,17 @@ export function exitTiles(stage: Stage): Set<string> {
   return out;
 }
 
+/** The barrier as tile keys, for the overlay. Empty when the stage has none. */
+export function barrierTiles(stage: Stage): Set<string> {
+  const out = new Set<string>();
+  const b = stage.exit?.barrier;
+  if (!b) return out;
+  for (let y = b.y; y < b.y + b.d; y++) {
+    for (let x = b.x; x < b.x + b.w; x++) out.add(tileKey(x, y));
+  }
+  return out;
+}
+
 export const STAGES: Record<StageId, Stage> = {
   'van-cortlandt': {
     id: 'van-cortlandt',
@@ -302,6 +354,16 @@ export const STAGES: Record<StageId, Stage> = {
       { kind: 'conclave', x: 8, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
       { kind: 'conclave', x: 9, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
       { kind: 'conclave', x: 10, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      // THE FOUR THAT COME DOWN. The run is whole when the battle starts: these
+      // stand on the `barrier` rectangle below and vanish on the beat it falls,
+      // and the gap piece takes their place. Same tile, same piece, same turns
+      // as the rest of the run, so until somebody hits it there is no way to
+      // tell from the fence alone where the hole is going to be - the lamp and
+      // the amber panel behind it do that job.
+      { kind: 'conclave', x: 11, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
+      { kind: 'conclave', x: 12, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
+      { kind: 'conclave', x: 13, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
+      { kind: 'conclave', x: 14, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
       { kind: 'conclave', x: 15, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
       { kind: 'conclave', x: 16, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
       { kind: 'conclave', x: 17, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
@@ -317,7 +379,7 @@ export const STAGES: Record<StageId, Stage> = {
       // other turn lays that flap back inside the park, on top of the green
       // panel — which is exactly what it did the first time, covering two of
       // the four tiles that are the entire lesson of this board.
-      { kind: 'conclave', x: 11, y: 13, w: 4, d: 1, height: 5, turns: 3, variant: 2 },
+      { kind: 'conclave', x: 11, y: 13, w: 4, d: 1, height: 5, turns: 3, variant: 2, when: 'open' },
       // CYRUS, on the floor of the bowl, one tile south of the arches. The
       // battle starts the moment after. His tile stays BLOCKED or a unit can
       // stand inside him.
@@ -363,11 +425,33 @@ export const STAGES: Record<StageId, Stage> = {
     // Six of nine is what makes the decision survivable: the eight walk out and
     // you have won with two to spare, so Cleon is a cost you CAN pay and the
     // board never punishes you for paying it.
-    exit: { x: 11, y: 13, w: 4, d: 1, needed: 6, label: 'Por la valla' },
+    //
+    // AND IT STARTS SHUT. The four fence tiles in front of it, on row 12, are
+    // the only squares row 13 can be entered from - x=10 and x=15 on row 13
+    // are blocked - so sealing them seals the door. Forty points is three
+    // Warrior punches, give or take: two men stop and hit while the other six
+    // walk up behind them, and the Riffs get the two turns that costs.
+    exit: {
+      x: 11,
+      y: 13,
+      w: 4,
+      d: 1,
+      needed: 6,
+      label: 'Por la valla',
+      barrier: {
+        x: 11,
+        y: 12,
+        w: 4,
+        d: 1,
+        hp: 40,
+        label: 'La valla',
+        line: 'La valla cede. Ya hay por dónde salir.',
+      },
+    },
     brief: [
       'Luther ha matado a Cyrus y os ha señalado a vosotros.',
       'Nadie vino armado: Cleon dio su palabra por los nueve.',
-      'Salid por el hueco de la valla. Con seis basta.',
+      'La valla está entera: rompedla y salid. Con seis basta.',
     ],
     // The nine, in squad order, and every one of them empty-handed.
     //

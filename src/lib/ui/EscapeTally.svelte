@@ -14,7 +14,14 @@
     units,
     needed,
     label,
-  }: { units: Unit[]; needed: number; label: string } = $props();
+    barrier,
+  }: {
+    units: Unit[];
+    needed: number;
+    label: string;
+    /** What stands in the way, while it still does. Absent once it is down. */
+    barrier?: { label: string; hp: number; hpMax: number };
+  } = $props();
 
   const allies = $derived(units.filter((u) => u.team === 'ally'));
   const out = $derived(allies.filter(hasLeft));
@@ -41,6 +48,15 @@
       </span>
     {/each}
   </div>
+  {#if barrier}
+    <!-- The fence before the count: until this line goes, the number under it
+         cannot move, and the player should read them in that order. -->
+    <p class="barrier">
+      <span>{barrier.label}</span>
+      <span class="hp">{barrier.hp}<span class="max">/{barrier.hpMax}</span></span>
+    </p>
+    <p class="hint">Cerrada. Rompedla a golpes.</p>
+  {/if}
   <p class="count" class:doomed>
     {out.length} de {needed} fuera
   </p>
@@ -87,6 +103,29 @@
   .pip.down::before {
     content: '×';
     color: #a05a5a;
+  }
+
+  .barrier {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin: 0.4rem 0 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #ffb35c;
+    letter-spacing: 0.04em;
+  }
+
+  .barrier .max {
+    font-weight: 400;
+    opacity: 0.7;
+  }
+
+  .hint {
+    margin: 0.1rem 0 0;
+    font-size: 0.62rem;
+    color: #d8c9a8;
+    opacity: 0.85;
   }
 
   .count {

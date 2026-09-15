@@ -13,6 +13,8 @@
   import {
     activeUnit,
     aimHasTarget,
+    aimingAtBarrier,
+    barrierDamage,
     battle,
     cancel,
     commandList,
@@ -38,6 +40,7 @@
   import CameraControls from '$lib/ui/CameraControls.svelte';
   import CommandMenu from '$lib/ui/CommandMenu.svelte';
   import Forecast from '$lib/ui/Forecast.svelte';
+  import Window from '$lib/ui/Window.svelte';
   import ResultBanner from '$lib/ui/ResultBanner.svelte';
   import StageSelect from '$lib/ui/StageSelect.svelte';
   import { STAGE_LIST, type StageId } from '$lib/stages';
@@ -47,7 +50,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.6.0';
+  const APP_VERSION = '1.7.0';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -496,6 +499,16 @@
     };
   });
 
+  // The fence gets its own readout: it has no hit points bar, no angle and no
+  // odds, and the unit forecast would have to lie about all three.
+  const barrierForecast = $derived.by(() => {
+    const ability = battle.ability;
+    const u = activeUnit();
+    const b = stage.exit?.barrier;
+    if (!aimingAtBarrier() || !ability || !u || !b) return null;
+    return { label: b.label, abilityName: ability.name, damage: barrierDamage(u, ability), hp: battle.barrierHp };
+  });
+
   const showCommands = $derived(
     playerTurn &&
       (battle.phase === 'command' ||
@@ -552,7 +565,14 @@
       </div>
       <TileInfo tile={cursorTile} occupant={cursorOccupant} body={cursorBody} />
       {#if stage.exit}
-        <EscapeTally units={battle.units} needed={stage.exit.needed} label={stage.exit.label} />
+        <EscapeTally
+          units={battle.units}
+          needed={stage.exit.needed}
+          label={stage.exit.label}
+          barrier={stage.exit.barrier && battle.barrierHp > 0
+            ? { label: stage.exit.barrier.label, hp: battle.barrierHp, hpMax: stage.exit.barrier.hp }
+            : undefined}
+        />
       {/if}
       {#if stage.head}
         <HeadMark unit={unitById(battle.units, stage.head.id)} label={stage.head.label} />
@@ -587,6 +607,13 @@
     <div class="corner bottom-right">
       <!-- Grows upward from the anchored corner, so the order window below it
            never shifts under the pointer. -->
+      {#if barrierForecast}
+        <Window title="Previsión">
+          <p class="fence-line">{barrierForecast.abilityName} → {barrierForecast.label}</p>
+          <p class="fence-dmg">{barrierForecast.damage} <span>DAÑO · siempre acierta</span></p>
+          <p class="fence-left">Le quedan {barrierForecast.hp}</p>
+        </Window>
+      {/if}
       {#if aimForecast}
         <Forecast
           target={aimForecast.target}
@@ -652,6 +679,37 @@
 </div>
 
 <style>
+  /* The fence readout: the unit forecast's voice, minus the odds it has none of. */
+  .fence-line {
+    font-size: 0.72rem;
+    color: #a9c0e6;
+    margin: 0 0 0.25rem;
+  }
+
+  .fence-dmg {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #ffe27a;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
+    margin: 0 0 0.4rem;
+  }
+
+  .fence-dmg span {
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #93aad2;
+    margin-left: 0.3rem;
+  }
+
+  .fence-left {
+    font-size: 0.7rem;
+    color: #ffb35c;
+    margin: 0;
+  }
+
   .stage {
     position: fixed;
     inset: 0;

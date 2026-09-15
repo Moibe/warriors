@@ -35,10 +35,11 @@
     stage as currentStage,
     renderPosition,
     setHoverTile,
+    barrierStanding,
   } from './battle.svelte';
   import { LEVEL, TILE, tileToWorld, type Tile } from './grid';
   import { landableTiles, tilesInBurst } from './pathfinding';
-  import { exitTiles } from './stages';
+  import { barrierTiles, exitTiles } from './stages';
   import { hasLeft } from './units';
 
   let {
@@ -62,6 +63,10 @@
   const stage = $derived(currentStage());
   /** The way out, if this battle has one. */
   const doorway = $derived(exitTiles(stage));
+  /** Whether the way out is still shut behind the stage's barrier. */
+  const shut = $derived(barrierStanding());
+  /** The barrier's own squares, drawn only while it stands. */
+  const barrier = $derived(shut ? barrierTiles(stage) : new Set<string>());
   /** The one the battle is decided by, if it is decided by one. */
   const headId = $derived(stage.head?.id ?? null);
   const map = $derived(stage.map);
@@ -148,15 +153,17 @@
   // Props are centred on their footprint, so moving one is editing the anchor
   // in stages.ts and nothing else.
   const scenery = $derived(
-    stage.props.map((p) => {
-      const w = tileToWorld(map, p.x + (p.w - 1) / 2, p.y + (p.d - 1) / 2, p.height);
-      return {
-        p,
-        pos: [w.x, w.y, w.z] as [number, number, number],
-        rot: ((p.turns ?? 0) * Math.PI) / 2,
-        variant: p.variant ?? 0,
-      };
-    })
+    stage.props
+      .filter((p) => !p.when || (p.when === 'closed') === shut)
+      .map((p) => {
+        const w = tileToWorld(map, p.x + (p.w - 1) / 2, p.y + (p.d - 1) / 2, p.height);
+        return {
+          p,
+          pos: [w.x, w.y, w.z] as [number, number, number],
+          rot: ((p.turns ?? 0) * Math.PI) / 2,
+          variant: p.variant ?? 0,
+        };
+      })
   );
 
   // The shadow frustum used to be hardwired to ±14, which fits the park and
@@ -236,7 +243,21 @@
      one colour the HUD has left, and drawn above the rest at half strength so a
      blue movement panel never hides it and it never shouts over one. -->
 {#if doorway.size}
-  <TileOverlays {map} tiles={doorway} color="#79e07a" opacity={0.5} lift={0.055} pulse={0.35} />
+  <!-- Amber while the barrier stands: the squares are still the way out, they
+       are just not open yet, and green would promise a walk the pathfinder
+       refuses. The barrier itself gets the same amber, so the thing to hit and
+       the thing it is hiding read as one shut door. -->
+  <TileOverlays
+    {map}
+    tiles={doorway}
+    color={shut ? '#ffb35c' : '#79e07a'}
+    opacity={0.5}
+    lift={0.055}
+    pulse={0.35}
+  />
+{/if}
+{#if barrier.size}
+  <TileOverlays {map} tiles={barrier} color="#ffb35c" opacity={0.45} lift={0.05} pulse={0.2} />
 {/if}
 
 <!-- No bobbing arrow: the acting unit already carries its own marker, and two

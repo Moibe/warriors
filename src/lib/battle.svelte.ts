@@ -23,7 +23,7 @@ import {
   type Tile,
 } from './grid';
 import { JOBS, WEAPON_NAMES, type Ability, type ProjectileId } from './jobs';
-import { DEFAULT_STAGE, STAGES, type Stage, type StageId } from './stages';
+import { DEFAULT_STAGE, STAGES, type Exit, type Stage, type StageId } from './stages';
 import {
   bestApproach,
   computeReachable,
@@ -60,7 +60,17 @@ export function stage(): Stage {
  * synchronous, so it can never observe a half-finished swap. `restart()` is the
  * only place it is installed, so it cannot drift from `stageId`.
  */
-let map: BattleMap = STAGES[DEFAULT_STAGE].map;
+let map: BattleMap = boardFor(DEFAULT_STAGE);
+
+/**
+ * The board a stage is played on: its own map, or a copy with the barrier's
+ * tiles sealed while the barrier stands. Used at load and by `restart()`, so
+ * the first battle and every later one start from the same shut door.
+ */
+function boardFor(id: StageId): BattleMap {
+  const b = STAGES[id].exit?.barrier;
+  return b ? sealed(STAGES[id].map, b) : STAGES[id].map;
+}
 
 export type Phase =
   | 'clock' // CT is filling; nobody is acting
@@ -131,6 +141,13 @@ export const battle = $state({
    * resting the mouse on a man tells you who he is.
    */
   hover: null as Coord | null,
+  /**
+   * What the stage's barrier has left, 0 when it is down or there never was one.
+   * The one number that decides whether the way out is a way out yet: while it
+   * is above zero the barrier's tiles are sealed in `map` and the door behind
+   * them cannot be reached.
+   */
+  barrierHp: STAGES[DEFAULT_STAGE].exit?.barrier?.hp ?? 0,
   walk: null as WalkAnim | null,
   /** Non-null only while something thrown is still in the air. */
   throw: null as ThrowAnim | null,
@@ -280,6 +297,16 @@ function defaultAim(ability: Ability): Coord | null {
   }
   if (best) return best;
 
+  // Nobody in reach, but the fence is: point at it. On the board this exists
+  // for, that is what a man standing at the fence with nobody around opened the
+  // menu to do.
+  if (ability.kind === 'physical' && u.team === 'ally') {
+    for (const key of range) {
+      const c = parseKey(key);
+      if (barrierAt(c.x, c.y)) return c;
+    }
+  }
+
   // Nobody worth pointing at: park on the nearest square in reach, but never
   // on the caster's own. An ability with no minimum range covers the square it
   // is cast from, so the plain nearest tile is the caster itself — opening the
@@ -329,6 +356,7 @@ export function aimHasTarget(): boolean {
   const aim = battle.aim;
   const ability = battle.ability;
   if (battle.phase !== 'target' || !aim || !actor || !ability) return false;
+  if (aimsAtBarrier(actor, ability, aim.x, aim.y)) return true;
   return abilityTargetsAt(aim.x, aim.y).some((t) => isIntendedTarget(actor, t, ability));
 }
 
@@ -737,6 +765,78 @@ let pendingImpact: (() => void) | null = null;
 
 const POPUP_LIFE = 1.5;
 
+/** Whether the stage's barrier is still standing. */
+export function barrierStanding(): boolean {
+  return battle.barrierHp > 0;
+}
+
+/** What one blow from `actor` with `ability` takes off the barrier. */
+export function barrierDamage(actor: Unit, ability: Ability): number {
+  return Math.max(1, Math.round(actor.pa * ability.power));
+}
+
+/** Whether the current aim is a swing at the barrier, for the forecast. */
+export function aimingAtBarrier(): boolean {
+  const actor = activeUnit();
+  const aim = battle.aim;
+  const ability = battle.ability;
+  if (battle.phase !== 'target' || !aim || !actor || !ability) return false;
+  return aimsAtBarrier(actor, ability, aim.x, aim.y);
+}
+
+/** Whether (x, y) is a square of the barrier, and the barrier is still up. */
+export function barrierAt(x: number, y: number): boolean {
+  const b = stage().exit?.barrier;
+  if (!b || !barrierStanding()) return false;
+  return x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.d;
+}
+
+/**
+ * The board with the barrier's tiles sealed. A copy, never a write into the
+ * stage's own map: that one is shared, frozen data that the scene draws from
+ * and the checker reads, and a rule that lasts a few turns must not leak into
+ * it. Everything that decides where a man may stand reads `map`, so swapping
+ * the copy in and out is the entire mechanism.
+ */
+function sealed(m: BattleMap, b: NonNullable<Exit['barrier']>): BattleMap {
+  return {
+    ...m,
+    tiles: m.tiles.map((t) =>
+      t && t.x >= b.x && t.x < b.x + b.w && t.y >= b.y && t.y < b.y + b.d
+        ? { ...t, walkable: false }
+        : t
+    ),
+  };
+}
+
+/** Whether a swing aimed at (x, y) is a swing at the barrier. */
+function aimsAtBarrier(actor: Unit, ability: Ability, x: number, y: number): boolean {
+  // The player's side only, and only with the body or something held in the
+  // hand. Nothing thrown: a bottle does not open a fence, and the AI never
+  // aims at a square with nobody on it anyway.
+  return actor.team === 'ally' && ability.kind === 'physical' && barrierAt(x, y);
+}
+
+/**
+ * A blow on the barrier. No roll: a fence does not dodge and has no back, so
+ * the number is the straight PA times power the forecast would print against
+ * a man, and every hit lands.
+ */
+function hitBarrier(actor: Unit, ability: Ability, x: number, y: number) {
+  const b = stage().exit!.barrier!;
+  const dmg = barrierDamage(actor, ability);
+  battle.barrierHp = Math.max(0, battle.barrierHp - dmg);
+  const height = tileAt(map, x, y)?.height ?? heightOf(actor);
+  pushPopupAt(x, y, height, String(dmg), '#ffe27a');
+  log(`${actor.name} golpea ${b.label.toLowerCase()}: ${dmg} de daño.`);
+  if (battle.barrierHp > 0) return;
+  // Down. The stage's own map comes back, and with it the tiles the copy
+  // sealed - and the door behind them.
+  map = STAGES[stageId].map;
+  pushPopupAt(x, y, height, '¡ABIERTA!', '#79e07a');
+  log(b.line);
+}
+
 /** Whether this square is part of the way out. */
 function onExitTile(u: Unit): boolean {
   const e = stage().exit;
@@ -777,15 +877,11 @@ function onWalkFinished() {
 // ---------------------------------------------------------------------------
 
 function pushPopup(unit: Unit, text: string, color: string) {
-  battle.popups.push({
-    id: popupId++,
-    x: unit.x,
-    y: unit.y,
-    height: heightOf(unit),
-    text,
-    color,
-    t: 0,
-  });
+  pushPopupAt(unit.x, unit.y, heightOf(unit), text, color);
+}
+
+function pushPopupAt(x: number, y: number, height: number, text: string, color: string) {
+  battle.popups.push({ id: popupId++, x, y, height, text, color, t: 0 });
 }
 
 const ANGLE_TAG: Record<Angle, string> = { front: '', side: ' (flanco)', back: ' (espalda)' };
@@ -812,7 +908,8 @@ export function confirmAbility(x: number, y: number): boolean {
   // meant to make; it is a misfired click. The refusal comes before any stamina
   // or facing is touched, so the player is left exactly where they were, still
   // aiming.
-  if (!targets.some((t) => isIntendedTarget(actor, t, ability))) return false;
+  const barrier = aimsAtBarrier(actor, ability, x, y);
+  if (!barrier && !targets.some((t) => isIntendedTarget(actor, t, ability))) return false;
 
   actor.facing = facingTo({ x: actor.x, y: actor.y }, { x, y });
   actor.mp -= ability.mp;
@@ -844,6 +941,7 @@ export function confirmAbility(x: number, y: number): boolean {
     return true;
   }
 
+  if (barrier) hitBarrier(actor, ability, x, y);
   resolveHits(actor, ability, targets);
   resolveTimer = RESOLVE_PAUSE;
   return true;
@@ -1116,7 +1214,8 @@ function runAiStep() {
 export function restart() {
   // Installing the stage comes first: everything below is torn down relative to
   // the board that is about to be in play, not the one that just ended.
-  map = STAGES[stageId].map;
+  battle.barrierHp = STAGES[stageId].exit?.barrier?.hp ?? 0;
+  map = boardFor(stageId);
   battle.units = STAGES[stageId].roster();
   if (import.meta.env.DEV && STAGES[stageId].exit && STAGES[stageId].head) {
     // A stage carrying both would silently be a door battle: the door answers
