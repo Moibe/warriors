@@ -351,8 +351,8 @@ export const STAGES: Record<StageId, Stage> = {
       { kind: 'conclave', x: 5, y: 1, w: 2, d: 1, height: 0, variant: 0 },
       { kind: 'conclave', x: 7, y: 1, w: 2, d: 1, height: 0, variant: 0 },
       { kind: 'conclave', x: 9, y: 1, w: 2, d: 1, height: 0, variant: 0 },
-      // THE PERMANENT BOUNDARY runs the WHOLE rest of the row, eleven tiles
-      // west of the barrier and three east of it - all of it MURO (PIECE.wall,
+      // THE PERMANENT BOUNDARY runs the WHOLE rest of the row, twelve tiles
+      // west of the barrier and two east of it - all of it MURO (PIECE.wall,
       // variant 9), the arcade's own cut stone stacked to the fence's exact
       // height, no prop that could ever look like something you swing at.
       // It has to run the full width or it argues against itself: a wall
@@ -377,16 +377,16 @@ export const STAGES: Record<StageId, Stage> = {
       { kind: 'conclave', x: 8, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
       { kind: 'conclave', x: 9, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
       { kind: 'conclave', x: 10, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 11, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
       // THE FOUR THAT COME DOWN. The run is whole when the battle starts: these
       // stand on the `barrier` rectangle below and vanish on the beat it falls,
       // and the gap piece takes their place. They are the ONLY wood on this
       // wall now, which is the point - a fighter reads "this part is timber,
       // the rest is stone" before he reads a single number.
-      { kind: 'conclave', x: 11, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
       { kind: 'conclave', x: 12, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
       { kind: 'conclave', x: 13, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
       { kind: 'conclave', x: 14, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
-      { kind: 'conclave', x: 15, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 15, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1, when: 'closed' },
       { kind: 'conclave', x: 16, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
       { kind: 'conclave', x: 17, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
       // THE WAY OUT — exactly the `exit` rectangle above, and the two must never
@@ -401,7 +401,7 @@ export const STAGES: Record<StageId, Stage> = {
       // other turn lays that flap back inside the park, on top of the green
       // panel — which is exactly what it did the first time, covering two of
       // the four tiles that are the entire lesson of this board.
-      { kind: 'conclave', x: 11, y: 13, w: 4, d: 1, height: 5, turns: 3, variant: 2, when: 'open' },
+      { kind: 'conclave', x: 12, y: 13, w: 4, d: 1, height: 5, turns: 3, variant: 2, when: 'open' },
       // CYRUS, on the floor of the bowl, one tile south of the arches. The
       // battle starts the moment after. His tile stays BLOCKED or a unit can
       // stand inside him.
@@ -420,7 +420,7 @@ export const STAGES: Record<StageId, Stage> = {
       // this game is ever going to give a new player.
       { kind: 'conclave', x: 0, y: 3, w: 1, d: 1, height: 5, variant: 5 },
       { kind: 'conclave', x: 0, y: 8, w: 1, d: 1, height: 5, variant: 5 },
-      { kind: 'conclave', x: 8, y: 12, w: 1, d: 1, height: 5, variant: 5 },
+      { kind: 'conclave', x: 9, y: 12, w: 1, d: 1, height: 5, variant: 5 },
       // LITTER. Flat, free, and the only thing on the board that says a thousand
       // people were standing here ninety seconds ago. Nothing within one tile of
       // Cyrus: the crowd fell back from him, and the clean stone around a body
@@ -449,20 +449,20 @@ export const STAGES: Record<StageId, Stage> = {
     // board never punishes you for paying it.
     //
     // AND IT STARTS SHUT. The four fence tiles in front of it, on row 12, are
-    // the only squares row 13 can be entered from - x=10 and x=15 on row 13
+    // the only squares row 13 can be entered from - x=11 and x=16 on row 13
     // are blocked - so sealing them seals the door. Sixty points is four
     // Warrior punches or two Scrapper kicks: two or three men stop and hit
     // while the others walk up behind them, and the Riffs get the turns that
     // costs. The kick doing it in half the time is the reason the kick exists.
     exit: {
-      x: 11,
+      x: 12,
       y: 13,
       w: 4,
       d: 1,
       needed: 6,
       label: 'Por la valla',
       barrier: {
-        x: 11,
+        x: 12,
         y: 12,
         w: 4,
         d: 1,
