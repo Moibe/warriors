@@ -181,6 +181,39 @@
 
   /** Never nearer than this, even out past the board's left and right corners. */
   const NEAREST = -5.0;
+
+  /**
+   * How much further out the whole horizon sits, on top of everything below.
+   *
+   * The numbers under this one measure the board from its centre along one
+   * axis, and that was the mistake: the pivot turns the horizon to face the
+   * viewer, but the BOARD turns too, so at most angles what is pointing at the
+   * skyline is not the board's edge but its corner. A twenty by fourteen board
+   * reaches 10 along one axis and 7 along the other — but 12.2 to a corner, and
+   * the rides were hung at 8.6. Rotate the camera a quarter turn and the far
+   * corner of the beach came out past the horizon, so the Wonder Wheel sat down
+   * on top of the sand.
+   *
+   * Pushing it out costs nothing: the camera is orthographic, so distance does
+   * not shrink anything. It only slides the horizon up the screen and out of
+   * the way, which is exactly what a horizon is supposed to do.
+   */
+  const HORIZON_PUSH = 11.0;
+
+  /**
+   * And the drop that pays for the push.
+   *
+   * The camera is orthographic at a fixed pitch, so moving the horizon away
+   * does not make it smaller — it slides it UP the screen, by V_BACK per unit.
+   * Pushed far enough to clear the board's corner, the Wonder Wheel left the
+   * top of the frame altogether, which trades one bug for a worse one.
+   *
+   * Lowering it by exactly what the push raised puts every ride back on the
+   * pixel it was on before, while standing eleven units further out. Same
+   * picture, no collision. The two constants above exist for this: it is the
+   * only sum in the file that has to be right rather than merely look right.
+   */
+  const HORIZON_DROP = -(HORIZON_PUSH * V_BACK) / V_UP;
   /** How far behind the board's far edge a thing stands. A sprite is at its
    *  tile's centre, a third of a unit nearer than the tile's edge, so this
    *  clears a man standing on the very last row as well as the row itself. */
@@ -188,7 +221,7 @@
 
   /** The line the whole horizon is hung from: the board's far edge, plus air. */
   function behind(x: number): number {
-    return Math.min(NEAREST, Math.abs(x) - BOARD_REACH - CLEAR);
+    return Math.min(NEAREST, Math.abs(x) - BOARD_REACH - CLEAR) - HORIZON_PUSH;
   }
 
   /** How far back a ride stands from the rooftops that hide its feet. */
@@ -840,7 +873,7 @@
      inside it, with the position and rotation the stage gave it, exactly as
      every other prop in this project. -->
 <T.Group bind:ref={pivot}>
-  <T.Group {position} rotation.y={rotation}>
+  <T.Group {position} rotation.y={rotation} position.y={isHorizon ? HORIZON_DROP : position[1]}>
     {#if piece === PIECE.skyline}
       <!-- ================= EL HORIZONTE ================= -->
       <!-- Nothing below casts or receives. It is outside the shadow camera's
