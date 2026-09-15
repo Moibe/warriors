@@ -62,7 +62,7 @@
   //
   //   piece       H      H−0.40   H−0.93   hides, of a man one tile behind
   //   litter      0.012  −0.39    −0.92    nothing. It is paper on the stone.
-  //   cyrus       0.22   −0.18    −0.71    nothing.
+  //   cyrus       0.14   −0.26    −0.79    nothing.
   //   fenceGap    0.30   −0.10    −0.63    nothing: the kicked-out boards lie
   //                                        flat, and the section that came away
   //                                        hangs off the lip, off the board.
@@ -447,7 +447,7 @@
       name: 'Cyrus',
       w: 1,
       d: 1,
-      top: 0.22,
+      top: 0.14,
       steps: false,
       caps: false,
       wall: false,
@@ -1122,16 +1122,21 @@
   // as furniture.
 
   const CYRUS_TILT = 0.34;
-  const cyrusHeadGeometry = new BoxGeometry(0.19, 0.17, 0.21);
-  const cyrusShoulderGeometry = new BoxGeometry(0.42, 0.16, 0.18);
-  const cyrusChestGeometry = new BoxGeometry(0.36, 0.19, 0.48);
-  const cyrusVestGeometry = new BoxGeometry(0.3, 0.04, 0.42);
-  const cyrusHipGeometry = new BoxGeometry(0.32, 0.17, 0.22);
-  const cyrusThighGeometry = new BoxGeometry(0.13, 0.15, 0.34);
-  const cyrusShinGeometry = new BoxGeometry(0.11, 0.13, 0.3);
-  const cyrusBootGeometry = new BoxGeometry(0.12, 0.12, 0.15);
-  const cyrusArmGeometry = new BoxGeometry(0.32, 0.11, 0.12);
-  const cyrusForearmGeometry = new BoxGeometry(0.1, 0.11, 0.36);
+  // Every box's THICKNESS (the Y dimension only — footprint is untouched) runs
+  // at 0.6 of an earlier pass that read as a raised loaf rather than a man
+  // face-down on the stone: a body this camera looks nearly straight down on
+  // reads by its silhouette, and a silhouette with real height on it reads as
+  // a solid sitting ON the tile, not a man pressed flat against it.
+  const cyrusHeadGeometry = new BoxGeometry(0.19, 0.102, 0.21);
+  const cyrusShoulderGeometry = new BoxGeometry(0.42, 0.096, 0.18);
+  const cyrusChestGeometry = new BoxGeometry(0.36, 0.114, 0.48);
+  const cyrusVestGeometry = new BoxGeometry(0.3, 0.024, 0.42);
+  const cyrusHipGeometry = new BoxGeometry(0.32, 0.102, 0.22);
+  const cyrusThighGeometry = new BoxGeometry(0.13, 0.09, 0.34);
+  const cyrusShinGeometry = new BoxGeometry(0.11, 0.078, 0.3);
+  const cyrusBootGeometry = new BoxGeometry(0.12, 0.072, 0.15);
+  const cyrusArmGeometry = new BoxGeometry(0.32, 0.066, 0.12);
+  const cyrusForearmGeometry = new BoxGeometry(0.1, 0.066, 0.36);
 
   // ---- Farola (1×1) -------------------------------------------------------
   // Head bottom at 1.96, top at 2.24, on a column 0.09 across at its widest.
@@ -1664,35 +1669,36 @@
       </T.Group>
     </T.Group>
   {:else if piece === PIECE.cyrus}
-    <!-- Nine boxes and two muted tones. No blood, no spectacle, no fourth
-         colour — the argument is written out at the geometry above, and the
-         short version is that this is the tutorial board and the loudest thing
-         on it has to be the overlay the player is learning to read. -->
+    <!-- Nine boxes and two muted tones, flattened to 0.6 of their first pass
+         (see the geometry above). No blood, no spectacle, no fourth colour —
+         the argument is written out at the geometry above, and the short
+         version is that this is the tutorial board and the loudest thing on
+         it has to be the overlay the player is learning to read. -->
     <T.Group rotation.y={CYRUS_TILT}>
-      <T.Mesh geometry={cyrusHeadGeometry} material={skinTone} position={[0.05, 0.085, -0.62]} rotation.y={0.5} />
-      <T.Mesh geometry={cyrusShoulderGeometry} material={leather} position={[0, 0.08, -0.44]} />
-      <T.Mesh geometry={cyrusChestGeometry} material={leather} position={[0, 0.095, -0.14]} castShadow />
-      <T.Mesh geometry={cyrusVestGeometry} material={cloth} position={[0, 0.2, -0.16]} />
-      <T.Mesh geometry={cyrusHipGeometry} material={cloth} position={[0, 0.085, 0.18]} />
+      <T.Mesh geometry={cyrusHeadGeometry} material={skinTone} position={[0.05, 0.051, -0.62]} rotation.y={0.5} />
+      <T.Mesh geometry={cyrusShoulderGeometry} material={leather} position={[0, 0.048, -0.44]} />
+      <T.Mesh geometry={cyrusChestGeometry} material={leather} position={[0, 0.057, -0.14]} castShadow />
+      <T.Mesh geometry={cyrusVestGeometry} material={cloth} position={[0, 0.126, -0.16]} />
+      <T.Mesh geometry={cyrusHipGeometry} material={cloth} position={[0, 0.051, 0.18]} />
 
       <!-- One arm flung out, one along the body. That is the whole pose. -->
       <T.Mesh
         geometry={cyrusArmGeometry}
         material={leather}
-        position={[-0.34, 0.06, -0.3]}
+        position={[-0.34, 0.033, -0.3]}
         rotation.y={0.45}
       />
-      <T.Mesh geometry={cyrusForearmGeometry} material={leather} position={[0.24, 0.06, -0.14]} />
+      <T.Mesh geometry={cyrusForearmGeometry} material={leather} position={[0.24, 0.033, -0.14]} />
 
       {#each [-1, 1] as side (side)}
         <T.Mesh
           geometry={cyrusThighGeometry}
           material={cloth}
-          position={[side * 0.09, 0.075, 0.44]}
+          position={[side * 0.09, 0.045, 0.44]}
           rotation.y={side * 0.1}
         />
-        <T.Mesh geometry={cyrusShinGeometry} material={cloth} position={[side * 0.11, 0.065, 0.76]} />
-        <T.Mesh geometry={cyrusBootGeometry} material={leather} position={[side * 0.11, 0.06, 0.96]} />
+        <T.Mesh geometry={cyrusShinGeometry} material={cloth} position={[side * 0.11, 0.039, 0.76]} />
+        <T.Mesh geometry={cyrusBootGeometry} material={leather} position={[side * 0.11, 0.036, 0.96]} />
       {/each}
     </T.Group>
   {:else if piece === PIECE.lamp}
