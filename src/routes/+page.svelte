@@ -47,7 +47,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.5.0';
+  const APP_VERSION = '1.6.0';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -422,20 +422,42 @@
 
   // The terrain window follows the cursor, which is the acting unit except
   // while a destination is being chosen — where the height of the square you
-  // are about to step onto is exactly what you need to read. The unit window
-  // stays on the acting unit; inspecting another one means reading its row in
-  // the turn order.
+  // are about to step onto is exactly what you need to read.
   const cursor = $derived(cursorCoord());
   const cursorTile = $derived(cursor ? tileAt(map, cursor.x, cursor.y) : null);
-  const cursorOccupant = $derived(
-    cursor ? unitAt(battle.units, cursor.x, cursor.y)?.name : undefined
+  /** Whoever the game cursor is on: the aimed target, or the acting unit. */
+  const cursorUnit = $derived(cursor ? unitAt(battle.units, cursor.x, cursor.y) : undefined);
+  const cursorOccupant = $derived(cursorUnit?.name);
+  /** Whoever the MOUSE is on, which is a different question from the cursor. */
+  const hovered = $derived(
+    battle.hover ? unitAt(battle.units, battle.hover.x, battle.hover.y) : undefined
   );
   // A body holds its square without standing on it: nothing can finish a move
   // there, so calling the tile clear would be a lie the player then walks into.
   const cursorBody = $derived(
     cursor && !cursorOccupant ? fallenAt(battle.units, cursor.x, cursor.y)?.name : undefined
   );
-  const panelUnit = $derived(active);
+  // The unit window follows the pointer, the way FFT's does.
+  //
+  // It used to stay pinned to the acting unit, and inspecting anybody else meant
+  // reading his row in the turn order, or the one word the terrain window gave
+  // you: "Ocupada · Sully". That is not inspecting, that is being told a name in
+  // the wrong corner of the screen in seven-point type. The moment a board asked
+  // the player to pick ONE enemy out of nine by name - Sully, on the Orphans'
+  // block, whose fall turns Mercy - the pinned window stopped being a
+  // convenience and became the reason you could not play the rule.
+  //
+  // So, in order: whoever is under the MOUSE; failing that whoever the game
+  // cursor is on, which while aiming is the man you are about to hit; failing
+  // that the acting unit. The title says which. Hover your own man and you get
+  // him back, so the pinned readout loses nothing that matters, and an enemy's
+  // portrait, job and bar become readable for the price of moving the mouse -
+  // which is what a mouse is for.
+  //
+  // The terrain window stays on the game cursor on purpose. A keyboard player
+  // choosing a destination needs the height of the square he is about to step
+  // onto, not the height of wherever the mouse was left.
+  const panelUnit = $derived(hovered ?? cursorUnit ?? active);
   const playerTurn = $derived(!!active && active.team === 'ally' && isAlive(active));
 
   const queue = $derived(upcomingTurns(7));
@@ -553,7 +575,7 @@
         <UnitPanel
           unit={panelUnit}
           height={heightOf(panelUnit)}
-          title={panelUnit.id === battle.activeId ? 'En turno' : 'Unidad'}
+          title={panelUnit.id === battle.activeId ? 'En turno' : 'Bajo el cursor'}
         />
       {/if}
     </div>

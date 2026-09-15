@@ -121,6 +121,16 @@ export const battle = $state({
   moveTarget: null as Coord | null,
   /** Tile being aimed at while an ability is up. Null outside the target phase. */
   aim: null as Coord | null,
+  /**
+   * The tile under the mouse pointer, or null when it is off the board.
+   *
+   * Deliberately NOT the cursor. The cursor is the game's - the destination
+   * while moving, the aim while targeting, the acting unit otherwise - and it
+   * is what the terrain window and Enter obey. This is only where the pointer
+   * happens to be, and the one thing that reads it is the unit window, so that
+   * resting the mouse on a man tells you who he is.
+   */
+  hover: null as Coord | null,
   walk: null as WalkAnim | null,
   /** Non-null only while something thrown is still in the air. */
   throw: null as ThrowAnim | null,
@@ -181,6 +191,13 @@ export function heightOf(u: Unit): number {
 export function isPlayerTurn(): boolean {
   const u = activeUnit();
   return !!u && u.team === 'ally';
+}
+
+/** The pointer moved onto a tile, or off the board. Written only on change. */
+export function setHoverTile(c: Coord | null) {
+  const h = battle.hover;
+  if (c === null ? h === null : h !== null && h.x === c.x && h.y === c.y) return;
+  battle.hover = c;
 }
 
 /**
@@ -1118,6 +1135,7 @@ export function restart() {
   battle.log = [];
   battle.winner = null;
   battle.turn = 0;
+  battle.hover = null;
   facingBeforePreview = null;
   aiPlan = null;
   resolveTimer = 0;

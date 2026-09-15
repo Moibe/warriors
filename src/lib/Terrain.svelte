@@ -31,9 +31,12 @@
   let {
     map,
     onTileClick,
+    onTileHover,
   }: {
     map: BattleMap;
     onTileClick?: (tile: Tile) => void;
+    /** The tile under the pointer, or null once the pointer leaves the board. */
+    onTileHover?: (tile: Tile | null) => void;
   } = $props();
 
   /** Void cells are simply absent, so instance index ≠ tile index. */
@@ -137,14 +140,33 @@
 
   type PointerLike = { instanceId?: number; stopPropagation?: () => void };
 
-  // Click only: there is deliberately no hover tracking. The cursor is pinned
-  // to the acting unit, so a pointer-move handler would have nothing to write.
   function handleClick(e: PointerLike) {
     const idx = e.instanceId;
     if (idx === undefined) return;
     e.stopPropagation?.();
     const cell = cells[idx];
     if (cell) onTileClick?.(cell);
+  }
+
+  // Hover, which this file used to refuse on purpose: "the cursor is pinned to
+  // the acting unit, so a pointer-move handler would have nothing to write".
+  // That was true and it is what made the game unreadable with a mouse - the
+  // only way to learn who a man was, was to walk the keyboard cursor onto him.
+  // The game cursor stays pinned exactly as before; this is a SECOND, separate
+  // signal for the pointer, and what it drives is the unit window, not the
+  // cursor. Deduplicated on the instance index so a pointer resting on a tile
+  // costs one write when it arrives and none while it stays.
+  let lastHover = -1;
+  function handleHover(e: PointerLike) {
+    const idx = e.instanceId;
+    if (idx === undefined || idx === lastHover) return;
+    lastHover = idx;
+    onTileHover?.(cells[idx] ?? null);
+  }
+  function handleLeave() {
+    if (lastHover === -1) return;
+    lastHover = -1;
+    onTileHover?.(null);
   }
 </script>
 
@@ -162,4 +184,6 @@
   args={[plateGeometry, plateMaterial, Math.max(1, cells.length)]}
   receiveShadow
   onclick={handleClick}
+  onpointermove={handleHover}
+  onpointerleave={handleLeave}
 />

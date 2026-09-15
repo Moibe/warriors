@@ -34,6 +34,7 @@
     heightOf,
     stage as currentStage,
     renderPosition,
+    setHoverTile,
   } from './battle.svelte';
   import { LEVEL, TILE, tileToWorld, type Tile } from './grid';
   import { landableTiles, tilesInBurst } from './pathfinding';
@@ -209,7 +210,11 @@
   shadow.normalBias={0.02}
 />
 
-<Terrain {map} onTileClick={handleClick} />
+<Terrain
+  {map}
+  onTileClick={handleClick}
+  onTileHover={(t) => setHoverTile(t ? { x: t.x, y: t.y } : null)}
+/>
 
 <!-- Keyed by position in the list, not by tile: a rug and the armchair standing
      on it share a square, and so would any two pieces stacked on purpose. -->
