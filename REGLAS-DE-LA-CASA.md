@@ -233,6 +233,26 @@ Medido en Riverside: de cinco líneas de fuego amigo a cero, y los bateos amplio
 pasaron a coger dos y tres Warriors. Los dos casos que quedan alcanzan a un Fury
 **y a dos Warriors** — eso es un canje decidido, no ceguera.
 
+### Puedes apuntar a los tuyos a propósito
+
+La reja que lo impedía se había escrito para otra pregunta: existía para que un
+jugador nuevo no se pegara a sí mismo, y lo conseguía **exigiendo que el blanco
+fuera del otro bando** — lo cual también prohibía, de paso, que Swan aporreara al
+que tiene delante para llegar al de detrás.
+
+Todo el resto del juego ya contaba con ello: la ventana de previsión lleva desde
+siempre la línea *"Fuego amigo: esto va contra los tuyos"* con un comentario que la
+llama *permitido, pero ruidoso*, y `resolveHits` pinta en ámbar el número de daño de
+un compañero en vez de en blanco. Sólo faltaba abrir la reja.
+
+Lo único que sigue prohibido es **apuntarse a uno mismo**, y no por prudencia: un
+golpe ya no alcanza a quien lo da, así que confirmar sobre tu propia casilla
+gastaría el turno sin hacer nada, y una orden que calla y no hace nada es peor que
+una en gris.
+
+La arenga conserva su bando. Gritarle a la banda contraria para levantarla no es una
+opción táctica atrevida, es un sinsentido.
+
 ### Un golpe en área nunca alcanza a quien lo da
 
 Los tres golpes en área del juego —el bate de los Furies, el tablón de los Orphans

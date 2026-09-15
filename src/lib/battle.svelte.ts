@@ -380,15 +380,31 @@ export function abilityTargetsAt(x: number, y: number): Unit[] {
 }
 
 /**
- * Whether this unit is who the move was meant for. An area swing still catches
- * whoever is standing in it — that is the price of a wide swing — but it is
- * what the move is *aimed* at that decides whether the aim is legal at all.
- * Without this, a punch has a valid target on your own square, and the first
- * thing a new player does is hit themselves in the face.
+ * Whether the aim is allowed to be confirmed on this unit.
+ *
+ * YOU MAY HIT YOUR OWN MEN ON PURPOSE. This used to refuse it, and the refusal
+ * was inherited from a different question: it was written to stop a new player
+ * punching himself in the face, and it did that by demanding the aim land on
+ * the other side — which also quietly forbade Swan from clubbing the man in
+ * front of him to get at the one behind. An area swing has always caught your
+ * own people; the forecast window has always carried a line that says "Fuego
+ * amigo: esto va contra los tuyos" and a comment calling it *allowed, but
+ * loud*; and `resolveHits` has always painted a friendly's damage number amber
+ * instead of white. Every part of this game was built expecting it except the
+ * one gate that said no.
+ *
+ * So the only thing still refused is the actor himself. Not out of caution —
+ * a swing no longer catches the man swinging it anyway, so confirming on your
+ * own square would spend a turn and do nothing at all, and an order that
+ * silently does nothing is worse than one that is greyed out.
+ *
+ * A rally keeps its side. Shouting the other gang back onto its feet is not a
+ * bold tactical option, it is nonsense, and `resolveHits` would drop it on the
+ * floor even if this let it through.
  */
 function isIntendedTarget(actor: Unit, other: Unit, ability: Ability): boolean {
-  if (ability.targets === 'any') return true;
-  return (ability.targets === 'ally') === (other.team === actor.team);
+  if (ability.targets === 'ally') return other.team === actor.team;
+  return other.id !== actor.id;
 }
 
 /** Whether confirming the aim right now would hit anything worth hitting. */
