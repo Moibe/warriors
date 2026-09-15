@@ -51,7 +51,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.8.1';
+  const APP_VERSION = '1.8.2';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -238,6 +238,26 @@
     if (dragging) {
       swallowClick = pressButton === 0;
       (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    } else if (pressButton === 2) {
+      // THE RIGHT BUTTON IS "VOLVER", and it only is when the press did not
+      // turn into a drag. That distinction is not a nicety: the right button
+      // also pans the view, so without it every time the player shoved the
+      // board sideways to look at something he would also have thrown away the
+      // order he had half-chosen.
+      //
+      // `dragging` is exactly the flag that answers it, and it is already
+      // maintained for the left button, which has the same problem the other
+      // way round: a press that travelled less than DRAG_THRESHOLD pixels is a
+      // click, and anything further is a drag. So a quick right-click backs out
+      // of a submenu and a right-drag moves the camera, and nothing has to
+      // guess which was meant.
+      //
+      // `cancel()` on the board's own phases only; it is deliberately NOT the
+      // Esc key's whole job. Esc also closes the battle picker, which is a
+      // modal with its own veil that swallows pointer events before they ever
+      // reach this element - so there is nothing here to close, and nothing to
+      // special-case.
+      cancel();
     }
     dragging = false;
     turning = false;
@@ -673,7 +693,7 @@
     <kbd>Enter</kbd> confirmar · <kbd>1</kbd>…<kbd>0</kbd> órdenes · <kbd>Q</kbd><kbd>E</kbd> girar ·
     <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar · <kbd>M</kbd> batalla · <kbd>rueda</kbd> zoom ·
     <kbd>arrastrar</kbd> desplazar · <kbd>botón central</kbd> girar ·
-    <kbd>Esc</kbd> cancelar
+    <kbd>Esc</kbd> o <kbd>botón derecho</kbd> volver
   </p>
 </div>
 
