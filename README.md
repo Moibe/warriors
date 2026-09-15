@@ -151,6 +151,16 @@ así que no se puede desalinear una plantilla sin enterarse.
   para que lo que promete la ventana de confirmación sea exactamente lo que se
   tira.
 
+## Dos documentos que hay que leer antes de tocar nada
+
+- **[LA-PELICULA.md](LA-PELICULA.md)** — qué muestra de verdad la película, escena
+  por escena, y en qué nos apartamos de ella a sabiendas. La memoria popular de
+  esta película está mal en varios puntos concretos y cada uno nos ha costado
+  rehacer trabajo. Se lee antes de montar un escenario.
+- **[REGLAS-DE-LA-CASA.md](REGLAS-DE-LA-CASA.md)** — las invariantes del proyecto
+  y qué se rompió cada vez que se saltaron, con la cuenta de reincidencias. Se
+  lee antes de escribir cualquier línea.
+
 ## Siguientes pasos naturales
 
 - Más mapas y un selector de batalla.
