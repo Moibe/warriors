@@ -55,7 +55,7 @@
       <span>{barrier.label}</span>
       <span class="hp">{barrier.hp}<span class="max">/{barrier.hpMax}</span></span>
     </p>
-    <p class="hint">Cerrada. Rompedla a golpes.</p>
+    <p class="hint">Cerrada. Rómpanla a golpes.</p>
   {/if}
   <p class="count" class:doomed>
     {out.length} de {needed} fuera

@@ -1119,7 +1119,7 @@ const TAKEDOWN: Ability = {
  */
 const CLOSE_RANKS: Ability = {
   id: 'closeranks',
-  name: 'Cerrad el corro',
+  name: 'Cierren el corro',
   kind: 'rally',
   range: 3,
   minRange: 0,
@@ -1287,7 +1287,7 @@ const CHAIN_SWEEP: Ability = {
   targets: 'enemy',
   accuracy: 66,
   needsWeapon: true,
-  desc: 'La hace girar a la altura de las rodillas. Coge a todo el que esté cerca, sea de quien sea.',
+  desc: 'La hace girar a la altura de las rodillas. Atrapa a todo el que esté cerca, sea de quien sea.',
 };
 
 /**
@@ -1444,7 +1444,7 @@ const CYRUS_REVOLVER: Ability = {
  */
 const COME_OUT_TO_PLAY: Ability = {
   id: 'bottles',
-  name: 'Salid a jugar',
+  name: 'Salgan a jugar',
   kind: 'ranged',
   range: 5,
   minRange: 2,
@@ -1509,7 +1509,7 @@ const RUN_DOWN: Ability = {
   vertical: 2,
   targets: 'enemy',
   accuracy: 66,
-  desc: 'Llevan toda la noche detrás de vosotros. Cuando por fin te pillan, se nota.',
+  desc: 'Llevan toda la noche detrás de ustedes. Cuando por fin te pillan, se nota.',
 };
 
 // ---------------------------------------------------------------------------
@@ -1685,7 +1685,7 @@ export const JOBS: Record<JobId, Job> = {
     // bench and the radiator but never onto the sinks, which is the one place
     // on this board that is genuinely out of everybody's reach.
     stats: { hp: 44, mp: 4, pa: 8, ma: 2, speed: 8, move: 5, jump: 2 },
-    abilities: [DOOR_KICK, WEAPON_HIT, punch(1.9, 'Un chaval del Bowery con las manos grandes.')],
+    abilities: [DOOR_KICK, WEAPON_HIT, punch(1.9, 'Un chavo del Bowery con las manos grandes.')],
     sprite: {
       body: 'punk',
       hat: null,

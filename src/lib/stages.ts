@@ -514,9 +514,9 @@ export const STAGES: Record<StageId, Stage> = {
     // promise that put the other eight here unarmed. Swan gets the plan,
     // because giving the squad its orders is what a warchief is for.
     brief: [
-      { text: 'Luther ha matado a Cyrus y os ha señalado a vosotros.', speaker: 'fox' },
+      { text: 'Luther ha matado a Cyrus y los ha señalado a ustedes.', speaker: 'fox' },
       { text: 'Nadie vino armado: Cleon dio su palabra por los nueve.', speaker: 'cleon' },
-      { text: 'La valla está entera: rompedla y salid. Con seis basta.', speaker: 'swan' },
+      { text: 'La valla está entera: rómpanla y salgan. Con seis basta.', speaker: 'swan' },
     ],
     // The nine, in squad order, and every one of them empty-handed.
     //
@@ -594,7 +594,7 @@ export const STAGES: Record<StageId, Stage> = {
     },
     outcome: {
       victory: 'Fuera del parque. Ahora hay que cruzar la ciudad entera hasta casa.',
-      defeat: 'No salisteis del parque. La noche se acaba donde empezó.',
+      defeat: 'No salieron del parque. La noche se acaba donde empezó.',
     },
   },
 
@@ -645,7 +645,7 @@ export const STAGES: Record<StageId, Stage> = {
     },
     light: NIGHT_RIG,
     outcome: {
-      victory: 'El parque es vuestro. Los Furies se quedan tirados en el asfalto.',
+      victory: 'El parque es de ustedes. Los Furies se quedan tirados en el asfalto.',
       defeat: 'Los Warriors no salen de Riverside. Ninguno llega a Coney Island.',
     },
   },
@@ -766,7 +766,7 @@ export const STAGES: Record<StageId, Stage> = {
     // quiet. The read on Sully is left to nobody in particular: it is the one
     // line here that is a rule of the board before it is anyone's opinion.
     brief: [
-      { text: 'Los Orphans no os dejan pasar sin dejaros el chaleco.', speaker: 'fox' },
+      { text: 'Los Orphans no los dejan pasar sin dejarles el chaleco.', speaker: 'fox' },
       { text: 'La que se ríe desde el portal es Mercy, la chica de Sully.', speaker: 'vermin' },
       { text: 'Si Sully cae, ya no tiene por qué seguir con ellos.' },
     ],
@@ -860,8 +860,8 @@ export const STAGES: Record<StageId, Stage> = {
       key: { color: '#f0c079', intensity: 1.5, position: [6, 13, 8] },
     },
     outcome: {
-      victory: 'Fuera, y escaleras abajo. Nadie os preguntó de dónde erais por educación.',
-      defeat: 'No salisteis los tres. La recompensa de los Riffs se cobra esta noche.',
+      victory: 'Fuera, y escaleras abajo. Nadie les preguntó de dónde eran por educación.',
+      defeat: 'No salieron los tres. La recompensa de los Riffs se cobra esta noche.',
     },
   },
 
@@ -999,8 +999,8 @@ export const STAGES: Record<StageId, Stage> = {
       key: { color: '#eef6ea', intensity: 1.45, position: [5, 17, 7] },
     },
     outcome: {
-      victory: 'Los nueve en el suelo y los seis de pie. La única que ganáis a gusto.',
-      defeat: 'Os pillaron en los retretes. Nadie coge el último tren.',
+      victory: 'Los nueve en el suelo y los seis de pie. La única que ganan a gusto.',
+      defeat: 'Los pillaron en los retretes. Nadie toma el último tren.',
     },
   },
 
@@ -1056,8 +1056,8 @@ export const STAGES: Record<StageId, Stage> = {
     sky: DAWN_SKY,
     light: DAWN_RIG,
     outcome: {
-      victory: 'Luther en la arena y los suyos quietos alrededor. Ya podéis ir a casa.',
-      defeat: 'Amanece en Coney Island y no llegasteis a él. Nadie va a saber nunca la verdad.',
+      victory: 'Luther en la arena y los suyos quietos alrededor. Ya pueden ir a casa.',
+      defeat: 'Amanece en Coney Island y no llegaron a él. Nadie va a saber nunca la verdad.',
     },
   },
 };

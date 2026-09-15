@@ -627,7 +627,7 @@ function checkVictory(): boolean {
   if (exit) {
     if (out >= exit.needed) return decide('ally', 'Fuera. La puerta queda atrás.');
     if (out + standing < exit.needed) {
-      return decide('enemy', 'Ya no salís los que hacéis falta.');
+      return decide('enemy', 'Ya no salen los que hacen falta.');
     }
     // Clearing the room still ends it. Nobody is expected to manage that
     // against guns, but a board with nobody left on it must never be a battle
