@@ -10,6 +10,7 @@
   import CameraRig from './CameraRig.svelte';
   import Bus from './Bus.svelte';
   import ComfortStation from './ComfortStation.svelte';
+  import Conclave from './Conclave.svelte';
   import MensRoom from './MensRoom.svelte';
   import ConeyIsland from './ConeyIsland.svelte';
   import Furniture from './Furniture.svelte';
@@ -73,6 +74,7 @@
     furniture: Furniture,
     coneyIsland: ConeyIsland,
     mensRoom: MensRoom,
+    conclave: Conclave,
   };
 
   useTask((delta) => {

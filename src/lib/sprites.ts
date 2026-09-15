@@ -1584,6 +1584,165 @@ const SKATER_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   '   OKKKKO OGSSO     ',
 ]);
 
+// ---------------------------------------------------------------------------
+// The Gramercy Riffs
+// ---------------------------------------------------------------------------
+//
+// Cyrus's own gang, at the conclave, and this body is the ONE NIGHT they look
+// like this. They wear orange martial-arts tops and sunglasses at Van Cortlandt
+// and they change into black afterwards, as mourning - so if they ever turn up
+// again on another board they need a second body and a second palette, not an
+// edit of these.
+//
+// TWO READS, AND NEITHER OF THEM IS THE COLOUR.
+//
+// THE SUNGLASSES ARE A WHOLE ROW. Every other body in this file spells a face
+// with two `E` pixels and skin between them; this one runs `E` clean across the
+// head. At sixteen pixels a flat cold bar under a brow is not an eye, it is a
+// lens, and it is the only face in this game with nothing human in it. It costs
+// one row and it is the loudest identity in the project.
+//
+// Note what it is NOT: the Baseball Furies get their painted face from the
+// `face` overlay system, and this deliberately does not. A Riff has to read as
+// a Riff with `face: null`, because the glasses are the man and not something
+// applied to him - and because a body that carries its own identity cannot be
+// accidentally deployed without it.
+//
+// THE WRAP IS A DIAGONAL, and no other body here owns one. The Warriors have a
+// vest, the Punks a bib, the Turnbull a jacket, the Rogues nothing - all of
+// them vertical or rectangular. A crossover running corner to corner across the
+// chest is a silhouette nobody else in the game can be confused with, and it
+// survives being four pixels wide.
+//
+// The skirt of the top hangs past the belt, which is the third read and the
+// cheapest: these are the only men on any board whose garment goes below the
+// waist, so even the legs are a different shape from everybody else's.
+
+const RIFF_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSSSSSSHO   ',
+  '   OEEEEEEEEO   ',
+  '   OHSSSSSSHO   ',
+  '    OSSSSSSO    ',
+  '     OKKKKO     ',
+  '  OAAFFAAFFAAO  ',
+  '  OAAAFFAFAAAO  ',
+  ' OAAAAAFFAAAAAO ',
+  ' OAAAAAAFFAAAAO ',
+  ' OSOAAAAAFFAOSO ',
+  '   OOAAAAAFOO   ',
+  '    OBBBBBBO    ',
+  '   OAAAAAAAAO   ',
+  '   OAAAOOAAAO   ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+/** From behind: no glasses, because from behind a man in shades is just a man.
+ *  What is back there instead is the one cool colour they own, the band across
+ *  the shoulders - which is the only reason a Riff walking away still reads. */
+const RIFF_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHHHHHHHO   ',
+  '    OHHHHHHO    ',
+  '     OKKKKO     ',
+  '  OAAAAAAAAAAO  ',
+  '  OAAAFFFFAAAO  ',
+  ' OAAAFFAAFFAAAO ',
+  ' OAAAFFAAFFAAAO ',
+  ' OSOAAFFFFAAOSO ',
+  '   OOAAAAAAOO   ',
+  '    OBBBBBBO    ',
+  '   OAAAAAAAAO   ',
+  '   OAAAOOAAAO   ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+const RIFF_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSSSSSSHO   ',
+  '   OEEEEEEEEO   ',
+  '   OHSSSSSSHO   ',
+  '    OSSOOSSO    ',
+  '     OKKKKO     ',
+  '  OAAFFAAFFAAO  ',
+  'OSOAAAFFAFAAAOSO',
+  'OSOAAAAFFAAAAOSO',
+  ' OAAAAAAFFAAAAO ',
+  '  OAAAAAAFFAAO  ',
+  '   OOAAAAAFOO   ',
+  '    OBBBBBBO    ',
+  '  OAAAAAAAAAAO  ',
+  '  OAAAAOOAAAAO  ',
+  '  OCCOOOOOOCCO  ',
+  '  OCCOOOOOOCCO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
+const RIFF_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHHHHHHHO   ',
+  '    OHHHHHHO    ',
+  '     OKKKKO     ',
+  '  OAAAAAAAAAAO  ',
+  'OSOAAAFFFFAAAOSO',
+  'OSOAAFFAAFFAAOSO',
+  ' OAAAFFAAFFAAAO ',
+  '  OAAAFFFFAAAO  ',
+  '   OOAAAAAAOO   ',
+  '    OBBBBBBO    ',
+  '  OAAAAAAAAAAO  ',
+  '  OAAAAOOAAAAO  ',
+  '  OCCOOOOOOCCO  ',
+  '  OCCOOOOOOCCO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
+const RIFF_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '                 OBO',
+  '   OOOOOO       OBBO',
+  '  OHHHHHHO     OCBBO',
+  ' OHHHHHHHHO   OCCCCO',
+  ' OHSSSSSSHO OAACCCO ',
+  ' OHSSSSSSHOOAAAFBBO ',
+  ' OEEEEEEEEOOAAFAAO  ',
+  ' OHSSSSSSHOOAFAAAO  ',
+  '  OKSOOSKOOAFAAO    ',
+  '   OKKKKO OFSSO     ',
+]);
+
+
 
 const BODIES = {
   plain: {
@@ -1634,6 +1793,13 @@ const BODIES = {
     hurtFront: ROGUE_HURT_FRONT,
     hurtBack: ROGUE_HURT_BACK,
     down: ROGUE_DOWN,
+  },
+  riff: {
+    front: RIFF_FRONT,
+    back: RIFF_BACK,
+    hurtFront: RIFF_HURT_FRONT,
+    hurtBack: RIFF_HURT_BACK,
+    down: RIFF_DOWN,
   },
   punk: {
     front: PUNK_FRONT,

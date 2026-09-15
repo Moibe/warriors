@@ -78,6 +78,98 @@ const RIVERSIDE_PARK: MapSource = {
 export const riversidePark = parseMap(RIVERSIDE_PARK);
 
 /**
+ * "Van Cortlandt Park" - the meeting, and the board that goes first.
+ *
+ * Every other battle in this file is a fight. This one is a walk, and it is the
+ * only board in the game whose job is to teach. The player has never moved a
+ * man before, nobody on his side is carrying anything, and there is no hint
+ * system to lean on - so the lesson has to be the terrain. Four of them, in
+ * order: walking is a verb, the green band is how you win, you do not have to
+ * fight, and the one decision on the board is optional and costs you. Not one
+ * of them is written down anywhere.
+ *
+ * IT IS NOT A FIELD. The conclave is SET at Van Cortlandt and was SHOT at the
+ * 97th Street playground in Riverside - the same park as the Furies board, four
+ * battles later, which is a coincidence the film handed us and not one we
+ * arranged. What is on screen is a stone amphitheatre, and that is what this is.
+ * North (row 0) at the top:
+ *   - THE ARCADE along the north wall: masonry arches at level 5, blocked, that
+ *     the crowd perched in front of. The one built feature of the real location.
+ *   - THE FLOOR OF THE BOWL at level 0, under it. Cyrus fell there and Cleon is
+ *     pinned there, in the corner the arcade and the false wall make.
+ *   - A FALSE WALL down the west side, blocked - built for the shoot to hide the
+ *     playground, and here it is the side of the bowl you cannot run out of.
+ *   - THE BANK: terraces stepping up east and south, 0 to 1 to 2 to 3 to 4, with
+ *     two blocked parapets at x=4 and x=12 splitting the seating into wedges so
+ *     nine men read as a crowd standing in it rather than as a rank.
+ *   - THE FENCE along the south edge at level 5, blocked, EXCEPT FOR FOUR TILES.
+ *     That gap is the hole they went through and the whole win condition, and it
+ *     is in the corner furthest from Cleon: twenty steps of diagonal between the
+ *     way home and the man you are leaving. The board is not symmetrical on
+ *     purpose.
+ *
+ * WHAT MAKES IT A TUTORIAL IS THE DISTANCE, NOT THE ENEMY. The eight are banked
+ * high and east, two or three moves from the gap. Cleon starts on the floor in
+ * the far corner with six Riffs between him and everybody. Nothing is scripted
+ * and no rule is hidden - the board simply tells his story with geometry, and
+ * going back down for him is a real expedition the player may decline.
+ */
+const VAN_CORTLANDT: MapSource = {
+  name: 'Van Cortlandt Park',
+  heights: [
+    '555555555555223344',
+    '500000000011223344',
+    '500000000011223344',
+    '500000000011223344',
+    '500000000011223344',
+    '511151111111523344',
+    '511151111111523344',
+    '522252222222523344',
+    '522252222222523344',
+    '533333333333333344',
+    '333333333333333344',
+    '444444444444444444',
+    '555555555555555555',
+    '555555555555555555',
+  ],
+  surfaces: [
+    'ssssssssssssgggggg',
+    'sdnnnnnnndsssssssg',
+    'sdnnnnnnndsssssssg',
+    'sdnnnnnnndsssssssg',
+    'sdddddddddsssssssg',
+    'sgsssssssssssssssg',
+    'sgsssssssssssssssg',
+    'sgsssssssssssssssg',
+    'sgsssssssssssssssg',
+    'sssssssssssssssssg',
+    'sssssssssssssssssg',
+    'ggsssssssssssssssg',
+    'ggsssssssssssssggg',
+    'dddddddddddddddddd',
+  ],
+  blocked: [
+    '############......',
+    '#.................',
+    '#.................',
+    '#.................',
+    '#.................',
+    '#...#.......#.....',
+    '#...#.......#.....',
+    '#...#.......#.....',
+    '#...#.......#.....',
+    '#.................',
+    '..................',
+    '..................',
+    '..................',
+    '###########....###',
+  ],
+};
+
+export const vanCortlandt = parseMap(VAN_CORTLANDT);
+
+
+/**
  * "Gun Hill Road" — the night the Turnbull A.C. came down the block.
  *
  * The exact opposite of the park. There the sky was open and the ground fell

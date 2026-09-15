@@ -48,6 +48,7 @@ const url = await page.evaluate(async (wanted) => {
     ...units.orphans(),
     ...units.lizzies(),
     ...units.punks(),
+    ...units.riffs(),
     ...units.rogues(),
     ...units.mercy(),
   ];
@@ -55,7 +56,7 @@ const url = await page.evaluate(async (wanted) => {
   // The default sheet: one man per body type. Both Turnbull roles, because the
   // bald head is the slot most likely to go wrong, and both Punk bodies,
   // because the only thing between them is a pair of skates.
-  const DEFAULT = ['swan', 'fury-3', 'bull', 'moose', 'tino', 'starr', 'hog', 'vance', 'luther'];
+  const DEFAULT = ['swan', 'fury-3', 'bull', 'tino', 'starr', 'hog', 'vance', 'masai', 'luther'];
   const ids = wanted.length ? wanted : DEFAULT;
   const missing = ids.filter((id) => !roster.some((r) => r.id === id));
   const pick = ids

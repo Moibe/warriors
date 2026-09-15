@@ -18,6 +18,7 @@ import {
   orphanBlock,
   riversidePark,
   unionSquare,
+  vanCortlandt,
 } from './maps';
 import {
   furies,
@@ -25,6 +26,7 @@ import {
   mercy,
   orphans,
   punks,
+  riffs,
   rogues,
   turnbull,
   warriors,
@@ -39,7 +41,8 @@ export type PropKind =
   | 'parkedCar'
   | 'furniture'
   | 'coneyIsland'
-  | 'mensRoom';
+  | 'mensRoom'
+  | 'conclave';
 
 /**
  * The way out.
@@ -155,6 +158,7 @@ export const NIGHT_RIG: Lighting = {
 };
 
 export type StageId =
+  | 'van-cortlandt'
   | 'riverside-park'
   | 'gun-hill-road'
   | 'orphan-block'
@@ -174,6 +178,20 @@ export type Stage = {
   sky: Sky;
   light: Lighting;
   outcome: { victory: string; defeat: string };
+  /**
+   * What the battle report says before anybody has moved.
+   *
+   * A tutorial needs a voice and this game has no room for one: there is no
+   * hint system, no tooltip, no overlay, and adding any of them for a single
+   * board would be a whole subsystem paying rent on one stage. But there IS
+   * already a window that prints sentences in Spanish and that the player is
+   * going to read anyway, and putting the opening lines in it costs one
+   * optional field.
+   *
+   * Player-facing, so Spanish. Written in reading order - the log shows newest
+   * first, and `restart` reverses them so they come out the right way up.
+   */
+  brief?: string[];
   /** Present only on a battle that is won by getting out of it. */
   exit?: Exit;
   /** Present only on a battle that ends when one man goes down. */
@@ -216,6 +234,187 @@ export function exitTiles(stage: Stage): Set<string> {
 }
 
 export const STAGES: Record<StageId, Stage> = {
+  'van-cortlandt': {
+    id: 'van-cortlandt',
+    name: 'Van Cortlandt Park',
+    rival: 'Gramercy Riffs',
+    map: vanCortlandt,
+    // Piece indices come from PIECE in Conclave.svelte:
+    //   0 arcade · 1 fence · 2 fenceGap · 3 cruiser · 4 cyrus
+    //   5 lamp · 6 treeline · 7 litter · 8 bin
+    //
+    // Two contracts that will not fail loudly if they break. The `cyrus` tile
+    // must stay BLOCKED or a unit can stand inside him; and the `fenceGap`
+    // placement must stay exactly on the `exit` rectangle below, or the broken
+    // fence stops being where the green tiles are.
+    props: [
+      // THE ARCADE along the north wall. Five bays of two tiles, hung off the
+      // FLOOR row in front of the wall and never off the wall tiles themselves
+      // — on the wall tile the terrain column swallows a wall piece whole, which
+      // is the lesson the men's room paid for with three invisible fluorescent
+      // tubes.
+      { kind: 'conclave', x: 1, y: 1, w: 2, d: 1, height: 0, variant: 0 },
+      { kind: 'conclave', x: 3, y: 1, w: 2, d: 1, height: 0, variant: 0 },
+      { kind: 'conclave', x: 5, y: 1, w: 2, d: 1, height: 0, variant: 0 },
+      { kind: 'conclave', x: 7, y: 1, w: 2, d: 1, height: 0, variant: 0 },
+      { kind: 'conclave', x: 9, y: 1, w: 2, d: 1, height: 0, variant: 0 },
+      // THE FENCE along the south rim, one tile per placement so each can bow on
+      // its own hash and no post gets doubled where two bays meet. Six tiles
+      // north of the hole and three south of it, so the player reads a boundary
+      // before he reads the break in it.
+      { kind: 'conclave', x: 5, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      { kind: 'conclave', x: 6, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      { kind: 'conclave', x: 7, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      { kind: 'conclave', x: 8, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      { kind: 'conclave', x: 9, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      { kind: 'conclave', x: 10, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      { kind: 'conclave', x: 15, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      { kind: 'conclave', x: 16, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      { kind: 'conclave', x: 17, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 1 },
+      // THE WAY OUT — exactly the `exit` rectangle above, and the two must never
+      // drift apart or the broken fence stops being where the green tiles are.
+      // Nothing it draws inside that rectangle rises above 0.013, under all four
+      // overlay layers: a prop that draws over the exit panel has destroyed the
+      // one lesson of the board.
+      // turns 3, NOT 2, and the component says so in its own comment: it is
+      // authored as a run along local +Z with the cut fabric peeled out along
+      // local +X, so only turns 3 swings the run east-west along the fence line
+      // AND points the peeled flap south, off the last row the board has. Any
+      // other turn lays that flap back inside the park, on top of the green
+      // panel — which is exactly what it did the first time, covering two of
+      // the four tiles that are the entire lesson of this board.
+      { kind: 'conclave', x: 11, y: 13, w: 4, d: 1, height: 5, turns: 3, variant: 2 },
+      // CYRUS, on the floor of the bowl, one tile south of the arches. The
+      // battle starts the moment after. His tile stays BLOCKED or a unit can
+      // stand inside him.
+      { kind: 'conclave', x: 5, y: 2, w: 1, d: 1, height: 0, variant: 4 },
+      // THE PATROL CAR, off the board behind the arcade, and the only thing here
+      // that moves. The light is BEHIND you and the way out is the dark corner,
+      // which is the truest thing this set can say without a line of dialogue.
+      { kind: 'conclave', x: 11, y: -4, w: 2, d: 2, height: 5, turns: 3, variant: 3 },
+      // THE TREELINE, north and west, both off the board and both under the line
+      // the walls already cast.
+      { kind: 'conclave', x: 2, y: -6, w: 12, d: 1, height: 5, variant: 6 },
+      { kind: 'conclave', x: -6, y: 2, w: 1, d: 10, height: 5, turns: 1, variant: 6 },
+      // LAMPS, all on blocked tiles at level 5 — a lamp head only clears a man's
+      // hair while it stands level with him or above. One of them is three tiles
+      // from the gate, because a light over the way out is the cheapest hint
+      // this game is ever going to give a new player.
+      { kind: 'conclave', x: 0, y: 3, w: 1, d: 1, height: 5, variant: 5 },
+      { kind: 'conclave', x: 0, y: 8, w: 1, d: 1, height: 5, variant: 5 },
+      { kind: 'conclave', x: 8, y: 12, w: 1, d: 1, height: 5, variant: 5 },
+      // LITTER. Flat, free, and the only thing on the board that says a thousand
+      // people were standing here ninety seconds ago. Nothing within one tile of
+      // Cyrus: the crowd fell back from him, and the clean stone around a body
+      // is the loudest thing this set does.
+      { kind: 'conclave', x: 2, y: 1, w: 1, d: 1, height: 0, variant: 7 },
+      { kind: 'conclave', x: 3, y: 4, w: 1, d: 1, height: 0, variant: 7 },
+      { kind: 'conclave', x: 8, y: 3, w: 1, d: 1, height: 0, variant: 7 },
+      { kind: 'conclave', x: 10, y: 4, w: 1, d: 1, height: 0, variant: 7 },
+      { kind: 'conclave', x: 7, y: 6, w: 1, d: 1, height: 1, variant: 7 },
+      { kind: 'conclave', x: 12, y: 10, w: 1, d: 1, height: 3, variant: 7 },
+      // BINS, on the rim where people stood.
+      { kind: 'conclave', x: 0, y: 6, w: 1, d: 1, height: 5, variant: 8 },
+      { kind: 'conclave', x: 17, y: 12, w: 1, d: 1, height: 5, variant: 8 },
+    ],
+    // The hole in the fence, and the whole win condition.
+    //
+    // Four tiles, one more than the documented floor of three, because this is
+    // the board where the way out has to be unmissable and uncorkable. It sits
+    // in the corner of the map FURTHEST from Cleon - twenty steps of diagonal
+    // between the way home and the man you are leaving - and the rest of row 13
+    // is blocked so that it reads as a GAP, a thing with edges, instead of as a
+    // green stripe somebody painted on the grass.
+    //
+    // Six of nine is what makes the decision survivable: the eight walk out and
+    // you have won with two to spare, so Cleon is a cost you CAN pay and the
+    // board never punishes you for paying it.
+    exit: { x: 11, y: 13, w: 4, d: 1, needed: 6, label: 'Por la valla' },
+    brief: [
+      'Luther ha matado a Cyrus y os ha señalado a vosotros.',
+      'Nadie vino armado: Cleon dio su palabra por los nueve.',
+      'Salid por el hueco de la valla. Con seis basta.',
+    ],
+    // The nine, in squad order, and every one of them empty-handed.
+    //
+    // Eight are banked high and east, two moves from the gap. FOX IS THE ONLY
+    // ONE FACING SOUTH: eight men are still watching the bowl and one has
+    // turned round, he has the highest Charge Time on the board so he moves
+    // first, and his ground wedge points straight at a gap three tiles away.
+    // That is the entire tutorial delivered as a triangle on a tile, and it is
+    // also true to him - he is the one who saw Luther fire.
+    //
+    // Cleon is on the floor of the bowl in the corner the arcade and the false
+    // wall make, facing the arches, with his back to the way home. He acts
+    // third, before any Riff, so the choice is his before it is theirs.
+    roster: () => [
+      ...warriors([
+        { x: 10, y: 9, facing: 'w', ct: 44, weapon: 'none' },
+        { x: 16, y: 10, facing: 'w', ct: 20, weapon: 'none' },
+        { x: 2, y: 2, facing: 'n', ct: 40, weapon: 'none' },
+        { x: 15, y: 9, facing: 'w', ct: 36, weapon: 'none' },
+        { x: 13, y: 8, facing: 'w', ct: 26, weapon: 'none' },
+        { x: 11, y: 8, facing: 'w', ct: 30, weapon: 'none' },
+        { x: 16, y: 8, facing: 'w', ct: 16, weapon: 'none' },
+        { x: 12, y: 10, facing: 's', ct: 56, weapon: 'none' },
+        { x: 9, y: 10, facing: 'n', ct: 8, weapon: 'none' },
+      ]),
+      ...riffs(),
+    ],
+    sky: {
+      // The same span as Riverside - and span reads as air, and air reads as
+      // outdoors, which is the men's-room argument run forwards. This is the
+      // most outdoors board in the game: no el roof, no walls, no dawn, and a
+      // board sunk below its own horizon, so sky is most of what is behind it.
+      // Every stop a shade darker and bluer, because Van Cortlandt is the top
+      // of the Bronx and the furthest any board gets from a lit skyline.
+      zenith: '#05070f',
+      upper: '#0c1226',
+      lower: '#1b2440',
+      horizon: '#3a4360',
+      // The weakest glow in the game, and that is a rule rather than a mood.
+      // The glow paints the bottom edge of the screen; on this board the bottom
+      // edge is where the gate is and where the green exit overlay lives, and
+      // nothing behind that overlay may compete with it.
+      glow: 'rgba(255, 170, 104, 0.24)',
+    },
+    light: {
+      // NOT Riverside's NIGHT_RIG, and the two are the same real park. Three
+      // things separate them and each one moves a number.
+      //
+      // RIVERSIDE IS A HILLSIDE AND THIS IS A BOWL. A raking key makes terraced
+      // ledges readable on a slope and loses the whole far half of a concave
+      // board to its own shade, because in a bowl every surface faces inward.
+      // So this key stands at 31 degrees off vertical, the second steepest in
+      // the game, and the one thing a tutorial cannot afford is a dark corner.
+      //
+      // NIGHT_RIG IS THE DARKEST RIG HERE. Its ambient sits on the floor of the
+      // band, which it can afford because it is the fourth board anybody sees.
+      // This one goes first, and the first board a player ever loads cannot be
+      // the darkest one in the game.
+      //
+      // AND THE LIGHT IS NOT THE SAME OBJECT. Riverside's key is a moon. What
+      // lights a conclave is park lamps, gate lights and headlights on the road
+      // above - many weak sources from many directions, which in a rig is a
+      // higher ambient and a wider hemisphere, not a stronger key.
+      //
+      // The key is warm against a cold fill because every rig in this file is
+      // pushed away from its own surfaces, and the stone here is neutral: cold
+      // on cold is one hue for the whole board, which is how a night goes to
+      // tin. And it sits near the FLOOR of the band at 1.36, because the
+      // overlays are unlit - light the terraces past them and the green stops
+      // being lit glass and becomes a stain, on the one board whose entire
+      // lesson is that the green tiles are the win.
+      ambient: { color: '#93a6c0', intensity: 0.64 },
+      hemisphere: { sky: '#8aa2c8', ground: '#3b3a2e', intensity: 0.74 },
+      key: { color: '#e4e2d2', intensity: 1.36, position: [6, 18, 9] },
+    },
+    outcome: {
+      victory: 'Fuera del parque. Ahora hay que cruzar la ciudad entera hasta casa.',
+      defeat: 'No salisteis del parque. La noche se acaba donde empezó.',
+    },
+  },
+
   'riverside-park': {
     id: 'riverside-park',
     name: 'Riverside Park',
@@ -605,14 +804,17 @@ export const STAGES: Record<StageId, Stage> = {
 };
 
 /**
- * The order the picker offers them, which is the order they happen on the way
- * home: the Turnbull catch them on Gun Hill Road, the train dumps them on the
+ * The order the picker offers them, which is the order they happen: it starts
+ * at the conclave in Van Cortlandt Park, where Cyrus is shot and the Warriors
+ * are blamed for it, and from there it is the way home. The Turnbull catch
+ * them on Gun Hill Road, the train dumps them on the
  * Orphans' block, the Furies are waiting further south in Riverside Park, and
  * the Lizzies ask them upstairs afterwards, and the Punks are waiting in the
  * lavatory at Union Square on the way to the last train. Coney Island is the
  * morning.
  */
 export const STAGE_LIST: Stage[] = [
+  STAGES['van-cortlandt'],
   STAGES['gun-hill-road'],
   STAGES['orphan-block'],
   STAGES['riverside-park'],
@@ -621,4 +823,14 @@ export const STAGE_LIST: Stage[] = [
   STAGES['coney-island'],
 ];
 
-export const DEFAULT_STAGE: StageId = 'riverside-park';
+/**
+ * And the game opens on the first one, which it did not before.
+ *
+ * It used to open on Riverside Park - the third fight, against a gang that
+ * never says a word, with nine armed men against nine. That is a fine board
+ * and a terrible first impression: it starts in the middle of a story with
+ * every mechanic already switched on. The conclave is where the night starts
+ * and it is the only board here that teaches, so it is the one the game hands
+ * somebody who has never pressed a key.
+ */
+export const DEFAULT_STAGE: StageId = 'van-cortlandt';

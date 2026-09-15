@@ -1092,6 +1092,12 @@ export function restart() {
   resolveTimer = 0;
   clockDelay = TURN_GAP;
   log('Comienza la batalla en ' + map.name + '.');
+  // Backwards, because `log` unshifts: the last line pushed is the one on top,
+  // so a brief written in reading order has to go in tail first to come out
+  // head first. Logged after the opener so the opener ends up underneath it,
+  // which is where the oldest line belongs in a newest-first window.
+  const brief = stage().brief;
+  if (brief) for (let i = brief.length - 1; i >= 0; i--) log(brief[i]);
 }
 
 /**

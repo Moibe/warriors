@@ -140,11 +140,30 @@ export function hatOf(u: Unit): HatId {
  * deployment — the one it was written for — and a stage that needs it somewhere
  * else hands over one spot per member, in order. Nine entries, nine fighters.
  */
-export type Spot = { x: number; y: number; facing?: Facing; ct?: number };
+export type Spot = {
+  x: number;
+  y: number;
+  facing?: Facing;
+  ct?: number;
+  /**
+   * What he walks onto THIS board holding, when the board gets a say.
+   *
+   * Normally it is the job's, and it travels: a man who starts with a bat has
+   * one everywhere. Van Cortlandt is the exception the rule needed. Cyrus's
+   * terms were nine delegates per gang and nobody packing, Cleon gave his word,
+   * and the Warriors kept it - the whole plot turns on Luther being the only
+   * man there who did not. So the stage disarms its own deployment, which is a
+   * property of that night rather than of any of these men, and the shortest
+   * order list in the game falls out of it for free on the board that wants the
+   * shortest order list in the game.
+   */
+  weapon?: WeaponId;
+};
 
 /**
  * Moves a squad onto a stage's deployment without touching anything else about
- * them. Who they are travels between battles; where they stand does not.
+ * them. Who they are travels between battles; where they stand does not - and
+ * on exactly one board, neither does what they are carrying.
  */
 function placeSquad(squad: Unit[], spots?: Spot[]): Unit[] {
   if (!spots) return squad;
@@ -155,6 +174,7 @@ function placeSquad(squad: Unit[], spots?: Spot[]): Unit[] {
     squad[i].y = spot.y;
     if (spot.facing) squad[i].facing = spot.facing;
     if (spot.ct !== undefined) squad[i].ct = spot.ct;
+    if (spot.weapon !== undefined) squad[i].weapon = spot.weapon;
   }
   return squad;
 }
@@ -540,6 +560,78 @@ export function turnbull(spots?: Spot[]): Unit[] {
 /** The Orphans, who never leave their three blocks. */
 export function orphans(spots?: Spot[]): Unit[] {
   return placeSquad(ORPHAN_SQUAD(), spots);
+}
+
+// ---------------------------------------------------------------------------
+// The Gramercy Riffs
+// ---------------------------------------------------------------------------
+//
+// Cyrus's own gang, on the one night they are orange, and the only squad in
+// this file that is not trying to reach anybody. They are hosts. The conclave
+// is theirs, the bowl is theirs, and their whole job on this board is to be
+// standing between Cleon and the way out while eight other men walk up a bank
+// behind them.
+//
+// EVERY CHARGE TIME HERE IS BELOW TWELVE, and that is the board's safety catch
+// written into the deployment rather than into a rule. Time to act is
+// (100 - ct) / speed, so with Speed 5 and 6 the first SIX actions of the game
+// all belong to the player - Fox, Swan, Cleon, Snow, Cochise, Cowboy - and only
+// then does the first Riff move. Three men are already out and the choice about
+// Cleon has been seen before anything in orange takes a step. Raise one of
+// these into the 40s the other gangs get and the tutorial stops being one.
+//
+// NOBODY STARTS ADJACENT TO CLEON. Two squares, never one. The terms were nine
+// delegates and nobody packing, and the mob closed over him AFTER Luther
+// pointed; a board that opens with six men already in contact would be that
+// mob having already happened, and Cleon's first turn would be a formality
+// instead of a decision.
+
+const RIFF_SQUAD = () => [
+  // Cyrus's second, and the only one of the six the film gives a name to. Due
+  // east of Cleon at two squares - standing in the direction he would walk.
+  createUnit({
+    id: 'masai', name: 'Masai', job: 'lieutenant', team: 'enemy',
+    x: 4, y: 2, facing: 'w', ct: 12, brave: 88,
+    paletteOverride: { S: '#8a5c37', K: '#634027', H: '#151010', J: '#0b0808' },
+  }),
+  // Due south at two squares, corking the other lane. Those two are the cage;
+  // the rest are the crowd closing.
+  createUnit({
+    id: 'sanjo', name: 'Sanjo', job: 'lieutenant', team: 'enemy',
+    x: 2, y: 4, facing: 'n', ct: 10, brave: 88,
+    paletteOverride: { S: '#a87c58', K: '#835c3d', H: '#2a211c', J: '#17120f' },
+  }),
+  // The south-east shoulder, covering the diagonal the other two leave open.
+  createUnit({
+    id: 'bakari', name: 'Bakari', job: 'disciple', team: 'enemy',
+    x: 4, y: 4, facing: 'w', ct: 8,
+    paletteOverride: { S: '#7a5030', K: '#5b3a22', H: '#17141f', J: '#0c0a11' },
+  }),
+  // Hard against the false wall, shutting the strip of floor beside the masonry.
+  createUnit({
+    id: 'otis', name: 'Otis', job: 'disciple', team: 'enemy',
+    x: 1, y: 4, facing: 'n', ct: 6,
+    paletteOverride: { S: '#e0b489', K: '#b98a63', H: '#3a2f26', J: '#241c16' },
+  }),
+  // In front of the arches, which is exactly where the film puts them: perched
+  // along the arcade, watching.
+  createUnit({
+    id: 'deke', name: 'Deke', job: 'disciple', team: 'enemy',
+    x: 5, y: 1, facing: 'w', ct: 4,
+    paletteOverride: { S: '#c99a6e', K: '#a67a52', H: '#4a3524', J: '#2e2016' },
+  }),
+  // The outer man, six steps off and the slowest to start. He is the hole in
+  // the net, and he is there so that the net has one.
+  createUnit({
+    id: 'lomax', name: 'Lomax', job: 'disciple', team: 'enemy',
+    x: 7, y: 3, facing: 'w', ct: 0,
+    paletteOverride: { S: '#8d6a3a', K: '#5e4524', H: '#241c18', J: '#140f0c' },
+  }),
+];
+
+/** The Gramercy Riffs, holding the bowl they called everybody into. */
+export function riffs(spots?: Spot[]): Unit[] {
+  return placeSquad(RIFF_SQUAD(), spots);
 }
 
 // ---------------------------------------------------------------------------

@@ -123,7 +123,8 @@ export type Job = {
       | 'rogue'
       | 'luther'
       | 'punk'
-      | 'skater';
+      | 'skater'
+      | 'riff';
     hat: HatId;
     face: FaceId;
     /** What this role starts the fight holding. Can be lost, or taken. */
@@ -155,7 +156,9 @@ export type JobId =
   | 'tagalong'
   | 'roughneck'
   | 'chainman'
-  | 'kingpin';
+  | 'kingpin'
+  | 'disciple'
+  | 'lieutenant';
 
 // ---------------------------------------------------------------------------
 // Palettes
@@ -861,6 +864,231 @@ const CUSHION_KNIFE: Ability = {
 };
 
 
+
+/**
+ * The Gramercy Riffs, at the conclave, which is the only night they are orange.
+ *
+ * Every other gang in this file is a garment the film repeats; this one is a
+ * garment the film CHANGES. At Van Cortlandt they are in orange martial-arts
+ * tops and sunglasses at night, and they go to black only after Cyrus is shot,
+ * as mourning. So this is not "the Riffs" - it is the Riffs before, and if they
+ * ever turn up again they want a second literal, not an edit of this one.
+ *
+ * Two slots are doing work no other palette here asks of them.
+ *
+ * `E` IS THE SUNGLASSES. Everywhere else it is a dark iris, one pixel either
+ * side of a nose, and nobody has ever had to think about it. Run across the
+ * whole head it stops being an eye and becomes a lens - the single most
+ * remembered thing about these men, and the only place in this project where
+ * the eye slot carries a garment.
+ *
+ * `G` GOES DARK, and it is the first one in this file that does. Here it is the
+ * lapel band down the front of the top, and the obvious colour is bone, because
+ * a gi has white trim. It must not be bone. The brightest thing on this board
+ * is the Warriors' skull at #e6dcc4 and it is on their BACKS; a bone lapel on
+ * the enemy would put that same value on the enemy's FRONT, at sixteen pixels,
+ * on the one board where the player has never seen either silhouette before.
+ * The tutorial is the last place anybody should have to look twice to find his
+ * own man. So the trim is black, the gang reads orange-and-black, and the only
+ * pale thing in the frame belongs to the player. That slot has now cost this
+ * file four ships; this is the fifth time it mattered, and it mattered in a new
+ * direction.
+ *
+ * `A` is the loudest colour any gang has been given, on purpose. The board is
+ * grey stone under a cold night key and the Warriors' own gang slot is brown
+ * leather; a muted orange would collapse into that at ten tiles. This will not.
+ *
+ * There is no separate palette for the lieutenant. Luther got his own because
+ * he is a boss on a beach where nobody has colours; here the gang owns the
+ * loudest colour in the game and splitting it would say he belongs to a
+ * different one.
+ */
+const RIFF_COLORS: Partial<Palette> = {
+  O: '#191319', // outline - warm-black. A cold line on an orange garment reads as a print error
+  S: '#d8a878', // skin, a floor only; every Riff overrides it in units.ts
+  K: '#ad8156', // and its shadow, which has to move with it or the face goes flat
+  H: '#241c18', // hair - a floor. Undeclared, a Riff grows park-bench brown under his shades
+  J: '#140f0c', // hair shadow. Same reason, same trap
+  E: '#0b0b10', // THE SUNGLASSES. Flat, cold, near-black. Not an iris. Front templates only
+  A: '#d0601c', // the orange top. The gang in one colour, and the hottest thing on any board here
+  B: '#1c1619', // belt and boots. Near-black, so the feet anchor a man wearing a beacon
+  C: '#262b39', // trousers. Dark blue-black on purpose: NOT the Warriors' denim, and darker
+  M: '#8e949c', // cold steel - the frames of the shades. The only metal on them
+  W: '#6a4a2c', // strap leather. Nothing on a Riff is wooden
+  P: '#1e1a22', // headwear. Nobody at the conclave wears any; this is so the one who might is not brown
+  G: '#17151a', // the lapel band and the collar. BLACK - see the note above
+  F: '#26407e', // the band across the back. Their only cool colour, and why a Riff walking away still reads
+};
+
+// ---------------------------------------------------------------------------
+// Van Cortlandt Park
+// ---------------------------------------------------------------------------
+//
+// The first board, and the only one whose job is to be survived rather than
+// won. The six gangs after this one teach six geometries - the terrace, the
+// edge, the angle, the line of fire, the dead end, the name. This one teaches
+// the four things that have to be true before any of those mean anything:
+// WALKING IS A VERB · THE GREEN TILES ARE THE WIN · YOU DO NOT HAVE TO FIGHT ·
+// and the one decision on the board is optional and costs you.
+//
+// The temptation with a tutorial enemy is to make him feeble, and it is wrong
+// twice. It is wrong to the film - the Riffs are Cyrus's own gang, disciplined,
+// and they put Cleon on the floor with kicks and elbows - and it is wrong to
+// the player, because a feeble first enemy teaches him a number that is a lie
+// about every board after it. So NOTHING BELOW IS WEAK. The disciple's elbow
+// ties the Punk roughneck's boot for the hardest blow any rank-and-file enemy
+// in this game throws.
+//
+// The board is safe for one reason and one only: SPEED 5. A disciple acts once
+// every twenty ticks; a Warrior walking acts every eight to eleven. The gang is
+// answered by the clock before it is answered by anything the player does, and
+// the proof is a subtraction: the fastest Riff closes at 0.225 tiles per tick
+// and the SLOWEST Warrior - Ajax, move 3, speed 7 - walks away at 0.263. Not
+// one man in this gang can catch anybody who has decided to leave. That is why
+// they are allowed to hit as hard as they do.
+//
+// TWO MORE RULES HOLD THE BOARD TOGETHER AND BOTH ARE NEGATIVE SPACE.
+//
+// Nothing here reaches past an arm. Every move below is range 1, and that is
+// what keeps a crowd four men deep: only four tiles touch a man, so a mob
+// throttles itself and the dozen closing over Cleon are in each other's way.
+// Give any of them range 2 and the pocket he is pinned in stops being a pocket
+// and the whole rescue window shuts.
+//
+// And nobody here has WEAPON_HIT. Cyrus's terms were nine delegates a gang and
+// nobody packing; Luther broke that rule and that is the plot. The Orphans were
+// the first gang with empty hands, but this is the first BATTLE with empty
+// hands on both sides, and a greyed-out weapon row on either team would be a
+// lie sitting in the data.
+
+/**
+ * A Riff's punch, and the reason `punch()` is not in this gang.
+ *
+ * Everybody else opens with the shared street swing: free, always there,
+ * vertical 2, and it is what a man does with his hands when he has not been
+ * taught anything. The most repeated fact about the Riffs is that they HAVE
+ * been taught. So this sits in exactly the slot `punch()` occupies for everyone
+ * else - mp 0, range 1, vertical 2, the row that is never greyed out - and it
+ * is a kick, because a Riff does not throw a punch.
+ *
+ * VERTICAL 2 IS THE BOARD'S SAFETY VALVE. The bowl is terraces, and a gang that
+ * could not reach a man one step up would hand the player a board he wins by
+ * finding a kerb, which would teach him something false about Riverside, Gun
+ * Hill and the Rogues' groyne all at once. Two levels means the step you are on
+ * and the step above it. Not three: three levels up has to stay genuinely out
+ * of reach or height stops being a lesson and becomes a decoration.
+ *
+ * It is also the gang's ONLY answer to height, because the elbow cannot look
+ * up - so one tile of climbing takes their output from 15.4 to 11.6 a swing.
+ * That is the height lesson, taught with a number, on the first board.
+ */
+const HIGH_KICK: Ability = {
+  id: 'highkick',
+  name: 'Patada alta',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 1.9,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 86,
+  desc: 'Sube adonde el codo no llega. Dos escalones, y ni uno más.',
+};
+
+/**
+ * The hard one, and it cannot look up.
+ *
+ * `vertical: 0` is the entire point of it and the only thing that makes the
+ * terraces worth standing on. An elbow goes horizontally into a body at your
+ * own height; a man one step up has his ribs at the Riff's eye line and there
+ * is nothing to swing into. So on the flat this is what they all use - harder
+ * than a Fury's bat - and one tile of climbing switches it off completely.
+ *
+ * Two of six stamina is a countable magazine, the same shape as Luther's
+ * cylinder: three elbows in the whole battle and then he is a man kicking. It
+ * is priced so the planner opens with it and fades, which is how a gang of
+ * trained men is supposed to lose a long fight to nine street kids who do not
+ * stop.
+ */
+const ELBOW: Ability = {
+  id: 'elbow',
+  name: 'Codazo',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 2,
+  power: 2.4,
+  vertical: 0,
+  targets: 'enemy',
+  accuracy: 80,
+  desc: 'Corto, seco y a la altura de sus costillas. Si estás en un escalón, no existe.',
+};
+
+/**
+ * What actually happened to Cleon, and the lieutenant's whole character in one
+ * row.
+ *
+ * 94 to hit and almost nothing from the front; from behind it is nearly double,
+ * and that split IS the man. He elbows you while you are looking at him and he
+ * takes you down when you are not, and the planner picks between the two by
+ * itself because it scores the square it would attack FROM. A player watching
+ * him switch moves is being told, on the first board he ever loads, that the
+ * angle he is standing at is a number.
+ *
+ * Backstab 1.8, not the Orphans' 3.4. The Orphans are nothing from the front
+ * and everything from behind because they are a mob; this man is dangerous from
+ * every side and worse from one, because he is a fighter. Never raise it - the
+ * gang that owns the backstab is the gang with no other idea, and these have
+ * three.
+ */
+const TAKEDOWN: Ability = {
+  id: 'takedown',
+  name: 'Derribo',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 3,
+  power: 1.8,
+  vertical: 0,
+  targets: 'enemy',
+  accuracy: 94,
+  backstab: 1.8,
+  desc: 'Así se llevaron a Cleon. De frente casi no duele; por detrás te pone en el suelo.',
+};
+
+/**
+ * The most competent move in the game, pointed at his own side.
+ *
+ * This is the board's thesis written as one ability. The lieutenant is the best
+ * enemy unit here by every number on his sheet, and his signature does not
+ * touch the player at all: the planner only scores a rally on somebody already
+ * well down his bar, so it never fires unless the player CHOSE to fight. Walk
+ * out and the most dangerous man on the board spends the night kicking air.
+ * Stay and trade, and he quietly undoes one of your swings. Nothing is hidden
+ * and nothing is scripted; the move costs exactly as much as the player's own
+ * decision costs him.
+ *
+ * Six of ten stamina, and he is the only one who has any to spare: ONE rally
+ * for the whole battle, and the rest of the bar is swings.
+ */
+const CLOSE_RANKS: Ability = {
+  id: 'closeranks',
+  name: 'Cerrad el corro',
+  kind: 'rally',
+  range: 3,
+  minRange: 0,
+  aoe: 1,
+  mp: 6,
+  power: 2.0,
+  vertical: Infinity,
+  targets: 'ally',
+  desc: 'No pega a nadie. Levanta a los suyos, y sólo le da para una vez.',
+};
+
 /**
  * The Punks, and the first gang in the game wearing one garment from the
  * collar to the boot.
@@ -1293,6 +1521,68 @@ export const JOBS: Record<JobId, Job> = {
       face: null,
       weapon: 'can',
       palette: palette(WARRIOR_COLORS),
+    },
+  },
+
+  // --- The Gramercy Riffs --------------------------------------------------
+  //
+  // The most competent-looking enemy in the game and the least dangerous one,
+  // and the whole gap between those two is the clock. Speed 5 and 6 are the two
+  // slowest sheets here - the previous floor was the Turnbull wrecker at 6 -
+  // and Move 3 across the gang, because they are the hosts. They are not
+  // chasing anybody. They are holding a bowl.
+  //
+  // Jump 3 across the gang, and that is deliberate generosity: they must be
+  // ABLE to come up the terraces after you. A player who gets out has to learn
+  // that he outran them, not that a step stopped them, or the first thing this
+  // game teaches him is a lie about every board with a kerb on it.
+
+  disciple: {
+    id: 'disciple',
+    name: 'Discípulo',
+    tag: 'DIS',
+    // 44 is measured, not rounded: two Golpe bajo from behind, or three
+    // straight punches from anybody. The first enemy in the game is the one the
+    // player can afford to experiment on, and the move that drops him fastest
+    // is the move that teaches facing.
+    stats: { hp: 44, mp: 6, pa: 8, ma: 2, speed: 5, move: 3, jump: 3 },
+    // Two rows, the shortest command list in the game beside the Chusma's, and
+    // the exact opposite meaning. A Chusma has two because he has no decision to
+    // make. This man has two because both of his are right: one for a body on
+    // the flat, one for a body up a step, and no third thing a trained man would
+    // bother doing.
+    abilities: [ELBOW, HIGH_KICK],
+    sprite: {
+      body: 'riff',
+      hat: null,
+      face: null,
+      weapon: 'none',
+      palette: palette(RIFF_COLORS),
+    },
+  },
+
+  lieutenant: {
+    id: 'lieutenant',
+    name: 'Lugarteniente',
+    tag: 'LUG',
+    // PA 9 puts him level with Ajax and the Turnbull heavies - the hardest
+    // single blow any enemy in this game throws that is not a gun - and he gets
+    // it off six times per hundred ticks instead of nine.
+    //
+    // HP 52 and not the Turnbull's 62: lean men in cotton tops, not
+    // thirty-five-year-olds in denim.
+    stats: { hp: 52, mp: 10, pa: 9, ma: 6, speed: 6, move: 3, jump: 3 },
+    // Four rows, one of them free, and that is not a style choice: a unit whose
+    // whole list costs stamina runs dry and then walks in circles forever,
+    // because the planner scores nothing and falls through to "close on the
+    // nearest enemy". Patada alta is what he always has left.
+    abilities: [TAKEDOWN, ELBOW, HIGH_KICK, CLOSE_RANKS],
+    sprite: {
+      body: 'riff',
+      hat: null,
+      face: null,
+      weapon: 'none',
+      palette: palette(RIFF_COLORS),
     },
   },
 
