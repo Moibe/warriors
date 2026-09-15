@@ -51,7 +51,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.8.2';
+  const APP_VERSION = '1.8.3';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -132,6 +132,20 @@
   // rather than as a stack of cuts — which is the same thing Q and E already do
   // and the whole reason the easing is in there.
 
+  // ---- And the division of the three buttons ------------------------------
+  //
+  //   LEFT    picks a tile, and drags the view.
+  //   MIDDLE  drags the camera round, a quarter turn at a time.
+  //   RIGHT   cancels, and does nothing else at all.
+  //
+  // The right button used to drag the view as well, which meant it could only
+  // cancel on a press that had NOT travelled — a rule that worked and that
+  // nobody should have to know. A button that does one thing needs no rule: it
+  // is Esc with a mouse under it, it fires the moment it goes down, and the
+  // question "was that a click or a drag?" never comes up for it. The two
+  // gestures it gave up are both still there, on the two buttons whose whole
+  // job is gestures.
+
   /** Pixels of travel before a press stops being a click and becomes a drag. */
   const DRAG_THRESHOLD = 5;
   /** Sideways pixels per quarter turn. A full circle is four of these. */
@@ -169,9 +183,18 @@
   }
 
   function onPointerDown(e: PointerEvent) {
-    if (e.button !== 0 && e.button !== 1 && e.button !== 2) return;
-    // Only the middle and right buttons get their default suppressed: doing it
-    // to the left one would interfere with the click we still want to deliver.
+    // RIGHT IS ESC. It never enters the press/drag machine below, so it can
+    // never be half a gesture: down, cancelled, done. Returning here is the
+    // whole implementation — there is no matching case in `onPointerUp`,
+    // because there is nothing left over to finish.
+    if (e.button === 2) {
+      e.preventDefault();
+      cancel();
+      return;
+    }
+    if (e.button !== 0 && e.button !== 1) return;
+    // Only the middle button gets its default suppressed: doing it to the left
+    // one would interfere with the click we still want to deliver.
     if (e.button !== 0) e.preventDefault();
     pressing = true;
     pressButton = e.button;
@@ -238,26 +261,6 @@
     if (dragging) {
       swallowClick = pressButton === 0;
       (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
-    } else if (pressButton === 2) {
-      // THE RIGHT BUTTON IS "VOLVER", and it only is when the press did not
-      // turn into a drag. That distinction is not a nicety: the right button
-      // also pans the view, so without it every time the player shoved the
-      // board sideways to look at something he would also have thrown away the
-      // order he had half-chosen.
-      //
-      // `dragging` is exactly the flag that answers it, and it is already
-      // maintained for the left button, which has the same problem the other
-      // way round: a press that travelled less than DRAG_THRESHOLD pixels is a
-      // click, and anything further is a drag. So a quick right-click backs out
-      // of a submenu and a right-drag moves the camera, and nothing has to
-      // guess which was meant.
-      //
-      // `cancel()` on the board's own phases only; it is deliberately NOT the
-      // Esc key's whole job. Esc also closes the battle picker, which is a
-      // modal with its own veil that swallows pointer events before they ever
-      // reach this element - so there is nothing here to close, and nothing to
-      // special-case.
-      cancel();
     }
     dragging = false;
     turning = false;
@@ -693,7 +696,7 @@
     <kbd>Enter</kbd> confirmar · <kbd>1</kbd>…<kbd>0</kbd> órdenes · <kbd>Q</kbd><kbd>E</kbd> girar ·
     <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar · <kbd>M</kbd> batalla · <kbd>rueda</kbd> zoom ·
     <kbd>arrastrar</kbd> desplazar · <kbd>botón central</kbd> girar ·
-    <kbd>Esc</kbd> o <kbd>botón derecho</kbd> volver
+    <kbd>Esc</kbd> o <kbd>derecho</kbd> cancelar
   </p>
 </div>
 
