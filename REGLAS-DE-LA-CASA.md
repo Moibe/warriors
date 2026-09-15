@@ -138,12 +138,28 @@ Mandar el horizonte de Coney Island once unidades más al fondo para que dejara 
 encimarse con el tablero lo sacó por arriba del encuadre. Se paga bajándolo
 exactamente lo que subió: `HORIZON_PUSH * V_BACK / V_UP`.
 
-### La cámara está clavada a cuatro azimuts y dos elevaciones, y eso carga peso
+### La cámara para en ocho azimuts, y lo que eso carga es menos de lo que parece
 
-`yawIndex` es lo que rota las flechas del teclado para que sigan apuntando como el
-jugador ve la pantalla, y **cada sprite elige su pose a partir del azimut**. Un giro
-continuo rompe las dos cosas. Por eso el botón central del ratón gira en **cuartos
-de vuelta** acumulando el arrastre, no libremente.
+Fueron cuatro durante mucho tiempo, por el vocabulario de FFT y porque parecía que
+tres cosas dependían de ello. Sólo dependía una:
+
+- **Los sprites nunca dependieron.** Cada uno saca su pose de un **producto escalar
+  contra el azimut vivo** — uno decide frente o espalda, otro decide el espejo — así
+  que resuelven a cualquier ángulo y siempre lo hicieron.
+- **Los props tampoco**, y además la diagonal es su **peor caso**, no el mejor: a 45°
+  un paso de rejilla hacia la cámara son 0,707 de casilla y la línea de visión baja
+  0,408, mientras que de frente es una casilla entera y baja 0,577. Todas las tablas
+  de altura del proyecto están escritas para el peor caso.
+- **Las flechas sí dependían**, y es lo único que hubo que resolver: sólo hay cuatro
+  ejes de rejilla y la cámara para en ocho ángulos, así que en la mitad de ellos
+  "arriba" cae justo entre dos ejes. Se **redondea el azimut al cuarto más cercano**,
+  de modo que las flechas siguen a la cámara hasta la cara más próxima y se quedan
+  quietas en la media parada de cada lado.
+
+El número de paradas es **un dial**, `YAW_STOPS` en `CameraRig.svelte`. Subirlo
+suaviza el giro y hace más lentas Q/E; no rompe nada. Lo que sí sigue siendo cierto
+es que la cámara para en **paradas** y no gira libremente: una cámara descansando
+entre dos paradas dejaría el mapeo de las flechas descansando entre dos respuestas.
 
 ---
 

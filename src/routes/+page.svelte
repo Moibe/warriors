@@ -38,6 +38,7 @@
   import { fallenAt, isAlive, unitAt, unitById } from '$lib/units';
 
   import BattleLog from '$lib/ui/BattleLog.svelte';
+  import { YAW_STOPS } from '$lib/CameraRig.svelte';
   import CameraControls from '$lib/ui/CameraControls.svelte';
   import CommandMenu from '$lib/ui/CommandMenu.svelte';
   import Forecast from '$lib/ui/Forecast.svelte';
@@ -51,7 +52,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.8.3';
+  const APP_VERSION = '1.9.0';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -116,14 +117,14 @@
   // DRAG_THRESHOLD pixels; below that it stays a click and reaches the board
   // untouched.
   //
-  // THE MIDDLE BUTTON TURNS THE CAMERA, and it turns it in QUARTER TURNS rather
-  // than freely. That is not a shortcut, it is the camera this game has: four
-  // azimuths and two elevations, the FFT vocabulary, and both of those numbers
-  // are load-bearing. `yawIndex` is what the arrow keys are rotated through to
-  // stay pointing the way the player sees, and the sprites choose a pose from
-  // the azimuth. Hand the mouse a continuous yaw and the arrows stop agreeing
-  // with the screen and every man on the board picks his pose off an angle that
-  // is between two of them.
+  // THE MIDDLE BUTTON TURNS THE CAMERA, and it turns it in STOPS rather than
+  // freely — `YAW_STOPS` of them round the circle, eight at the time of
+  // writing. Stops rather than a continuous yaw because `yawIndex` is what the
+  // arrow keys are rotated through to keep pointing the way the player sees,
+  // and a camera resting between two stops would leave that mapping resting
+  // between two answers. The sprites, which were the other reason to fear this,
+  // turned out not to care at all: they pick a pose from a dot product against
+  // the live azimuth and resolve at any angle.
   //
   // So the drag accumulates and SPENDS itself: every YAW_STEP pixels sideways
   // is one quarter turn, every PITCH_STEP up or down is the raised angle on or
@@ -148,8 +149,12 @@
 
   /** Pixels of travel before a press stops being a click and becomes a drag. */
   const DRAG_THRESHOLD = 5;
-  /** Sideways pixels per quarter turn. A full circle is four of these. */
-  const YAW_STEP = 110;
+  /**
+   * Sideways pixels per STOP. Derived from the circle rather than written down,
+   * so the distance to drag a full turn stays the same however many stops the
+   * camera has: 440 px round, whether that is four faces or eight.
+   */
+  const YAW_STEP = 440 / YAW_STOPS;
   /** Vertical pixels before the raised angle goes on or comes off. */
   const PITCH_STEP = 90;
 
@@ -341,17 +346,26 @@
   /**
    * Arrows are screen-relative, not grid-relative — this is the whole trick.
    *
-   * The camera sits at 45° to the grid, so the four grid axes project to the
-   * four screen *diagonals*: at the default view, north runs up-and-right,
-   * east down-and-right, and so on. Pressing ↑ therefore has to mean "north",
-   * and each quarter turn of the camera rotates the whole mapping by one step —
-   * which is exactly a shift of `-yawIndex` around the ring of four.
+   * The camera starts at 45° to the grid, so the four grid axes project to the
+   * four screen *diagonals*: at the default view, north runs up-and-right, east
+   * down-and-right, and so on. Pressing ↑ therefore has to mean "north", and
+   * turning the camera rotates the whole mapping with it.
+   *
+   * THE ROUNDING IS THE WHOLE OF WHAT MORE THAN FOUR STOPS COSTS. There are
+   * only four grid axes and the camera now stops at eight angles, so at half of
+   * them "up" falls exactly between two of them and no mapping is more correct
+   * than another. Rounding the azimuth to the nearest quarter turn is the
+   * honest answer: the arrows follow the camera to the nearest face and stay
+   * put across the half-stop either side of it, so a press always lands on the
+   * axis the player would have pointed at, and the ambiguity never surfaces as
+   * a key that does two different things at the same angle.
    *
    * Keyed off `yawIndex` rather than the live `yaw`, so a press landing in the
    * middle of a rotation animation still resolves to the angle being turned to.
    */
   function arrowToGrid(base: number): Coord {
-    return GRID_DIRS[(((base - yawIndex) % 4) + 4) % 4];
+    const quarter = Math.round((yawIndex * 4) / YAW_STOPS);
+    return GRID_DIRS[(((base - quarter) % 4) + 4) % 4];
   }
 
   function onKeyDown(e: KeyboardEvent) {

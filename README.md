@@ -24,7 +24,7 @@ Una batalla jugable de principio a fin:
 - **Terreno con altura.** Cada casilla tiene un nivel entero; la altura decide a
   dónde puedes saltar, hasta dónde llega un arco y cuánto daño extra da atacar
   desde arriba.
-- **Cámara isométrica** ortográfica, 4 azimuts a 90°, 2 inclinaciones, zoom y
+- **Cámara isométrica** ortográfica, 8 azimuts a 45°, 2 inclinaciones, zoom y
   desplazamiento, todo interpolado.
 - **Sprites generados por código.** No hay ni un solo archivo de imagen: los
   personajes se dibujan pixel a pixel desde plantillas ASCII y se pintan con la
