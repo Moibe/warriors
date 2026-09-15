@@ -86,8 +86,15 @@ export type Exit = {
  * a turn each with six Riffs on the way, which is the only pressure this
  * tutorial ever puts on anybody.
  *
- * It takes punches and weapon blows - anything `physical` - from the player's
- * side only. It does not dodge, it has no back, and it never fights back.
+ * IT TAKES ANY ATTACK, from the player's side only - a fist, a bat, a boot, a
+ * brick, a faceful of spray. Only a rally bounces off it, because a rally is
+ * not an attack: it is shouting at your own gang, and there is nothing in this
+ * game a fence can be shouted into. Narrower than that and the board silently
+ * benches whoever throws instead of punching, on the one stage whose first
+ * lesson is "hit it".
+ *
+ * It does not dodge, it has no back, it stands on no step and it never fights
+ * back. Every blow lands for the number the forecast printed.
  */
 export type Barrier = {
   /** North-west corner, in tiles. Blocked while `hp` is above zero. */

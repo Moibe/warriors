@@ -301,12 +301,17 @@ const DISARM: Ability = {
  * Riverside is fought with legs and bats, not knuckles - Swan and Ajax kick
  * Furies off the path - so the Scrappers get one. But a kick that only hit
  * harder would be Golpear with a stamina cost, and nobody would take it. This
- * one is THE BLOW THAT OPENS THINGS: twice the damage to a barrier, so the
- * fence in Van Cortlandt comes down in two kicks instead of three punches, and
- * the tutorial's first board teaches two orders in that order - kick the fence,
- * then walk out of it. Against a man it is a punch and a half with a slightly
- * worse aim, paid for with the stamina a Scrapper would otherwise keep for
- * Arrebatar.
+ * one is THE BEST BLOW FOR OPENING THINGS: twice the damage to a barrier, so
+ * the fence in Van Cortlandt comes down in two kicks where a fist needs four.
+ *
+ * EVERY attack in the game can hit that fence - a thrown brick and a faceful
+ * of spray included, because benching the men who throw, on the one board
+ * whose first lesson is to hit something, would be absurd. So `barrierMul` is
+ * not a key: it is a REASON. All nine can swing at the boards, and the two
+ * wearing boots are the two worth walking over there.
+ *
+ * Against a man it is a punch and a half with a slightly worse aim, paid for
+ * with the stamina a Scrapper would otherwise keep for Arrebatar.
  *
  * Declared liberty: in the film the hole was already there.
  */

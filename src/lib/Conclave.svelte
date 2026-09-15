@@ -8,7 +8,7 @@
   // with nine pieces on `variant` rather than nine files:
   //
   //   · One palette. Midnight in a New York park has to agree with itself about
-  //     what moonlight does to cut stone, to black iron and to galvanised wire.
+  //     what moonlight does to cut stone, to black iron and to weathered timber.
   //     Nine files drift apart the first time somebody nudges a hex.
   //   · One PROPS key. A stage dresses a whole park by repeating one kind with
   //     different variants, the way the Orphans' block parks three cars.
@@ -63,9 +63,14 @@
   //   piece       H      H−0.40   H−0.93   hides, of a man one tile behind
   //   litter      0.012  −0.39    −0.92    nothing. It is paper on the stone.
   //   cyrus       0.22   −0.18    −0.71    nothing.
-  //   fenceGap    0.30   −0.10    −0.63    nothing, and it hangs off the lip.
+  //   fenceGap    0.30   −0.10    −0.63    nothing: the kicked-out boards lie
+  //                                        flat, and the section that came away
+  //                                        hangs off the lip, off the board.
   //   bin         0.34   −0.06    −0.59    nothing.
-  //   fence       1.02    0.62     0.09    nothing: it is a LATTICE (below).
+  //   fence       1.02    0.62     0.09    nothing: it is a PALING LATTICE. The
+  //                                        0.62 is a quarter wood and three
+  //                                        quarters air (below). Stripes a man,
+  //                                        never masks him.
   //   arcade      1.25    0.85     0.32    nothing: flat on a 1.25 wall.
   //   cruiser     1.42    1.02     0.49    nothing: it is off the board.
   //   treeline    2.00    1.60     1.07    nothing: it is off the board.
@@ -80,11 +85,48 @@
   // Only two pieces on the board are in that band at all, and each buys its
   // pass with a number:
   //
-  //   · fence — a chain-link LATTICE. Nothing continuous in it is thicker than
-  //     0.06: the rails are 50 mm stock, the wires 22 mm. It STRIPES a man
-  //     standing behind it, it never MASKS him. That is the whole difference
-  //     between a fence and a wall, and it is the reason a fence is allowed to
-  //     be 1.02 tall on the one line of tiles the player has to walk out over.
+  //   · fence — a WOODEN PALING lattice, and it buys its pass with arithmetic
+  //     the same shape as the chain-link's, because the rule never cared what
+  //     the fence is made of, only how much of a tile it fills. Per tile:
+  //
+  //        5 palings   × 0.05  = 0.25   of wood
+  //        4 gaps      × 0.15  = 0.60   of night, between them
+  //        2 half-gaps × 0.075 = 0.15   at the seams — each meets the next
+  //                                     tile's and makes another 0.15
+  //        ——————————————————————————————— 1.00, the tile
+  //
+  //     A QUARTER of the width occluded, against the chain-link's eighth, and
+  //     every gap is THREE TIMES the widest thing standing in it. The only
+  //     other member crossing the band is one 70 mm post per tile — a pole, and
+  //     thinner than the lamp column this file already licenses at 0.09.
+  //     Nothing continuous is over 0.07; nothing a man could hide behind is
+  //     over 0.05.
+  //
+  //     The one place a gap narrows is at a post, which stands at the tile seam
+  //     and takes 0.07 out of that 0.15, leaving 0.04 of air either side of it.
+  //     That is a POLE STANDING IN A GAP, which the rule above allows in so many
+  //     words. It is also why the post is set BEHIND the paling plane rather
+  //     than in it, which is how a paling fence is built anyway: the run stays
+  //     five identical sticks to a tile, and the post reads as a dark thing SEEN
+  //     THROUGH a gap. A post in the paling plane would read as a sixth, fatter
+  //     stick, and a fat stick is the one thing this fence may not have.
+  //
+  //     Now the case the rule exists for. Row 13 IS the fence line and it is
+  //     blocked except the four exit tiles, so the men who matter stand at row
+  //     12, ONE TILE BEHIND the fence, with the fence between them and the
+  //     default camera. H − 0.40 = 0.62: the run covers the bottom 0.62 of a
+  //     1.55 man, to the hip — but it covers it with five separate sticks and
+  //     three times their own width of park between them, so what the player
+  //     sees is a man STRIPED, never a man MASKED. Raised to 53° it is
+  //     H − 0.93 = 0.09 and the fence is at his boot tops.
+  //
+  //     Which is exactly why A SOLID BOARD FENCE IS FORBIDDEN HERE. Close the
+  //     gaps and the same 1.02 becomes 1.00 of continuous mass across the one
+  //     line of tiles nine men have to walk out over, and the tutorial hides
+  //     its own lesson behind a wall. Palings, not boards. If somebody ever
+  //     widens these to 0.08 "so the fence reads better", the quarter-tile
+  //     budget is spent by the fourth paling of five.
+  //
   //   · lamp — a 0.09 column with the lantern above the band entirely. The
   //     head's bottom is at 1.96, and the arithmetic is: a man one tile behind
   //     sees the head at 1.96 − 0.40 = 1.56, which clears his 1.55 by ten
@@ -145,9 +187,12 @@
   //     green exit panel, the board would have hidden the only thing it is
   //     teaching — that this battle is won by leaving. So NOTHING it draws
   //     inside its own footprint goes above 0.013, and the piece spends its
-  //     declared 0.30 entirely OFF the board: the peeled flap of cut fence
-  //     hangs south over the park's outer lip, past local x = +0.52, which at
-  //     turns 3 is beyond the last row of tiles the board has. That is the
+  //     declared 0.30 entirely OFF the board: the section they kicked out —
+  //     palings still nailed to their rails — lies south over the park's outer
+  //     lip, past local x = +0.52, which at turns 3 is beyond the last row of
+  //     tiles the board has. Inside the footprint there is nothing but boards
+  //     trodden into the stone and the splinters off their snapped ends, and
+  //     all of it is a PLANE lying in the dirt. That is the
   //     whole trick, and it only works because the fence line IS the southern
   //     edge — there is no tile out there to spoil.
   //   · litter is paper on stone and never leaves 0.012.
@@ -211,13 +256,37 @@
   //                                   so the relief reads against the wall it
   //                                   is carved into without competing with the
   //                                   terraces a man is standing on.
-  //   black iron  #1f2124 / #33363b   Gates, fence posts, lamp column, bin.
-  //                                   Near-black, never black: pure black reads
-  //                                   as a tear in the board.
-  //   galvanised  #7f868c             The chain-link, and the LIGHTEST thing on
-  //                                   the board on purpose. The fence is the way
-  //                                   out; it has to be findable from the far
-  //                                   corner of the bowl at a glance.
+  //   black iron  #1f2124 / #33363b   The arcade gates, the lamp column, the
+  //                                   bin, the cruiser's ironmongery. Near-black,
+  //                                   never black: pure black reads as a tear in
+  //                                   the board.
+  //   weathered   #8e8677 / #6a6357   The paling fence, and the LIGHTEST thing
+  //   timber                          on the board on purpose — the fence is the
+  //                                   way out and has to be findable from the far
+  //                                   corner of the bowl at a glance. That is the
+  //                                   one thing the wood inherits from the
+  //                                   galvanised wire it replaced.
+  //                                   Both hexes are argued:
+  //                                   · #8e8677 is 16% saturated. The pine in
+  //                                     the lavatory is #a87c45 and the Lizzies'
+  //                                     veneer #6a4a2c — both around 58%. Those
+  //                                     are interiors under a warm bulb; this is
+  //                                     a park fence at midnight under a cold
+  //                                     key, and forty winters take the resin
+  //                                     out of a board before they take the
+  //                                     brown. Warm pine out here would read as
+  //                                     furniture somebody carried up a hill.
+  //                                   · It still has to separate from the stone
+  //                                     it stands on. Its value sits a clear
+  //                                     step ABOVE the terrain's top face
+  //                                     #77756f and its hue a clear step warmer
+  //                                     than the arcade's #6b6963 — light and
+  //                                     faintly brown against grey. The shadow
+  //                                     face #6a6357 is 35 points of value under
+  //                                     the lit one, the same gap the galvanised
+  //                                     pair carried, so a run of palings reads
+  //                                     as boards catching the moon one at a
+  //                                     time rather than as one comb of sticks.
   //   dead grass  #2a3324 / #141a12   The rim scrub and the trees, dragged to
   //                                   near-black. The treeline is a wall, not a
   //                                   subject — it exists to stop the eye, and
@@ -288,7 +357,7 @@
    *
    * One number is not what it looks like, and it is deliberate. `fenceGap.top`
    * is 0.30, but nothing that piece draws inside its own three tiles goes above
-   * 0.013 — the 0.30 is the peeled flap of cut fence hanging SOUTH off the
+   * 0.013 — the 0.30 is the kicked-out section of palings lying SOUTH over the
    * board's outer lip, outside every tile it owns. The spec is honest: 0.30 is
    * the clearance the map must keep around the hole. The mesh spends none of it
    * where the green exit overlay lives.
@@ -393,8 +462,8 @@
   // for the reason the car's roof taught us: from this camera the tops of
   // things are most of what you see, so the tops carry the shape and the flanks
   // carry the colour. metalness is written out even where three would default
-  // it, because a board full of iron and galvanised wire is exactly the file
-  // where somebody would eventually be tempted.
+  // it, because a board full of iron and a police car is exactly the file where
+  // somebody would eventually be tempted.
 
   const ashlar = new MeshStandardMaterial({
     color: '#6b6963',
@@ -443,17 +512,22 @@
     flatShading: true,
   });
 
-  // Galvanised, and the lightest thing on the board by a distance. That is a
-  // decision, not an accident: the fence is the way out.
-  const galv = new MeshStandardMaterial({
-    color: '#7f868c',
-    roughness: 0.6,
+  // Weathered timber, and the lightest thing on the board by a distance. That
+  // is a decision, not an accident: the fence is the way out, and a player who
+  // cannot find it from the far side of the bowl has not been taught anything.
+  // Greyed almost to the bone — see the palette note in the header for why this
+  // is 16% saturated where the lavatory's pine is 58%. roughness 1 on both:
+  // there is no sheen left on a park paling, which is half of what separates it
+  // from the galvanised wire that used to stand here.
+  const timber = new MeshStandardMaterial({
+    color: '#8e8677',
+    roughness: 1,
     metalness: 0,
     flatShading: true,
   });
-  const galvDull = new MeshStandardMaterial({
-    color: '#5d646a',
-    roughness: 0.85,
+  const timberShade = new MeshStandardMaterial({
+    color: '#6a6357',
+    roughness: 1,
     metalness: 0,
     flatShading: true,
   });
@@ -472,7 +546,11 @@
     metalness: 0,
     flatShading: true,
   });
-  const timber = new MeshStandardMaterial({
+  // Bark, not lumber. It was called `timber` until the fence stopped being
+  // chain-link and needed the name for something that actually reads as wood;
+  // at #20211c this was never lumber anyway, it is the near-black side of a
+  // trunk with no light on it.
+  const bark = new MeshStandardMaterial({
     color: '#20211c',
     roughness: 1,
     metalness: 0,
@@ -653,10 +731,28 @@
     opacity: 0.42,
     depthWrite: false,
   });
-  const wireFlat = new MeshBasicMaterial({
-    color: '#6b7278',
+  // The wreckage on the exit tiles. Unlit twins of the fence's two timbers,
+  // because a board lying in the dirt is the same board that was standing in
+  // the fence ten seconds ago and the player has to join those two things up.
+  // Transparent, so the green exit overlay reads THROUGH them even at the one
+  // yaw where sorting might otherwise argue.
+  const plankFlat = new MeshBasicMaterial({
+    color: '#7c7466',
     transparent: true,
-    opacity: 0.55,
+    opacity: 0.6,
+    depthWrite: false,
+  });
+  // A snapped end shows the wood the weather never got to: paler than the face,
+  // and the only pale thing in the hole. It is what says BROKEN rather than
+  // taken down, which is the difference between a gang and a groundsman. The
+  // hex is lighter than the standing fence's, which would break the palette's
+  // "the fence is the lightest thing on the board" — except it is never drawn
+  // wider than 30 mm and never over half opacity, so nothing it paints is a
+  // thing the eye finds before it finds the fence.
+  const splinterFlat = new MeshBasicMaterial({
+    color: '#a1977f',
+    transparent: true,
+    opacity: 0.5,
     depthWrite: false,
   });
 
@@ -731,35 +827,71 @@
   const GATE_BARS = [-0.24, -0.08, 0.08, 0.24];
 
   // ---- Valla (1×1, standing on the level-5 fence line) --------------------
-  // Chain-link, and it must be a LATTICE, not a mass. Nothing continuous in it
-  // is over 0.06: top rail and bottom tension wire at 50 mm, fabric wires at
-  // 22 mm, one 70 mm post per tile. Total occlusion across a tile is about an
-  // eighth of its width, so a man behind it is STRIPED and never MASKED — which
-  // is the only reason a 1.02 object is allowed to stand on the row nine men
-  // have to walk out over.
+  // WOOD, and it must be a LATTICE, not a mass. A city park boundary is a run
+  // of vertical palings on two arris rails, which is also the only wooden fence
+  // that answers both halves of this board's problem: post-and-rail you would
+  // simply CLIMB, so the hole would mean nothing, and a solid board fence is a
+  // WALL, which the rule in the header forbids outright on this row.
   //
-  // Symmetric about local z = 0, because a fence has no front. `turns` here
-  // only decides which way the RUN lies: 0 or 2 east–west, 1 or 3 north–south.
+  // THE BUDGET, PER TILE, AND IT IS THE WHOLE LICENCE THIS PIECE HAS:
+  //
+  //   5 palings × 0.05 wide  = 0.25   a quarter of the tile, occluded
+  //   6 gaps    × 0.15 wide  = 0.75   three quarters of it, open park
+  //   1 post    × 0.07              a POLE, not a mass — the lamp column is
+  //                                 0.09 and the header already licenses it
+  //   2 rails   × 0.055 deep        poles too, and lying the flat way
+  //
+  // Palings are 0.05 × 0.02 in section: a board is WIDE AND THIN, so even at
+  // 45° of yaw, where a stick shows its edge as well as its face, one paling
+  // only ever eats 0.07 of the run. Five of them stripe a man; not one of them
+  // masks him. If you widen a paling, you have changed the rule, not the mesh.
+  //
+  // Near-symmetric about local z = 0, because a fence has no front and `turns`
+  // here only decides which way the RUN lies: 0 or 2 east–west, 1 or 3
+  // north–south. The palings sit on the centre plane and the rails 33 mm behind
+  // them — less than one paling width of offset, which cannot read as a face at
+  // any yaw, and it buys the thing that makes this read as carpentry: you can
+  // see the rails THROUGH the gaps.
 
-  const FENCE_POST_H = 1.0;
-  const FENCE_TOP = 1.02;
+  const FENCE_TOP = 1.02; // unchanged from the chain-link: the height table's
+  // row does not move, and it must not — it has to stay taller than a man can
+  // step over or the hole in it is not a way out, it is a gate.
+  const FENCE_POST_H = FENCE_TOP; // a sawn post IS its own cap. The chain-link
+  // needed a cap because a galvanised tube is a hole in the weather; a 4×4 cut
+  // square and left forty years just goes grey on top.
+  const PALING_W = 0.05;
+  const PALING_T = 0.02;
+  const PALING_FOOT = 0.1; // clear of the stone, the way palings rot off first
+  const PALING_H = 0.86; // 0.10 → 0.96, stopping under the post's own top
+  const RAIL_Z = -0.033;
+  const POST_Z = -0.055; // behind the rails, the way a post actually stands:
+  // the palings run PAST it, so on screen it fills a gap instead of widening a
+  // paling, and a gap is where the board can afford it.
 
-  const fencePostGeometry = new CylinderGeometry(0.035, 0.038, FENCE_POST_H, 6);
-  const fenceCapGeometry = new CylinderGeometry(0.046, 0.046, 0.02, 6);
-  const fenceTopRailGeometry = new BoxGeometry(1.01, 0.05, 0.05);
-  const fenceTensionGeometry = new BoxGeometry(1.01, 0.03, 0.03);
-  const fenceWireGeometry = new BoxGeometry(0.022, 0.86, 0.022);
-  const fenceDiagGeometry = new BoxGeometry(0.022, 1.1, 0.022);
-  const FENCE_WIRES = [-0.4, -0.2, 0, 0.2, 0.4];
+  const fencePostGeometry = new BoxGeometry(0.07, FENCE_POST_H, 0.07);
+  const fenceRailGeometry = new BoxGeometry(1.01, 0.055, 0.045);
+  const palingGeometry = new BoxGeometry(PALING_W, PALING_H, PALING_T);
+  // Kicked in and snapped off above the top rail. 0.26 shorter, so it tops out
+  // at 0.70 where its neighbours reach 0.96. That is a hole in the TOP of the
+  // run, which is the half of the fence nobody was hiding behind — the piece
+  // gets its wear for free and the silhouette never notices.
+  const palingSnappedGeometry = new BoxGeometry(PALING_W, PALING_H - 0.26, PALING_T);
+  // The splinter left standing on a snapped one. Three sides, 44 mm across, so
+  // it stays inside the paling it grew out of.
+  const palingSplinterGeometry = new ConeGeometry(0.022, 0.09, 3);
+  /** Paling centres. 0.20 pitch, 0.15 of night between each pair. */
+  const FENCE_PALINGS = [-0.4, -0.2, 0, 0.2, 0.4];
+  const RAIL_HIGH = 0.84;
+  const RAIL_LOW = 0.26;
 
   // ---- Valla rota (1×3, ON the exit tiles) --------------------------------
   // The hole they went through, and the most rule-bound object on the board.
   //
-  // Authored as a run along local +Z, three tiles, with the cut fabric peeled
-  // out along local +X. THE STAGE MUST PLACE IT WITH turns 3: that swings the
-  // run east–west along the fence line and points +X SOUTH, which is off the
-  // southern edge of an 18×14 board — no row 14 exists. Any other turn puts the
-  // peeled flap back inside the park, over tiles men stand on, and the piece
+  // Authored as a run along local +Z, three tiles, with the kicked-out section
+  // lying out along local +X. THE STAGE MUST PLACE IT WITH turns 3: that swings
+  // the run east–west along the fence line and points +X SOUTH, which is off
+  // the southern edge of an 18×14 board — no row 14 exists. Any other turn puts
+  // that section back inside the park, over tiles men stand on, and the piece
   // becomes illegal.
   //
   // Everything inside the footprint is a PLANE at 0.006–0.012, unlit,
@@ -768,15 +900,22 @@
   // in. See FLAT_CEILING.
 
   const gapPathGeometry = new PlaneGeometry(0.68, 2.86).rotateX(-Math.PI / 2);
-  const gapMatGeometry = new PlaneGeometry(0.44, 0.6).rotateX(-Math.PI / 2);
-  const gapWireGeometry = new PlaneGeometry(0.03, 0.86).rotateX(-Math.PI / 2);
-  /** Where the trodden-flat fabric ended up. All of it under 0.013. */
-  const GAP_MATS = [
-    { x: -0.12, z: -0.92, rot: 0.24, y: 0.007 },
-    { x: 0.16, z: 0.34, rot: -0.38, y: 0.009 },
-    { x: -0.06, z: 1.02, rot: 0.12, y: 0.011 },
+  // A paling trodden flat: 0.05 wide, as long as the paling was. Same stick,
+  // lying down. And the splinters off the snapped ends, which are the only
+  // thing in the footprint that says this barrier was BROKEN rather than
+  // unbolted — snapped wood, not cut wire.
+  const gapBoardGeometry = new PlaneGeometry(0.05, 0.86).rotateX(-Math.PI / 2);
+  const gapShortBoardGeometry = new PlaneGeometry(0.05, 0.42).rotateX(-Math.PI / 2);
+  const gapSplinterGeometry = new PlaneGeometry(0.018, 0.2).rotateX(-Math.PI / 2);
+  /** Where the kicked-out boards ended up. All of it under 0.013. */
+  const GAP_BOARDS = [
+    { x: -0.12, z: -0.92, rot: 0.24, y: 0.007, short: false },
+    { x: 0.16, z: 0.34, rot: -0.38, y: 0.009, short: false },
+    { x: -0.06, z: 1.02, rot: 0.12, y: 0.011, short: true },
+    { x: 0.2, z: -0.28, rot: 1.42, y: 0.0065, short: true },
+    { x: -0.22, z: 0.66, rot: -1.31, y: 0.0115, short: true },
   ];
-  const GAP_WIRES = [
+  const GAP_SPLINTERS = [
     { x: -0.24, z: -1.16, rot: 0.9, y: 0.008 },
     { x: 0.22, z: -0.42, rot: -0.55, y: 0.01 },
     { x: -0.18, z: 0.18, rot: 1.35, y: 0.012 },
@@ -784,12 +923,31 @@
     { x: 0.02, z: 1.3, rot: 0.42, y: 0.0105 },
   ];
 
-  // The 0.30 the spec declares, and it is spent ENTIRELY off the board: hinged
-  // on the park's outer lip at local x ≈ 0.52 and peeled up and out to 0.88.
-  // Nothing of it crosses back over an exit tile.
-  const gapFlapGeometry = new BoxGeometry(0.44, 0.025, 2.1);
-  const gapStubGeometry = new CylinderGeometry(0.035, 0.042, 0.24, 6);
-  const GAP_FLAP_TILT = 0.62;
+  // The 0.30 the spec declares, and it is spent ENTIRELY off the board: the
+  // section that came away — five palings still nailed to the two rails they
+  // were nailed to when they were standing — dropped over the park's outer lip
+  // and lying at a tilt, hinged nowhere, because nothing hinged it: it was
+  // kicked. Authored in its own tilted group so every number below is measured
+  // along the panel, and the group's origin is at local x = 0.74, which is 0.22
+  // BEYOND the lip at 0.52. Worked, for the far corner of the far paling:
+  //
+  //   x  0.74 − 0.20·cos(0.62) − 0.01·sin(0.62) = 0.57   ✓ off the board
+  //   y  0.15 + 0.20·sin(0.62) + 0.01·cos(0.62) = 0.27   ✓ under the 0.30
+  //
+  // The highest thing the piece owns is the splinter on a stub at 0.29, so the
+  // declared 0.30 is honest with eleven millimetres left. Nothing of any of it
+  // crosses back over an exit tile, which is the only reason this piece is
+  // allowed to have a third dimension at all.
+  const gapPanelPalingGeometry = new BoxGeometry(0.4, 0.02, 0.05);
+  const gapPanelRailGeometry = new BoxGeometry(0.05, 0.05, 2.0);
+  const GAP_PANEL_PALINGS = [-0.9, -0.45, 0, 0.45, 0.9];
+  const GAP_PANEL_TILT = 0.62;
+  // The two palings that did not come away: snapped off at the low rail and
+  // still standing at the edge of the hole, out on the lip. Jagged tops, which
+  // is the whole reason they are here — a clean edge reads as a gate.
+  const gapStubGeometry = new BoxGeometry(0.05, 0.24, 0.05);
+  const gapStubSplinterGeometry = new ConeGeometry(0.024, 0.08, 3);
+  const GAP_STUB_TILT = 0.3;
 
   // ---- Patrulla (2×2, OFF the board, behind the arcade) -------------------
   // Roof at 1.18, which is the car's real height — a 1970s sedan is 1.37 m
@@ -1047,12 +1205,20 @@
   const panel = $derived.by(() => ({
     lean: (roll[0] - 0.5) * 0.09,
     sag: roll[1] < 0.24 ? -0.045 : 0,
-    // One wire in six is gone. That is what a fence looks like at the bottom of
-    // a park nobody maintains, and it is also a free reminder that this thing
-    // is a lattice: you can see straight through the hole.
-    cut: roll[2] < 0.2 ? Math.floor(roll[3] * FENCE_WIRES.length) % FENCE_WIRES.length : -1,
+    // One paling in five tiles has gone entirely. That is what a wooden fence
+    // looks like at the bottom of a park nobody maintains — they come off one
+    // at a time, and somebody's mother burned it — and it is also a free
+    // reminder that this thing is a lattice: you can see straight through it.
+    gone: roll[2] < 0.2 ? Math.floor(roll[3] * FENCE_PALINGS.length) % FENCE_PALINGS.length : -1,
     bow: (roll[4] - 0.5) * 0.09,
-    post: roll[5] < 0.3 ? rust : galvDull,
+    // And a third of tiles have one snapped off short. If the same index comes
+    // up for both, the missing one wins and the tile simply has a hole: two
+    // rolls arguing over one paling is not worth a branch.
+    snapped: roll[5] < 0.34 ? Math.floor(roll[6] * FENCE_PALINGS.length) % FENCE_PALINGS.length : -1,
+    // Five bits, one per paling, deciding which face of the pair each one
+    // wears. A run of a dozen tiles then reads as sixty boards catching the
+    // moon differently, from one roll and no extra material.
+    grain: Math.floor(roll[7] * 32),
   }));
 
   /** Which two trees stand on this tile of rim, and how far each one leans. */
@@ -1199,55 +1365,65 @@
       {/each}
     {/each}
   {:else if piece === PIECE.fence}
-    <!-- Chain-link, and every member in it is a wire. The post is 70 mm, the
-         top rail 50, the fabric 22. Nothing continuous is over 0.06, which is
-         the whole reason a 1.02 object is legal on the line the player walks
-         out over: it stripes a man, it does not mask him. -->
+    <!-- WOOD. Five palings at 0.05, two rails at 0.055, one post at 0.07, and
+         0.15 of open park between every pair of palings. A quarter of the tile
+         is timber and three quarters of it is night, which is the whole reason
+         a 1.02 object is legal on the line the player walks out over: it
+         stripes a man, it does not mask him. Widen a paling and you have
+         repealed that, so do not. -->
     <!-- The lean pivots at the post's FOOT, not at the tile centre. A rotation
          about the group origin would lift a post standing half a tile away off
          the stone by a couple of centimetres, and a fence post hovering over
          the exit row is the sort of thing a player only ever notices on the
          board he is being taught on. -->
     <T.Group position={[-0.5, 0, 0]} rotation.z={panel.lean}>
+      <!-- Sawn square and left to go grey. No cap: that was a chain-link
+           problem, and a solved one is not a thing to port over. -->
       <T.Mesh
         geometry={fencePostGeometry}
-        material={panel.post}
-        position={[0, FENCE_POST_H / 2, 0]}
+        material={timberShade}
+        position={[0, FENCE_POST_H / 2, POST_Z]}
         castShadow
       />
-      <T.Mesh geometry={fenceCapGeometry} material={galvDull} position={[0, FENCE_TOP - 0.01, 0]} />
     </T.Group>
 
     <T.Group position={[0, 0, panel.bow]}>
+      <!-- Two arris rails, BEHIND the palings, seen through the gaps. The top
+           one carries the sag: a wooden rail droops between its posts, and the
+           palings hung on it do not care, which is why only the rail tilts. -->
       <T.Mesh
-        geometry={fenceTopRailGeometry}
-        material={galvDull}
-        position={[0, 0.965 + panel.sag, 0]}
+        geometry={fenceRailGeometry}
+        material={timberShade}
+        position={[0, RAIL_HIGH + panel.sag, RAIL_Z]}
         rotation.z={panel.sag * 0.6}
       />
-      <T.Mesh geometry={fenceTensionGeometry} material={galvDull} position={[0, 0.09, 0]} />
-      <T.Mesh geometry={fenceTensionGeometry} material={galv} position={[0, 0.52, 0]} />
+      <T.Mesh geometry={fenceRailGeometry} material={timberShade} position={[0, RAIL_LOW, RAIL_Z]} />
 
-      {#each FENCE_WIRES as wx, i (i)}
-        {#if i !== panel.cut}
-          <T.Mesh geometry={fenceWireGeometry} material={galv} position={[wx, 0.52, 0]} />
+      {#each FENCE_PALINGS as px, i (i)}
+        {#if i !== panel.gone}
+          {@const snapped = i === panel.snapped}
+          {@const h = snapped ? PALING_H - 0.26 : PALING_H}
+          <!-- One bit of `grain` per paling picks the face. Two tones down a
+               run of sixty boards is the difference between a fence and a comb. -->
+          <T.Mesh
+            geometry={snapped ? palingSnappedGeometry : palingGeometry}
+            material={((panel.grain >> i) & 1) === 1 ? timber : timberShade}
+            position={[px, PALING_FOOT + h / 2, 0]}
+          />
+          {#if snapped}
+            <!-- The splinter left standing where somebody's boot went through.
+                 It tops out at 0.78 against a whole paling's 0.96, so it adds
+                 nothing to the silhouette and says everything about how a
+                 barrier like this one comes down. -->
+            <T.Mesh
+              geometry={palingSplinterGeometry}
+              material={timber}
+              position={[px, PALING_FOOT + h + 0.035, 0]}
+              rotation.z={0.18}
+            />
+          {/if}
         {/if}
       {/each}
-
-      <!-- Two crossed strands. They say "chain-link" rather than "railing",
-           and at 22 mm they cost the silhouette nothing. -->
-      <T.Mesh
-        geometry={fenceDiagGeometry}
-        material={galv}
-        position={[0, 0.52, 0.012]}
-        rotation.z={0.78}
-      />
-      <T.Mesh
-        geometry={fenceDiagGeometry}
-        material={galvDull}
-        position={[0, 0.52, -0.012]}
-        rotation.z={-0.78}
-      />
     </T.Group>
   {:else if piece === PIECE.fenceGap}
     <!-- THE EXIT. Nothing in this block that stands on a tile goes over 0.013,
@@ -1255,43 +1431,63 @@
          would have destroyed the one lesson of the board. Planes, unlit,
          depthWrite off, renderOrder 0. -->
     <T.Mesh geometry={gapPathGeometry} material={trodden} position={[0, 0.005, 0]} renderOrder={FLAT_ORDER} />
-    {#each GAP_MATS as m, i (i)}
+    <!-- The boards they kicked out, trodden into the stone by nine men going
+         through in a hurry. Same 0.05 width they had standing up, because they
+         are the same sticks and the player has ten seconds to join those two
+         pictures up. -->
+    {#each GAP_BOARDS as b, i (i)}
       <T.Mesh
-        geometry={gapMatGeometry}
-        material={wireFlat}
-        position={[m.x, m.y, m.z]}
-        rotation.y={m.rot}
+        geometry={b.short ? gapShortBoardGeometry : gapBoardGeometry}
+        material={plankFlat}
+        position={[b.x, b.y, b.z]}
+        rotation.y={b.rot}
         renderOrder={FLAT_ORDER}
       />
     {/each}
-    {#each GAP_WIRES as w, i (i)}
+    <!-- Splinters, pale where the weather never got in. This is the one detail
+         that says BROKEN and not unbolted, and it costs five planes. -->
+    {#each GAP_SPLINTERS as s, i (i)}
       <T.Mesh
-        geometry={gapWireGeometry}
-        material={wireFlat}
-        position={[w.x, w.y, w.z]}
-        rotation.y={w.rot}
+        geometry={gapSplinterGeometry}
+        material={splinterFlat}
+        position={[s.x, s.y, s.z]}
+        rotation.y={s.rot}
         renderOrder={FLAT_ORDER}
       />
     {/each}
 
     <!-- The declared 0.30, and ALL of it beyond local x = 0.52 — which at the
          mandated turns 3 is south of row 13, off the southern lip of the board,
-         where there is no tile and no overlay to spoil. The flap is hinged on
-         the lip and peeled up and out, which is what a cut fence does. -->
-    <T.Mesh
-      geometry={gapFlapGeometry}
-      material={galvDull}
-      position={[0.7, 0.16, 0]}
-      rotation.z={GAP_FLAP_TILT}
-      castShadow
-    />
+         where there is no tile and no overlay to spoil. The section that came
+         away went over the lip in one piece, palings and rails together, and it
+         is lying where it landed. Nothing hinged it: it was kicked. -->
+    <T.Group position={[0.74, 0.15, 0]} rotation.z={GAP_PANEL_TILT}>
+      {#each [-0.13, 0.13] as rx (rx)}
+        <T.Mesh
+          geometry={gapPanelRailGeometry}
+          material={timberShade}
+          position={[rx, -0.045, 0]}
+        />
+      {/each}
+      {#each GAP_PANEL_PALINGS as pz, i (i)}
+        <T.Mesh
+          geometry={gapPanelPalingGeometry}
+          material={i % 2 === 0 ? timber : timberShade}
+          position={[0, 0, pz]}
+          castShadow
+        />
+      {/each}
+    </T.Group>
+
+    <!-- The two that did not come away: snapped off at the low rail, still
+         standing on the lip at either end of the hole, jagged on top. They are
+         the edge of the wound, and they are the reason the hole reads as
+         something nine men did rather than something the map always had. -->
     {#each [-1.15, 1.15] as sz (sz)}
-      <T.Mesh
-        geometry={gapStubGeometry}
-        material={rust}
-        position={[0.6, 0.12, sz]}
-        rotation.z={0.5}
-      />
+      <T.Group position={[0.64, 0, sz]} rotation.z={GAP_STUB_TILT}>
+        <T.Mesh geometry={gapStubGeometry} material={timberShade} position={[0, 0.12, 0]} />
+        <T.Mesh geometry={gapStubSplinterGeometry} material={timber} position={[0, 0.26, 0]} />
+      </T.Group>
     {/each}
   {:else if piece === PIECE.cruiser}
     <!-- OFF THE BOARD, behind the arcade, nose at the wall. 1.42 to the top of
@@ -1428,14 +1624,14 @@
     <T.Mesh geometry={scrubLobeGeometry} material={bough} position={[0.34, 0.18, 0.3]} />
 
     <T.Group position={[trees.ax, 0, trees.az]} rotation.z={trees.aLean}>
-      <T.Mesh geometry={treeTrunkGeometry} material={timber} position={[0, 0.6, 0]} castShadow />
+      <T.Mesh geometry={treeTrunkGeometry} material={bark} position={[0, 0.6, 0]} castShadow />
       <T.Mesh geometry={crownBigGeometry} material={bough} position={[0, 1.58, 0]} castShadow />
       <T.Mesh geometry={crownMidGeometry} material={trees.swap ? boughLit : bough} position={[-0.27, 1.32, 0.1]} />
       <T.Mesh geometry={crownSmallGeometry} material={bough} position={[0.28, 1.42, -0.08]} />
     </T.Group>
 
     <T.Group position={[trees.bx, 0, trees.bz]} rotation.z={trees.bLean}>
-      <T.Mesh geometry={treeTrunkLowGeometry} material={timber} position={[0, 0.43, 0]} />
+      <T.Mesh geometry={treeTrunkLowGeometry} material={bark} position={[0, 0.43, 0]} />
       <T.Mesh geometry={crownMidGeometry} material={trees.swap ? bough : boughLit} position={[0, 1.18, 0]} castShadow />
       <T.Mesh geometry={crownSmallGeometry} material={bough} position={[0.24, 0.96, 0.1]} />
     </T.Group>

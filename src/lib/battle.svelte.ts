@@ -339,9 +339,9 @@ function defaultAim(ability: Ability): Coord | null {
   if (best) return best;
 
   // Nobody in reach, but the fence is: point at it. On the board this exists
-  // for, that is what a man standing at the fence with nobody around opened the
-  // menu to do.
-  if (ability.kind === 'physical' && u.team === 'ally') {
+  // for, that is what a man who opened the menu with nobody around meant to do
+  // - whether he is going to punch it or throw something at it.
+  if (ability.kind !== 'rally' && u.team === 'ally') {
     for (const key of range) {
       const c = parseKey(key);
       if (barrierAt(c.x, c.y)) return c;
@@ -811,9 +811,22 @@ export function barrierStanding(): boolean {
   return battle.barrierHp > 0;
 }
 
-/** What one blow from `actor` with `ability` takes off the barrier. */
+/**
+ * What one blow from `actor` with `ability` takes off the barrier.
+ *
+ * The stat has to be the one `combat.ts` would have used on a man, or the
+ * window lies: the forecast shown while aiming at the fence is drawn from this
+ * function, and a thrown brick is scored on CALLE, not on fuerza. Reading `pa`
+ * for everything was invisible while only fists could reach the fence, and
+ * became wrong the moment a brick could.
+ *
+ * No angle, no height, no nerve: a fence has no back and does not stand on a
+ * step. What is left is the same product the forecast prints, times whatever
+ * the move is worth against something that does not dodge.
+ */
 export function barrierDamage(actor: Unit, ability: Ability): number {
-  return Math.max(1, Math.round(actor.pa * ability.power * (ability.barrierMul ?? 1)));
+  const stat = ability.kind === 'ranged' ? actor.ma : actor.pa;
+  return Math.max(1, Math.round(stat * ability.power * (ability.barrierMul ?? 1)));
 }
 
 /** Whether the current aim is a swing at the barrier, for the forecast. */
@@ -850,12 +863,23 @@ function sealed(m: BattleMap, b: NonNullable<Exit['barrier']>): BattleMap {
   };
 }
 
-/** Whether a swing aimed at (x, y) is a swing at the barrier. */
+/**
+ * Whether a blow aimed at (x, y) is a blow at the barrier.
+ *
+ * ANY ATTACK, from the player's side. It used to be `physical` only - fists and
+ * whatever was in the hand - and that quietly left two of the nine unable to
+ * touch the thing the whole board is about: Vermin throws and Rembrandt sprays,
+ * so on the one stage where the first lesson is "hit it", the two of them could
+ * only stand there. A brick is exactly what a fence is for.
+ *
+ * `rally` is the one kind that is not an attack, and excluding it excludes both
+ * of the moves that would have been nonsense - shouting your gang back onto
+ * their feet, and Rembrandt painting his name on something. Both are
+ * `targets: 'ally'`, neither does damage to anybody, and neither opens a fence.
+ * One condition, and it reads as what it means.
+ */
 function aimsAtBarrier(actor: Unit, ability: Ability, x: number, y: number): boolean {
-  // The player's side only, and only with the body or something held in the
-  // hand. Nothing thrown: a bottle does not open a fence, and the AI never
-  // aims at a square with nobody on it anyway.
-  return actor.team === 'ally' && ability.kind === 'physical' && barrierAt(x, y);
+  return actor.team === 'ally' && ability.kind !== 'rally' && barrierAt(x, y);
 }
 
 /**
@@ -980,7 +1004,17 @@ export function confirmAbility(x: number, y: number): boolean {
       // A bottle tumbles end over end; a brick is too heavy to spin much.
       spin: ability.projectile === 'bottle' ? Math.PI * 2.5 : Math.PI * 0.8,
     };
-    pendingImpact = () => resolveHits(actor, ability, targets);
+    // The SAME two steps the immediate path takes below, in the same order,
+    // just deferred until the object lands. Leaving the barrier out of here was
+    // the bug that made "any attack opens the fence" a half-truth: a thrown
+    // brick would aim at it, print a forecast, spend the stamina, fly the whole
+    // way across the board - and do nothing, because the deferred impact only
+    // ever rolled against people. Anything that resolves on arrival has to
+    // resolve ALL of it on arrival.
+    pendingImpact = () => {
+      if (barrier) hitBarrier(actor, ability, x, y);
+      resolveHits(actor, ability, targets);
+    };
     return true;
   }
 
