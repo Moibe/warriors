@@ -12,6 +12,7 @@
   import Scene from '$lib/Scene.svelte';
   import {
     activeUnit,
+    advanceIntro,
     aimHasTarget,
     aimingAtBarrier,
     barrierDamage,
@@ -30,6 +31,7 @@
     previewFacing,
     restart,
     runCommand,
+    skipIntro,
     stepAimCursor,
     stepMoveCursor,
     upcomingTurns,
@@ -46,6 +48,7 @@
   import CommandMenu from '$lib/ui/CommandMenu.svelte';
   import Forecast from '$lib/ui/Forecast.svelte';
   import Window from '$lib/ui/Window.svelte';
+  import IntroDialogue from '$lib/ui/IntroDialogue.svelte';
   import ResultBanner from '$lib/ui/ResultBanner.svelte';
   import StageSelect from '$lib/ui/StageSelect.svelte';
   import { STAGE_LIST, type StageId } from '$lib/stages';
@@ -55,7 +58,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.18.0';
+  const APP_VERSION = '1.19.0';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -191,6 +194,12 @@
   }
 
   function onPointerDown(e: PointerEvent) {
+    // The dialogue owns the pointer outright while it is up — its own veil
+    // already catches the click that advances it, and letting a drag reach
+    // the camera underneath a line nobody has finished reading yet would pan
+    // the board behind a screen the player cannot act on anyway.
+    if (battle.phase === 'intro') return;
+
     // RIGHT IS ESC. It never enters the press/drag machine below, so it can
     // never be half a gesture: down, cancelled, done. Returning here is the
     // whole implementation — there is no matching case in `onPointerUp`,
@@ -381,6 +390,16 @@
       else if (k === 'arrowup') picker?.step(-1);
       else if (k === 'arrowdown') picker?.step(1);
       else if (k === 'enter') picker?.confirm();
+      else return;
+      return e.preventDefault();
+    }
+
+    // Same for the dialogue: Enter or Space reads the next line, Escape drops
+    // the whole thing, and nothing else this board answers to should reach
+    // past it while the clock is still held.
+    if (battle.phase === 'intro') {
+      if (k === 'escape') skipIntro();
+      else if (k === 'enter' || k === ' ') advanceIntro();
       else return;
       return e.preventDefault();
     }
@@ -696,6 +715,10 @@
       {/if}
     </div>
   </div>
+
+  {#if battle.intro && !pickerOpen}
+    <IntroDialogue />
+  {/if}
 
   {#if battle.winner && !pickerOpen}
     <ResultBanner

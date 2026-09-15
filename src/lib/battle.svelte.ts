@@ -23,7 +23,7 @@ import {
   type Tile,
 } from './grid';
 import { JOBS, WEAPON_NAMES, type Ability, type ProjectileId } from './jobs';
-import { DEFAULT_STAGE, STAGES, type Exit, type Stage, type StageId } from './stages';
+import { DEFAULT_STAGE, STAGES, type BriefLine, type Exit, type Stage, type StageId } from './stages';
 import {
   bestApproach,
   computeReachable,
@@ -95,7 +95,14 @@ function barrierIndex(b: NonNullable<Exit['barrier']>, x: number, y: number): nu
   return (y - b.y) * b.w + (x - b.x);
 }
 
+/** The dialogue queued at the top of a stage, or none for a stage with no brief. */
+function initIntro(id: StageId): Intro | null {
+  const brief = STAGES[id].brief;
+  return brief && brief.length ? { lines: brief, index: 0 } : null;
+}
+
 export type Phase =
+  | 'intro' // the opening dialogue is up; the clock is held
   | 'clock' // CT is filling; nobody is acting
   | 'command' // the active unit's menu is open
   | 'move' // picking a destination
@@ -104,6 +111,12 @@ export type Phase =
   | 'resolving' // the action is playing out
   | 'facing' // choosing which way to end the turn looking
   | 'over'; // one side is gone
+
+/** Where the opening dialogue is, while it is up. */
+export type Intro = {
+  lines: BriefLine[];
+  index: number;
+};
 
 export type Popup = {
   id: number;
@@ -141,7 +154,14 @@ export type ThrowAnim = {
 
 export const battle = $state({
   units: STAGES[DEFAULT_STAGE].roster(),
-  phase: 'clock' as Phase,
+  phase: (initIntro(DEFAULT_STAGE) ? 'intro' : 'clock') as Phase,
+  /**
+   * The opening dialogue, line by line, or null on a stage with no brief.
+   * Non-null holds the clock: `advanceClock` only ever runs in phase
+   * `'clock'`, so a stage that opens on a line of dialogue cannot elect an
+   * active unit until `advanceIntro` has walked every line and let go.
+   */
+  intro: initIntro(DEFAULT_STAGE) as Intro | null,
   activeId: null as string | null,
   /** Ability chosen from the menu, waiting for a target. */
   ability: null as Ability | null,
@@ -1502,9 +1522,32 @@ export function restart() {
   // Backwards, because `log` unshifts: the last line pushed is the one on top,
   // so a brief written in reading order has to go in tail first to come out
   // head first. Logged after the opener so the opener ends up underneath it,
-  // which is where the oldest line belongs in a newest-first window.
+  // which is where the oldest line belongs in a newest-first window. Every
+  // line still lands here regardless of `intro` below — the log is the
+  // written record, the dialogue is only the first read of it.
   const brief = stage().brief;
-  if (brief) for (let i = brief.length - 1; i >= 0; i--) log(brief[i]);
+  if (brief) for (let i = brief.length - 1; i >= 0; i--) log(brief[i].text);
+  battle.intro = initIntro(stageId);
+  if (battle.intro) battle.phase = 'intro';
+}
+
+/** Steps the opening dialogue forward, or lets go of the clock on the last line. */
+export function advanceIntro() {
+  const intro = battle.intro;
+  if (!intro) return;
+  if (intro.index + 1 < intro.lines.length) {
+    intro.index += 1;
+    return;
+  }
+  battle.intro = null;
+  battle.phase = 'clock';
+}
+
+/** Drops the whole dialogue in one beat and lets the clock run. */
+export function skipIntro() {
+  if (!battle.intro) return;
+  battle.intro = null;
+  battle.phase = 'clock';
 }
 
 /**

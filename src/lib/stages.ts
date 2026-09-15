@@ -235,19 +235,24 @@ export type Stage = {
   light: Lighting;
   outcome: { victory: string; defeat: string };
   /**
-   * What the battle report says before anybody has moved.
+   * What the battle report says before anybody has moved, and now also what
+   * plays as a line of dialogue while the clock is held.
    *
-   * A tutorial needs a voice and this game has no room for one: there is no
-   * hint system, no tooltip, no overlay, and adding any of them for a single
-   * board would be a whole subsystem paying rent on one stage. But there IS
-   * already a window that prints sentences in Spanish and that the player is
-   * going to read anyway, and putting the opening lines in it costs one
-   * optional field.
+   * It used to be free: a window already printed sentences in Spanish that
+   * the player was going to read anyway, so the opening lines cost one
+   * optional field and nothing else. They still print there — `restart` still
+   * logs every line, in order, the instant the stage installs — but a report
+   * sitting under a wall of other lines competes with them for a read that
+   * was never guaranteed, and a battle nobody has started is the one moment
+   * this game can afford to ask for a player's full attention without
+   * costing him a turn. `IntroDialogue` is the one overlay this game owns,
+   * and the only board rule it changes is a clock that will not start
+   * counting until the last line has been seen.
    *
    * Player-facing, so Spanish. Written in reading order - the log shows newest
    * first, and `restart` reverses them so they come out the right way up.
    */
-  brief?: string[];
+  brief?: BriefLine[];
   /** Present only on a battle that is won by getting out of it. */
   exit?: Exit;
   /** Present only on a battle that ends when one man goes down. */
@@ -300,6 +305,24 @@ export type Turncoat = {
   to: Team;
   /** What the report prints on the beat it happens. Player-facing, so Spanish. */
   line: string;
+};
+
+/**
+ * One line of the report a battle opens on.
+ *
+ * `speaker` names a unit on THIS stage's own roster - never an id from
+ * another one, and never a face invented for the occasion. The report was
+ * written as a field account of what is in front of the player, third person
+ * throughout ("Cleon dio su palabra", not "yo di mi palabra"), and that
+ * wording stays exactly as written whether or not a face fronts it. A
+ * speaker does not turn the sentence into something he says; it turns the
+ * dialogue into a beat centred on him - the camera on Fox while the report
+ * says what Fox watched happen. Absent is the report speaking for itself:
+ * a narrator's line, no portrait, the establishing shot before anyone reacts.
+ */
+export type BriefLine = {
+  text: string;
+  speaker?: string;
 };
 
 export type Head = {
@@ -486,10 +509,14 @@ export const STAGES: Record<StageId, Stage> = {
         line: 'La valla cede. Ya hay por dónde salir.',
       },
     },
+    // Fox and Cleon front the two lines the roster comment below already ties
+    // to them by name - he is the one who saw Luther fire, and it is his
+    // promise that put the other eight here unarmed. Swan gets the plan,
+    // because giving the squad its orders is what a warchief is for.
     brief: [
-      'Luther ha matado a Cyrus y os ha señalado a vosotros.',
-      'Nadie vino armado: Cleon dio su palabra por los nueve.',
-      'La valla está entera: rompedla y salid. Con seis basta.',
+      { text: 'Luther ha matado a Cyrus y os ha señalado a vosotros.', speaker: 'fox' },
+      { text: 'Nadie vino armado: Cleon dio su palabra por los nueve.', speaker: 'cleon' },
+      { text: 'La valla está entera: rompedla y salid. Con seis basta.', speaker: 'swan' },
     ],
     // The nine, in squad order, and every one of them empty-handed.
     //
@@ -733,10 +760,15 @@ export const STAGES: Record<StageId, Stage> = {
       // picking the Orphans back up off the pavement.
       ...mercy([{ x: 9, y: 4, facing: 'e', ct: 16, team: 'enemy' }]),
     ],
+    // Fox again, the one who counts what is standing in front of him - the
+    // film gives him exactly that line about the Orphans elsewhere on this
+    // roster. Vermin spots her, the way he answers Fox rather than staying
+    // quiet. The read on Sully is left to nobody in particular: it is the one
+    // line here that is a rule of the board before it is anyone's opinion.
     brief: [
-      'Los Orphans no os dejan pasar sin dejaros el chaleco.',
-      'La que se ríe desde el portal es Mercy, la chica de Sully.',
-      'Si Sully cae, ya no tiene por qué seguir con ellos.',
+      { text: 'Los Orphans no os dejan pasar sin dejaros el chaleco.', speaker: 'fox' },
+      { text: 'La que se ríe desde el portal es Mercy, la chica de Sully.', speaker: 'vermin' },
+      { text: 'Si Sully cae, ya no tiene por qué seguir con ellos.' },
     ],
     // And the rule that makes one of the nine worth reaching first.
     turncoat: {

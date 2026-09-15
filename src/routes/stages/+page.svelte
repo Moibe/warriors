@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import { STAGE_LIST, type Stage } from '$lib/stages';
   import type { Surface } from '$lib/grid';
+  import type { Unit } from '$lib/units';
 
   // Mismos acentos que /expediente y /jobs, esta vez indexados por el rival
   // de cada batalla — la serie entera comparte una paleta.
@@ -78,6 +79,7 @@
 
   type Row = {
     stage: Stage;
+    roster: Unit[];
     order: number;
     accent: string;
     accentDim: string;
@@ -113,6 +115,7 @@
 
     return {
       stage,
+      roster,
       order: i + 1,
       accent: acc.accent,
       accentDim: acc.accentDim,
@@ -224,7 +227,12 @@
               {#if r.stage.brief?.length}
                 <blockquote class="brief">
                   {#each r.stage.brief as line}
-                    <p>{line}</p>
+                    <p>
+                      {#if line.speaker}
+                        <span class="who">{r.roster.find((u) => u.id === line.speaker)?.name}:</span>
+                      {/if}
+                      {line.text}
+                    </p>
                   {/each}
                 </blockquote>
               {/if}
@@ -503,6 +511,13 @@
     font-style: italic;
     color: var(--ink);
     line-height: 1.5;
+  }
+
+  .brief .who {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--accent);
+    margin-right: 0.15rem;
   }
 
   .brief p + p {
