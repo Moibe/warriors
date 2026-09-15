@@ -158,6 +158,18 @@ export type Spot = {
    * shortest order list in the game.
    */
   weapon?: WeaponId;
+  /**
+   * Whose side he is on, when the board gets a say in that too.
+   *
+   * Normally it is the squad's and it never changes. Mercy is the exception the
+   * film insists on: she is the Orphans' warlord's girl, she stands on their
+   * stoop, she is the one who goads the Warriors into the fight - and she leaves
+   * with them when it is over. She is not an ally who happens to start far away.
+   * She is on the other side, and she changes her mind.
+   *
+   * Pairs with {@link Stage.turncoat}, which is what changes it.
+   */
+  team?: Team;
 };
 
 /**
@@ -175,6 +187,7 @@ function placeSquad(squad: Unit[], spots?: Spot[]): Unit[] {
     if (spot.facing) squad[i].facing = spot.facing;
     if (spot.ct !== undefined) squad[i].ct = spot.ct;
     if (spot.weapon !== undefined) squad[i].weapon = spot.weapon;
+    if (spot.team !== undefined) squad[i].team = spot.team;
   }
   return squad;
 }

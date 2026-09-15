@@ -832,6 +832,36 @@ export function confirmAbility(x: number, y: number): boolean {
   return true;
 }
 
+/**
+ * Somebody watches the wrong man go down and stops being on his side.
+ *
+ * One assignment, and everything downstream is already looking at it. The team
+ * ring and the ground wedge are painted inside an effect that reads `unit.team`,
+ * the turn order colours its rows off the same field, the planner picks its
+ * targets with `o.team !== u.team`, and `checkVictory` counts both sides fresh
+ * every time it runs - so flipping the field flips the unit's colour, who wants
+ * to hit her, who she wants to hit, and whether the battle is over. Nothing here
+ * has to tell any of them.
+ *
+ * It fires from the one place a unit can reach zero, and it cannot catch the
+ * acting unit: the trigger is somebody ELSE falling, and on this board the only
+ * mover who can drop Sully is on the other side from him.
+ */
+function changeSides(fallen: Unit) {
+  const rule = stage().turncoat;
+  if (!rule || fallen.id !== rule.when) return;
+  const who = unitById(battle.units, rule.id);
+  if (import.meta.env.DEV && !who) {
+    // Same guard as `head`: without it a typo means the rule simply never
+    // fires, and a rule that silently does not exist is worse than a crash.
+    throw new Error(`La escena ${stage().id} hace cambiar de bando a "${rule.id}", que no está en su reparto`);
+  }
+  if (!who || !inPlay(who) || who.team === rule.to) return;
+  who.team = rule.to;
+  log(rule.line);
+  pushPopup(who, '¡SE PASA!', '#79e07a');
+}
+
 /** Rolls the ability against everyone caught in it and applies what happens. */
 function resolveHits(actor: Unit, ability: Ability, targets: Unit[]) {
   const actorHeight = heightOf(actor);
@@ -893,6 +923,7 @@ function resolveHits(actor: Unit, ability: Ability, targets: Unit[]) {
       target.fellOnTurn = battle.turn;
       log(`${target.name} cae.`);
       pushPopup(target, 'K.O.', '#ff6b6b');
+      changeSides(target);
     }
   }
 }

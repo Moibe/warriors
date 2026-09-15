@@ -11,6 +11,7 @@
 // and never a unit somebody already took the bat off.
 
 import { tileKey, type BattleMap } from './grid';
+import type { Team } from './units';
 import {
   coneyIsland,
   gunHillRoad,
@@ -196,6 +197,8 @@ export type Stage = {
   exit?: Exit;
   /** Present only on a battle that ends when one man goes down. */
   head?: Head;
+  /** Present only on a battle where somebody changes sides partway through. */
+  turncoat?: Turncoat;
 };
 
 /**
@@ -213,6 +216,37 @@ export type Stage = {
  * stage that also has an `exit` — the door answers first and this would never
  * fire. There is a check for both in `restart`.
  */
+/**
+ * Somebody who changes sides, and the thing that changes their mind.
+ *
+ * Shaped like {@link Exit} and {@link Head} and for the same reason: it is a
+ * rule of THIS battle, not a property of a person. Mercy switches on the
+ * Orphans' block and nowhere else, and putting a flag on the unit would carry
+ * it to two boards where she is simply on your side from the first tick.
+ *
+ * WHY IT IS TIED TO A MAN AND NOT TO A TURN COUNT. A timer would work and would
+ * be a worse rule: the player could not see it coming, could not cause it, and
+ * could not be rewarded for understanding it. Tied to Sully it becomes the one
+ * thing the Orphans' board never had - a PRIORITY TARGET. That board is nine
+ * interchangeable bodies and pure extermination, which is the grindiest fight
+ * in the game; now one of the nine is worth reaching first, and reaching him
+ * pays twice, because until he falls she is keeping his gang on its feet.
+ *
+ * Nothing about it is hidden. The stage's `brief` says it in three lines before
+ * anybody has moved, the turn order lists her by name, and if the player would
+ * rather just knock her down, he can. That is a choice, not a trap.
+ */
+export type Turncoat = {
+  /** Unit id on this stage's own roster: the one who switches. */
+  id: string;
+  /** The unit whose fall does it. */
+  when: string;
+  /** Which side he or she ends up on. */
+  to: Team;
+  /** What the report prints on the beat it happens. Player-facing, so Spanish. */
+  line: string;
+};
+
 export type Head = {
   /** Unit id on this stage's own roster. */
   id: string;
@@ -567,7 +601,28 @@ export const STAGES: Record<StageId, Stage> = {
         ]
       ),
       ...orphans(),
+      // On the stoop behind Sully, on HIS side, which is where the film puts
+      // her: she is his girl, she is the one who makes the chicken noises at
+      // Fox, and the fight happens because of her. She leaves with the Warriors
+      // when it is over - see `turncoat` below.
+      //
+      // As an enemy she is nearly harmless in a fight and not harmless at all
+      // on a board: `Arenga` reaches her own side, so until Sully falls she is
+      // picking the Orphans back up off the pavement.
+      ...mercy([{ x: 9, y: 4, facing: 'e', ct: 16, team: 'enemy' }]),
     ],
+    brief: [
+      'Los Orphans no os dejan pasar sin dejaros el chaleco.',
+      'La que se ríe desde el portal es Mercy, la chica de Sully.',
+      'Si Sully cae, ya no tiene por qué seguir con ellos.',
+    ],
+    // And the rule that makes one of the nine worth reaching first.
+    turncoat: {
+      id: 'mercy',
+      when: 'sully',
+      to: 'ally',
+      line: 'Mercy mira a Sully en el suelo y se pone detrás de Swan.',
+    },
     sky: {
       // A residential block, so there is sky again — but low and brown, the
       // colour a city throws back at its own streetlights.

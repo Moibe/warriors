@@ -187,6 +187,18 @@ por radio y con una recompensa por toda la ciudad. En el parque hay caos, focos 
 mil personas dispersándose. Por eso los Riffs de este tablero son **lentos** y no
 persiguen: son anfitriones sujetando un foso.
 
+### 3 · La calle de los Orphans
+
+**La película cuenta su propia escuadra en voz alta aquí.** Fox vuelve de
+explorar con "treinta, a lo mejor", y Vermin contesta: *"Thirty's a lot more than
+eight."* Ocho. Es el único escenario que no podría haber sido de nueve.
+
+Suben a parlamentar **sólo dos**: *"Fox, you come with me"*. Los otros seis se
+quedan atrás, que es la forma que ya tenían esas casillas.
+
+**Sully** es el único Orphan con nombre en la película, y la banda entera se
+levanta por él. Ver más abajo lo de Mercy.
+
 ### 5 · El piso de las Lizzies
 
 Suben tres: **Cochise, Rembrandt y Vermin**. Las armas están escondidas en el piso,
@@ -280,9 +292,27 @@ aguantan 56. Eso mide la letalidad del enemigo, no si se puede ganar — para es
 hace falta jugarlo. Si al jugarlo sigue saliendo cuesta arriba, el siguiente
 tornillo es la Velocidad, no la vida.
 
-## Lo que sigue sin cuadrar
+## Mercy cambia de bando
 
-Mercy aparece en tres escenas de la película y en dos del juego. Le falta **la de
-los Orphans**, donde empieza siendo la chica de Sully, en el bando contrario, y
-es ella quien provoca la pelea — y se pasa a los Warriors cuando la escena
-termina. Eso pide un cambio de bando a mitad de batalla que el motor no tiene.
+La película la mete en tres escenas y el juego la tenía en dos. Faltaba **la de
+los Orphans**, y faltaba por una razón de verdad: ahí **no está de tu lado**. Es
+la chica de Sully, mira desde el portal, y es ella quien provoca la pelea
+haciendo ruidos de gallina a Fox. Se va con los Warriors cuando la escena
+termina.
+
+Ahora sale ahí, **en el bando contrario**, y se pasa cuando cae Sully.
+
+**Por qué atado a un hombre y no a un número de turno.** Un temporizador habría
+funcionado y habría sido una regla peor: no la ves venir, no la provocas y no te
+premia por entenderla. Atada a Sully le da al escenario de los Orphans lo único
+que no tenía — **un objetivo prioritario**. Ese tablero son nueve cuerpos
+intercambiables y exterminio puro, que es la pelea más pesada del juego; ahora
+uno de los nueve merece la pena alcanzarlo primero, y alcanzarlo paga dos veces,
+porque hasta que cae **ella está levantando a su banda del suelo con la arenga**.
+
+No hay nada escondido: la nota de apertura lo dice en tres líneas antes de que se
+mueva nadie, el orden de turno la lista por su nombre, y si prefieres tumbarla,
+puedes. Eso es una elección, no una trampa.
+
+Comprobado jugándolo: *"Swan → Sully: 16 de daño. / Sully cae. / Mercy mira a
+Sully en el suelo y se pone detrás de Swan."*
