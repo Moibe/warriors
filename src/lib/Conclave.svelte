@@ -80,6 +80,10 @@
   //   cruiser     1.42    1.02     0.49    nothing: it is off the board.
   //   treeline    2.00    1.60     1.07    nothing: it is off the board.
   //   lamp        2.24    1.84     1.31    nothing: a 0.09 column, head at 1.96.
+  //   lampWall    2.24    1.84     1.31    the same row, and strictly less of
+  //                                        it: the column starts at 0.98
+  //                                        instead of 0.24, so it hides even
+  //                                        less than the lamp does.
   //
   // THE RULE THIS FILE HOLDS, AND IT IS HARSHER THAN ANY OTHER BOARD'S BECAUSE
   // THIS IS THE ONE THE PLAYER IS LEARNING ON:
@@ -359,6 +363,7 @@
     litter: 7,
     bin: 8,
     wall: 9,
+    lampWall: 10,
   } as const;
 
   /**
@@ -455,6 +460,19 @@
     },
     lamp: {
       name: 'Farola',
+      w: 1,
+      d: 1,
+      top: 2.24,
+      steps: false,
+      caps: false,
+      wall: false,
+      offBoard: false,
+    },
+    // The same lamp with its bottom metre taken off, for the tiles where a
+    // `wall` is already standing. Same top, same head, same licence — see the
+    // piece itself for why the foot had to go.
+    lampWall: {
+      name: 'Farola en muro',
       w: 1,
       d: 1,
       top: 2.24,
@@ -1160,6 +1178,29 @@
   const lampGlassGeometry = new CylinderGeometry(0.15, 0.085, 0.14, 8);
   const lampCapGeometry = new ConeGeometry(0.17, 0.14, 8);
 
+  // ---- Farola en muro (1×1, on a tile a `wall` already stands on) ----------
+  // THE SAME LAMP FROM 1.02 UP, and nothing below it.
+  //
+  // A lamp on row 12 stands on the same square as a metre of ashlar, and the
+  // two were being drawn straight through each other: the wall is a thin
+  // course, 0.16 deep against a tile a full unit across, so the column did not
+  // hide behind it - it crossed it, in front at the foot and behind at the
+  // coping, and read as a pole threaded through the masonry rather than as a
+  // lamp standing next to it. Neither piece was wrong on its own; they were
+  // wrong about each other.
+  //
+  // Cutting the lamp off at the wall's top is the honest fix, because it is
+  // what a lamp behind a wall actually looks like: you see the part that
+  // clears it. The base and the plinth go entirely — they were the two meshes
+  // most tangled in the stone — and the column starts 40 mm UNDER the coping,
+  // so it reads as socketed into the wall rather than balanced on it.
+  //
+  // 1.04 long, and the bottom radius is the taper's own value at that height
+  // (0.040 of the full column's 0.044-to-0.034 run), so the two lamps on this
+  // board are the same lamp seen from different sides of a wall.
+  const LAMP_WALL_FOOT = 0.98; // FENCE_TOP 1.02, less 40 mm of socket.
+  const lampWallColumnGeometry = new CylinderGeometry(0.034, 0.04, 1.04, 8);
+
   // ---- Arboleda (1×1, OFF the board) --------------------------------------
   // A black wall of trees on the far rim. Two crowns and a scrub band per tile,
   // repeated along a line — and unlike everything else in this file it is
@@ -1751,12 +1792,23 @@
         <T.Mesh geometry={cyrusBootGeometry} material={leather} position={[side * 0.11, 0.036, 0.96]} />
       {/each}
     </T.Group>
-  {:else if piece === PIECE.lamp}
+  {:else if piece === PIECE.lamp || piece === PIECE.lampWall}
     <!-- Head bottom 1.96, top 2.24, column 0.08 across. Only legal on a tile at
-         a level equal to or above the men near it — see the arithmetic above. -->
-    <T.Mesh geometry={lampBaseGeometry} material={ironLit} position={[0, 0.05, 0]} castShadow />
-    <T.Mesh geometry={lampPlinthGeometry} material={iron} position={[0, 0.17, 0]} />
-    <T.Mesh geometry={lampColumnGeometry} material={iron} position={[0, 1.13, 0]} castShadow />
+         a level equal to or above the men near it — see the arithmetic above.
+         Everything from the collar up is shared: the two variants differ only
+         in how much of the post you are allowed to see. -->
+    {#if piece === PIECE.lamp}
+      <T.Mesh geometry={lampBaseGeometry} material={ironLit} position={[0, 0.05, 0]} castShadow />
+      <T.Mesh geometry={lampPlinthGeometry} material={iron} position={[0, 0.17, 0]} />
+      <T.Mesh geometry={lampColumnGeometry} material={iron} position={[0, 1.13, 0]} castShadow />
+    {:else}
+      <T.Mesh
+        geometry={lampWallColumnGeometry}
+        material={iron}
+        position={[0, LAMP_WALL_FOOT + 0.52, 0]}
+        castShadow
+      />
+    {/if}
     <T.Mesh geometry={lampCollarGeometry} material={ironLit} position={[0, LAMP_HEAD - 0.025, 0]} />
     <!-- The lantern glass is the emissive, never a light. It reads from the
          side as well as from under, which is what matters on a board seen from

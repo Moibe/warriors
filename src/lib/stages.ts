@@ -334,7 +334,7 @@ export const STAGES: Record<StageId, Stage> = {
     map: vanCortlandt,
     // Piece indices come from PIECE in Conclave.svelte:
     //   0 arcade · 1 fence · 2 fenceGap · 3 cruiser · 4 cyrus
-    //   5 lamp · 6 treeline · 7 litter · 8 bin
+    //   5 lamp · 6 treeline · 7 litter · 8 bin · 9 wall · 10 lampWall
     //
     // Two contracts that will not fail loudly if they break. The `cyrus` tile
     // must stay BLOCKED or a unit can stand inside him; and the `fenceGap`
@@ -418,9 +418,17 @@ export const STAGES: Record<StageId, Stage> = {
       // hair while it stands level with him or above. One of them is three tiles
       // from the gate, because a light over the way out is the cheapest hint
       // this game is ever going to give a new player.
+      //
+      // THE THIRD IS A DIFFERENT PIECE (variant 10, `lampWall`) for one reason:
+      // it is the only one standing on a square a wall is already standing on.
+      // The two west lamps rise off a solid terrain column that fills its tile,
+      // so their foot is hidden by the thing they stand on; the row-12 lamp
+      // shares its square with a 0.16-deep course of ashlar, which cannot hide
+      // anything, and the full post read as threaded THROUGH the masonry.
+      // `lampWall` is the same lamp from the coping up and nothing below it.
       { kind: 'conclave', x: 0, y: 3, w: 1, d: 1, height: 5, variant: 5 },
       { kind: 'conclave', x: 0, y: 8, w: 1, d: 1, height: 5, variant: 5 },
-      { kind: 'conclave', x: 9, y: 12, w: 1, d: 1, height: 5, variant: 5 },
+      { kind: 'conclave', x: 9, y: 12, w: 1, d: 1, height: 5, variant: 10 },
       // LITTER. Flat, free, and the only thing on the board that says a thousand
       // people were standing here ninety seconds ago. Nothing within one tile of
       // Cyrus: the crowd fell back from him, and the clean stone around a body
