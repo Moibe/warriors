@@ -1235,10 +1235,13 @@
     position = [0, 0, 0],
     rotation = 0,
     variant = 0,
+    wear = 0,
   }: {
     position?: [number, number, number];
     rotation?: number;
     variant?: number;
+    /** 0 to 1, how far through this piece the gang has got. Only `fence` reads it. */
+    wear?: number;
   } = $props();
 
   const piece = $derived(((variant % PIECE_COUNT) + PIECE_COUNT) % PIECE_COUNT);
@@ -1292,6 +1295,49 @@
     // moon differently, from one roll and no extra material.
     grain: Math.floor(roll[7] * 32),
   }));
+
+  /**
+   * WHAT THE GANG HAS ACTUALLY KNOCKED OUT, on top of what the winters did.
+   *
+   * The barrier is one pool of sixty points across four tiles, so all four
+   * panels wear at the SAME RATE — anything else would be the picture arguing
+   * with the health bar, which says one number for the whole run. What differs
+   * is WHICH boards go: the order is hashed off the tile, so four panels
+   * losing the same amount never lose it in the same places, and the run comes
+   * apart looking like four separate fights instead of one animation played
+   * four times.
+   *
+   * TEN STEPS, not five: a board snaps before it goes. Sixty points is four or
+   * five swings, so five stages would move barely once a punch and the whole
+   * point of this is that every punch shows. Snapping first also puts the
+   * splinter stump on screen, which is the thing that reads as FRESH damage
+   * rather than as a fence that was always missing a board.
+   *
+   * Capped at nine, one short of the end. The piece is swapped for the hole the
+   * instant the barrier falls, and until that instant the rules still say
+   * sealed; a panel with nothing left in it would be the set telling a player
+   * to walk through a square the pathfinder will refuse him.
+   */
+  const BREAK_SEEDS = [53, 59, 61, 67, 71];
+
+  const broken = $derived.by(() => {
+    const steps = Math.min(9, Math.round(Math.min(1, Math.max(0, wear)) * 10));
+    if (steps <= 0) return null;
+    const kx = Math.round(position[0] * 4);
+    const kz = Math.round(position[2] * 4);
+    const order = FENCE_PALINGS.map((_, i) => i).sort(
+      (a, b) => hash2D(kx, kz, BREAK_SEEDS[a]) - hash2D(kx, kz, BREAK_SEEDS[b])
+    );
+    // 0 whole, 1 snapped short, 2 gone.
+    const state = FENCE_PALINGS.map(() => 0);
+    order.forEach((idx, k) => {
+      state[idx] = Math.max(0, Math.min(2, steps - k * 2));
+    });
+    return state;
+  });
+
+  /** The top rail droops further as the boards under it stop holding it up. */
+  const railSag = $derived(panel.sag - Math.min(1, Math.max(0, wear)) * 0.05);
 
   /** Which two trees stand on this tile of rim, and how far each one leans. */
   const trees = $derived.by(() => ({
@@ -1466,14 +1512,18 @@
       <T.Mesh
         geometry={fenceRailGeometry}
         material={timberShade}
-        position={[0, RAIL_HIGH + panel.sag, RAIL_Z]}
-        rotation.z={panel.sag * 0.6}
+        position={[0, RAIL_HIGH + railSag, RAIL_Z]}
+        rotation.z={railSag * 0.6}
       />
       <T.Mesh geometry={fenceRailGeometry} material={timberShade} position={[0, RAIL_LOW, RAIL_Z]} />
 
+      <!-- `broken` is the gang's work, `panel` is the weather's. They stack:
+           a board the winters already took cannot be knocked out twice, and a
+           board with a hit on it snaps whether or not it was going to. -->
       {#each FENCE_PALINGS as px, i (i)}
-        {#if i !== panel.gone}
-          {@const snapped = i === panel.snapped}
+        {@const hit = broken ? broken[i] : 0}
+        {#if i !== panel.gone && hit !== 2}
+          {@const snapped = i === panel.snapped || hit === 1}
           {@const h = snapped ? BOARD_H - 0.26 : BOARD_H}
           <!-- One bit of `grain` per paling picks the face. Two tones down a
                run of sixty boards is the difference between a fence and a comb. -->

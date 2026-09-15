@@ -155,6 +155,31 @@
     confirmTile(tile.x, tile.y);
   }
 
+  /**
+   * How far through the barrier the gang has got, 0 to 1, for the props that
+   * ARE the barrier.
+   *
+   * The number in the panel was the only thing that moved while they hit it:
+   * sixty points is four or five swings, and for the first three of them the
+   * fence looked exactly as it had at the top of the battle. A board fence is
+   * the one obstacle in this game whose damage the player can be shown instead
+   * of told, so it is shown - the panel stays, because six-of-sixty is a
+   * promise the picture cannot make on its own, but nobody should have to read
+   * it to know a punch landed.
+   */
+  const barrierWear = $derived.by(() => {
+    const full = stage.exit?.barrier?.hp ?? 0;
+    if (!full || !shut) return 0;
+    return Math.min(1, Math.max(0, 1 - battle.barrierHp / full));
+  });
+
+  /** Whether this prop's footprint stands on the barrier rectangle. */
+  function onBarrier(p: (typeof stage.props)[number]): boolean {
+    const b = stage.exit?.barrier;
+    if (!b) return false;
+    return p.x < b.x + b.w && p.x + p.w > b.x && p.y < b.y + b.d && p.y + p.d > b.y;
+  }
+
   // Props are centred on their footprint, so moving one is editing the anchor
   // in stages.ts and nothing else.
   const scenery = $derived(
@@ -167,6 +192,7 @@
           pos: [w.x, w.y, w.z] as [number, number, number],
           rot: ((p.turns ?? 0) * Math.PI) / 2,
           variant: p.variant ?? 0,
+          wear: onBarrier(p) ? barrierWear : 0,
         };
       })
   );
@@ -230,9 +256,9 @@
 
 <!-- Keyed by position in the list, not by tile: a rug and the armchair standing
      on it share a square, and so would any two pieces stacked on purpose. -->
-{#each scenery as { p, pos, rot, variant }, i (i)}
+{#each scenery as { p, pos, rot, variant, wear }, i (i)}
   {@const Prop = PROPS[p.kind]}
-  <Prop position={pos} rotation={rot} {variant} />
+  <Prop position={pos} rotation={rot} {variant} {wear} />
 {/each}
 
 <!-- Layer order by lift: movement under weapon reach under the burst. -->
