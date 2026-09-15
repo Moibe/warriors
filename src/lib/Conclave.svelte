@@ -1340,24 +1340,25 @@
   /**
    * WHAT THE GANG HAS ACTUALLY KNOCKED OUT, on top of what the winters did.
    *
-   * The barrier is one pool of sixty points across four tiles, so all four
-   * panels wear at the SAME RATE — anything else would be the picture arguing
-   * with the health bar, which says one number for the whole run. What differs
-   * is WHICH boards go: the order is hashed off the tile, so four panels
-   * losing the same amount never lose it in the same places, and the run comes
-   * apart looking like four separate fights instead of one animation played
-   * four times.
+   * Each of the four tiles keeps its OWN fifteen-point pool now, not a shared
+   * sixty, so `wear` arrives already scoped to this one panel and this panel
+   * alone answers for it — one board can be down to its last plank while its
+   * neighbour has not been touched, because that is exactly what it means for
+   * a board to break separately rather than for the whole run to fall at once.
+   * WHICH boards go, inside one panel, is still hashed off the tile, so a run
+   * of four panels losing boards at four different rates never loses them in
+   * the same pattern either.
    *
-   * TEN STEPS, not five: a board snaps before it goes. Sixty points is four or
-   * five swings, so five stages would move barely once a punch and the whole
-   * point of this is that every punch shows. Snapping first also puts the
+   * TEN STEPS, not five: a board snaps before it goes, and fifteen points is
+   * one solid swing for most of this roster, so five stages would jump from
+   * whole to half-gone in a single punch. Snapping first also puts the
    * splinter stump on screen, which is the thing that reads as FRESH damage
    * rather than as a fence that was always missing a board.
    *
-   * Capped at nine, one short of the end. The piece is swapped for the hole the
-   * instant the barrier falls, and until that instant the rules still say
-   * sealed; a panel with nothing left in it would be the set telling a player
-   * to walk through a square the pathfinder will refuse him.
+   * Capped at nine, one short of the end. THIS panel is swapped for open
+   * ground the instant ITS OWN pool empties, and until that instant the rules
+   * still say sealed; a panel with nothing left in it would be the set
+   * telling a player to walk through a square the pathfinder will refuse him.
    */
   const BREAK_SEEDS = [53, 59, 61, 67, 71];
 

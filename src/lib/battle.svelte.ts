@@ -60,16 +60,39 @@ export function stage(): Stage {
  * synchronous, so it can never observe a half-finished swap. `restart()` is the
  * only place it is installed, so it cannot drift from `stageId`.
  */
-let map: BattleMap = boardFor(DEFAULT_STAGE);
+let map: BattleMap = boardFor(DEFAULT_STAGE, initBarrierHp(DEFAULT_STAGE));
 
 /**
- * The board a stage is played on: its own map, or a copy with the barrier's
- * tiles sealed while the barrier stands. Used at load and by `restart()`, so
- * the first battle and every later one start from the same shut door.
+ * The board a stage is played on: its own map, or a copy with whichever of the
+ * barrier's OWN tiles are still standing sealed. Takes `hp` as a parameter
+ * rather than reading `battle.barrierHp` itself for two reasons: the very
+ * first call above runs before `battle` exists, and every later call — one
+ * per hit, not once at the end — passes the array that just changed rather
+ * than trusting a global to be current.
  */
-function boardFor(id: StageId): BattleMap {
+function boardFor(id: StageId, hp: number[]): BattleMap {
   const b = STAGES[id].exit?.barrier;
-  return b ? sealed(STAGES[id].map, b) : STAGES[id].map;
+  return b ? sealed(STAGES[id].map, b, hp) : STAGES[id].map;
+}
+
+/**
+ * One pool per tile of the barrier, not one pool for the whole run. A stage
+ * declares `hp` as the cost of the WHOLE thing — the number every design
+ * comment about this board is written against — and it is split evenly across
+ * the footprint here, once, so every other function only ever deals in
+ * per-tile pools and never has to re-derive the split.
+ */
+function initBarrierHp(id: StageId): number[] {
+  const b = STAGES[id].exit?.barrier;
+  if (!b) return [];
+  const n = b.w * b.d;
+  return Array.from({ length: n }, () => Math.round(b.hp / n));
+}
+
+/** A barrier tile's own index into its pool array, or -1 if (x, y) is not one. */
+function barrierIndex(b: NonNullable<Exit['barrier']>, x: number, y: number): number {
+  if (x < b.x || x >= b.x + b.w || y < b.y || y >= b.y + b.d) return -1;
+  return (y - b.y) * b.w + (x - b.x);
 }
 
 export type Phase =
@@ -153,12 +176,13 @@ export const battle = $state({
    */
   hoverUnit: null as string | null,
   /**
-   * What the stage's barrier has left, 0 when it is down or there never was one.
-   * The one number that decides whether the way out is a way out yet: while it
-   * is above zero the barrier's tiles are sealed in `map` and the door behind
-   * them cannot be reached.
+   * What the stage's barrier has left, ONE ENTRY PER TILE of it, empty when
+   * there is no barrier. Each square opens on its own the moment ITS entry
+   * hits zero — a fighter who keeps hitting the same board opens that board,
+   * not the whole run, and the tile beside it stays sealed in `map` until
+   * somebody spends the swings on it too.
    */
-  barrierHp: STAGES[DEFAULT_STAGE].exit?.barrier?.hp ?? 0,
+  barrierHp: initBarrierHp(DEFAULT_STAGE),
   walk: null as WalkAnim | null,
   /** Non-null only while something thrown is still in the air. */
   throw: null as ThrowAnim | null,
@@ -822,9 +846,27 @@ let pendingImpact: (() => void) | null = null;
 
 const POPUP_LIFE = 1.5;
 
-/** Whether the stage's barrier is still standing. */
+/** Whether ANY tile of the stage's barrier is still standing. */
 export function barrierStanding(): boolean {
-  return battle.barrierHp > 0;
+  return battle.barrierHp.some((hp) => hp > 0);
+}
+
+/** Remaining HP of one barrier tile. 0 if (x, y) is not part of one. */
+export function barrierTileHp(x: number, y: number): number {
+  const b = stage().exit?.barrier;
+  if (!b) return 0;
+  const i = barrierIndex(b, x, y);
+  return i >= 0 ? (battle.barrierHp[i] ?? 0) : 0;
+}
+
+/** Whether THIS ONE square of the barrier is still standing. */
+export function barrierTileStanding(x: number, y: number): boolean {
+  return barrierTileHp(x, y) > 0;
+}
+
+/** What the barrier has left, summed — for the one HUD number that tracks it. */
+export function barrierHpTotal(): number {
+  return battle.barrierHp.reduce((sum, hp) => sum + hp, 0);
 }
 
 /**
@@ -854,28 +896,30 @@ export function aimingAtBarrier(): boolean {
   return aimsAtBarrier(actor, ability, aim.x, aim.y);
 }
 
-/** Whether (x, y) is a square of the barrier, and the barrier is still up. */
+/** Whether (x, y) is a square of the barrier that is STILL standing. */
 export function barrierAt(x: number, y: number): boolean {
-  const b = stage().exit?.barrier;
-  if (!b || !barrierStanding()) return false;
-  return x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.d;
+  return barrierTileStanding(x, y);
 }
 
 /**
- * The board with the barrier's tiles sealed. A copy, never a write into the
- * stage's own map: that one is shared, frozen data that the scene draws from
- * and the checker reads, and a rule that lasts a few turns must not leak into
- * it. Everything that decides where a man may stand reads `map`, so swapping
- * the copy in and out is the entire mechanism.
+ * The board with whichever of the barrier's tiles are still standing sealed.
+ * A copy, never a write into the stage's own map: that one is shared, frozen
+ * data that the scene draws from and the checker reads, and a rule that lasts
+ * a few turns must not leak into it. Everything that decides where a man may
+ * stand reads `map`, so swapping the copy in and out is the entire mechanism.
+ *
+ * Recomputed from `hp` on every hit, not swapped once at the very end: a tile
+ * that just reached zero has to open on its own, whatever its neighbours still
+ * have left.
  */
-function sealed(m: BattleMap, b: NonNullable<Exit['barrier']>): BattleMap {
+function sealed(m: BattleMap, b: NonNullable<Exit['barrier']>, hp: number[]): BattleMap {
   return {
     ...m,
-    tiles: m.tiles.map((t) =>
-      t && t.x >= b.x && t.x < b.x + b.w && t.y >= b.y && t.y < b.y + b.d
-        ? { ...t, walkable: false }
-        : t
-    ),
+    tiles: m.tiles.map((t) => {
+      if (!t) return t;
+      const i = barrierIndex(b, t.x, t.y);
+      return i >= 0 && (hp[i] ?? 0) > 0 ? { ...t, walkable: false } : t;
+    }),
   };
 }
 
@@ -902,22 +946,38 @@ function aimsAtBarrier(actor: Unit, ability: Ability, x: number, y: number): boo
  * A blow on the barrier. No roll: a fence does not dodge and has no back, so
  * the number is the straight PA times power the forecast would print against
  * a man, and every hit lands.
+ *
+ * IT ONLY EVER TOUCHES THE SQUARE AIMED AT. `aimsAtBarrier` already refused
+ * anything else — you cannot target a board that already gave — so `i` below
+ * is always the one tile this swing was for, and every OTHER tile's pool is
+ * exactly what it was before this function ran.
  */
 function hitBarrier(actor: Unit, ability: Ability, x: number, y: number) {
   const b = stage().exit!.barrier!;
+  const i = barrierIndex(b, x, y);
   const dmg = barrierDamage(actor, ability);
-  battle.barrierHp = Math.max(0, battle.barrierHp - dmg);
+  battle.barrierHp[i] = Math.max(0, battle.barrierHp[i] - dmg);
   const height = tileAt(map, x, y)?.height ?? heightOf(actor);
   pushPopupAt(x, y, height, String(dmg), '#ffe27a');
   // Same shape as a hit on a man, with the order named: the fence is the one
   // place where WHICH blow you used is the whole lesson.
   log(`${actor.name} → ${b.label.toLowerCase()} (${ability.name}): ${dmg} de daño.`);
-  if (battle.barrierHp > 0) return;
-  // Down. The stage's own map comes back, and with it the tiles the copy
-  // sealed - and the door behind them.
-  map = STAGES[stageId].map;
-  pushPopupAt(x, y, height, '¡ABIERTA!', '#79e07a');
-  log(b.line);
+
+  // Recomputed, not swapped: a run of four pools means four separate moments
+  // a door can open, not one.
+  map = boardFor(stageId, battle.barrierHp);
+  if (battle.barrierHp[i] > 0) return;
+
+  // Down to zero, THIS TILE only. If it took the last pool with it, the run is
+  // whole open and gets the line the stage wrote for that; otherwise it is one
+  // board out of four and gets a smaller beat that says exactly that.
+  if (battle.barrierHp.every((hp) => hp <= 0)) {
+    pushPopupAt(x, y, height, '¡ABIERTA!', '#79e07a');
+    log(b.line);
+  } else {
+    pushPopupAt(x, y, height, '¡HUECO!', '#79e07a');
+    log(`${actor.name} abre un hueco en ${b.label.toLowerCase()}.`);
+  }
 }
 
 /** Whether this square is part of the way out. */
@@ -1412,8 +1472,8 @@ function runAiStep() {
 export function restart() {
   // Installing the stage comes first: everything below is torn down relative to
   // the board that is about to be in play, not the one that just ended.
-  battle.barrierHp = STAGES[stageId].exit?.barrier?.hp ?? 0;
-  map = boardFor(stageId);
+  battle.barrierHp = initBarrierHp(stageId);
+  map = boardFor(stageId, battle.barrierHp);
   battle.units = STAGES[stageId].roster();
   if (import.meta.env.DEV && STAGES[stageId].exit && STAGES[stageId].head) {
     // A stage carrying both would silently be a door battle: the door answers

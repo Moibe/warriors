@@ -95,18 +95,25 @@ export type Exit = {
  *
  * It does not dodge, it has no back, it stands on no step and it never fights
  * back. Every blow lands for the number the forecast printed.
+ *
+ * `hp` IS THE WHOLE RUN'S, not one tile's — the number every comment on this
+ * board is written against, and the one the HUD still totals up. The engine
+ * splits it evenly across the footprint at battle start and tracks each tile
+ * separately from there, so a fighter who keeps hitting the same board opens
+ * THAT board the moment its own share runs out, whatever the other three
+ * still have standing. See `initBarrierHp` in battle.svelte.ts.
  */
 export type Barrier = {
-  /** North-west corner, in tiles. Blocked while `hp` is above zero. */
+  /** North-west corner, in tiles. A tile is blocked while its own share stands. */
   x: number;
   y: number;
   w: number;
   d: number;
-  /** How much it takes before it gives. */
+  /** How much the WHOLE run takes before it gives, split evenly per tile. */
   hp: number;
   /** Heading over the HUD line. Player-facing, so Spanish. */
   label: string;
-  /** What the report prints on the beat it comes down. */
+  /** What the report prints on the beat the LAST tile comes down. */
   line: string;
 };
 
@@ -315,17 +322,6 @@ export function exitTiles(stage: Stage): Set<string> {
   return out;
 }
 
-/** The barrier as tile keys, for the overlay. Empty when the stage has none. */
-export function barrierTiles(stage: Stage): Set<string> {
-  const out = new Set<string>();
-  const b = stage.exit?.barrier;
-  if (!b) return out;
-  for (let y = b.y; y < b.y + b.d; y++) {
-    for (let x = b.x; x < b.x + b.w; x++) out.add(tileKey(x, y));
-  }
-  return out;
-}
-
 export const STAGES: Record<StageId, Stage> = {
   'van-cortlandt': {
     id: 'van-cortlandt',
@@ -458,10 +454,21 @@ export const STAGES: Record<StageId, Stage> = {
     //
     // AND IT STARTS SHUT. The four fence tiles in front of it, on row 12, are
     // the only squares row 13 can be entered from - x=11 and x=16 on row 13
-    // are blocked - so sealing them seals the door. Sixty points is four
-    // Warrior punches or two Scrapper kicks: two or three men stop and hit
+    // are blocked - so sealing them seals the door.
+    //
+    // SIXTY POINTS, FIFTEEN A BOARD - the engine splits it evenly across the
+    // four tiles at kickoff (see `initBarrierHp` in battle.svelte.ts) and every
+    // swing only ever touches the one board it was aimed at, never its
+    // neighbours. Most punches on this roster already clear fifteen in one
+    // blow, so the common case is one man, one swing, one board open; Fox and
+    // Rembrandt's fists fall short and need a second. A Scrapper's kick
+    // doubles against the boards specifically so it never leaves one half
+    // broken, at the cost of everything past fifteen being spent on nothing -
+    // which is also why piling a second swing onto a board that is already
+    // about to give buys nothing: four boards is four separate targets no
+    // matter who is throwing the punches, and two or three men stop and hit
     // while the others walk up behind them, and the Riffs get the turns that
-    // costs. The kick doing it in half the time is the reason the kick exists.
+    // costs.
     exit: {
       x: 12,
       y: 13,

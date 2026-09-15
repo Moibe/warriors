@@ -36,12 +36,13 @@
     stage as currentStage,
     renderPosition,
     setHoverTile,
-    barrierStanding,
+    barrierTileHp,
+    barrierTileStanding,
   hoveredUnit,
 } from './battle.svelte';
-  import { LEVEL, TILE, tileToWorld, type Tile } from './grid';
+  import { LEVEL, TILE, parseKey, tileKey, tileToWorld, type Tile } from './grid';
   import { landableTiles, tilesInBurst } from './pathfinding';
-  import { barrierTiles, exitTiles } from './stages';
+  import { exitTiles } from './stages';
   import { SPRITE_WORLD_H } from './sprites';
   import { hasLeft } from './units';
 
@@ -66,10 +67,36 @@
   const stage = $derived(currentStage());
   /** The way out, if this battle has one. */
   const doorway = $derived(exitTiles(stage));
-  /** Whether the way out is still shut behind the stage's barrier. */
-  const shut = $derived(barrierStanding());
-  /** The barrier's own squares, drawn only while it stands. */
-  const barrier = $derived(shut ? barrierTiles(stage) : new Set<string>());
+  /** Whether ANY barrier tile still stands under world x — a whole column. */
+  function columnStanding(x: number): boolean {
+    const b = stage.exit?.barrier;
+    if (!b) return false;
+    for (let y = b.y; y < b.y + b.d; y++) if (barrierTileStanding(x, y)) return true;
+    return false;
+  }
+  // Split, not one shut/open boolean: a run of four pools opens one square at
+  // a time, so the door reads that way too — the tile over a fallen board is
+  // green the instant it falls, whatever its neighbours still have standing.
+  const doorwayClosed = $derived.by(() => {
+    if (!stage.exit?.barrier) return new Set<string>();
+    const out = new Set<string>();
+    for (const key of doorway) if (columnStanding(parseKey(key).x)) out.add(key);
+    return out;
+  });
+  const doorwayOpen = $derived.by(() => {
+    const out = new Set(doorway);
+    for (const key of doorwayClosed) out.delete(key);
+    return out;
+  });
+  /** The barrier's own squares that are STILL standing, drawn amber. */
+  const barrier = $derived.by(() => {
+    const b = stage.exit?.barrier;
+    const out = new Set<string>();
+    if (!b) return out;
+    for (let y = b.y; y < b.y + b.d; y++)
+      for (let x = b.x; x < b.x + b.w; x++) if (barrierTileStanding(x, y)) out.add(tileKey(x, y));
+    return out;
+  });
   /** The one the battle is decided by, if it is decided by one. */
   const headId = $derived(stage.head?.id ?? null);
   /** Whoever the mouse is resting on, for the card that floats over his head. */
@@ -156,8 +183,10 @@
   }
 
   /**
-   * How far through the barrier the gang has got, 0 to 1, for the props that
-   * ARE the barrier.
+   * How far through ITS OWN pool one barrier tile has got, 0 to 1. Per tile,
+   * not one number for the whole run: each square now opens on its own HP, so
+   * the wear the player sees on a given panel has to answer for that panel
+   * alone, not for whatever the other three still have standing.
    *
    * The number in the panel was the only thing that moved while they hit it:
    * sixty points is four or five swings, and for the first three of them the
@@ -167,24 +196,41 @@
    * promise the picture cannot make on its own, but nobody should have to read
    * it to know a punch landed.
    */
-  const barrierWear = $derived.by(() => {
-    const full = stage.exit?.barrier?.hp ?? 0;
-    if (!full || !shut) return 0;
-    return Math.min(1, Math.max(0, 1 - battle.barrierHp / full));
-  });
-
-  /** Whether this prop's footprint stands on the barrier rectangle. */
-  function onBarrier(p: (typeof stage.props)[number]): boolean {
+  function barrierTileWear(p: (typeof stage.props)[number]): number {
     const b = stage.exit?.barrier;
-    if (!b) return false;
-    return p.x < b.x + b.w && p.x + p.w > b.x && p.y < b.y + b.d && p.y + p.d > b.y;
+    // Wear only ever applies to a piece standing on exactly one barrier tile —
+    // the wood itself. A wider piece (the flap that fills the whole run once
+    // it is down) has nothing left to wear down.
+    if (!b || p.w !== 1 || p.d !== 1) return 0;
+    if (p.x < b.x || p.x >= b.x + b.w || p.y < b.y || p.y >= b.y + b.d) return 0;
+    const full = Math.round(b.hp / (b.w * b.d));
+    if (full <= 0) return 0;
+    return Math.min(1, Math.max(0, 1 - barrierTileHp(p.x, p.y) / full));
+  }
+
+  /**
+   * Whether every barrier tile under this prop's own footprint has fallen.
+   *
+   * The same check answers BOTH senses of `when`: a `'closed'` piece (the four
+   * single-tile fence panels) wants its own one tile still up, and an `'open'`
+   * piece (the flap that fills the whole run) wants every tile under its wider
+   * footprint down — which for a piece exactly as wide as the barrier means
+   * ALL FOUR, not just the one it happens to sit nearest. One loop over
+   * whatever the footprint actually covers serves both without a special case.
+   */
+  function footprintOpen(p: (typeof stage.props)[number]): boolean {
+    const b = stage.exit?.barrier;
+    if (!b) return true;
+    for (let y = p.y; y < p.y + p.d; y++)
+      for (let x = p.x; x < p.x + p.w; x++) if (barrierTileStanding(x, y)) return false;
+    return true;
   }
 
   // Props are centred on their footprint, so moving one is editing the anchor
   // in stages.ts and nothing else.
   const scenery = $derived(
     stage.props
-      .filter((p) => !p.when || (p.when === 'closed') === shut)
+      .filter((p) => !p.when || (p.when === 'open') === footprintOpen(p))
       .map((p) => {
         const w = tileToWorld(map, p.x + (p.w - 1) / 2, p.y + (p.d - 1) / 2, p.height);
         return {
@@ -192,7 +238,7 @@
           pos: [w.x, w.y, w.z] as [number, number, number],
           rot: ((p.turns ?? 0) * Math.PI) / 2,
           variant: p.variant ?? 0,
-          wear: onBarrier(p) ? barrierWear : 0,
+          wear: barrierTileWear(p),
         };
       })
   );
@@ -273,19 +319,17 @@
      this one describes a standing fact about the room. Green because it is the
      one colour the HUD has left, and drawn above the rest at half strength so a
      blue movement panel never hides it and it never shouts over one. -->
-{#if doorway.size}
-  <!-- Amber while the barrier stands: the squares are still the way out, they
-       are just not open yet, and green would promise a walk the pathfinder
-       refuses. The barrier itself gets the same amber, so the thing to hit and
-       the thing it is hiding read as one shut door. -->
-  <TileOverlays
-    {map}
-    tiles={doorway}
-    color={shut ? '#ffb35c' : '#79e07a'}
-    opacity={0.5}
-    lift={0.055}
-    pulse={0.35}
-  />
+{#if doorwayClosed.size}
+  <!-- Amber over whichever doorway squares are still behind standing wood:
+       they are still the way out, just not open yet, and green would promise
+       a walk the pathfinder refuses. The barrier itself gets the same amber,
+       so the thing to hit and the thing it is hiding read as one shut door. -->
+  <TileOverlays {map} tiles={doorwayClosed} color="#ffb35c" opacity={0.5} lift={0.055} pulse={0.35} />
+{/if}
+{#if doorwayOpen.size}
+  <!-- And green the instant its own column falls — one hole at a time, not
+       all four waiting on the last board in the run. -->
+  <TileOverlays {map} tiles={doorwayOpen} color="#79e07a" opacity={0.5} lift={0.055} pulse={0.35} />
 {/if}
 {#if barrier.size}
   <TileOverlays {map} tiles={barrier} color="#ffb35c" opacity={0.45} lift={0.05} pulse={0.2} />
