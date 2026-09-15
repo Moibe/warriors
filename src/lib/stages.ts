@@ -351,18 +351,26 @@ export const STAGES: Record<StageId, Stage> = {
       { kind: 'conclave', x: 5, y: 1, w: 2, d: 1, height: 0, variant: 0 },
       { kind: 'conclave', x: 7, y: 1, w: 2, d: 1, height: 0, variant: 0 },
       { kind: 'conclave', x: 9, y: 1, w: 2, d: 1, height: 0, variant: 0 },
-      // THE PERMANENT BOUNDARY, six tiles north of the barrier and three south
-      // of it, is MURO (PIECE.wall, variant 9): the arcade's own cut stone,
-      // stacked to the fence's exact height, no prop that could ever look like
-      // something you swing at. That is a deliberate reversal of what this run
-      // used to be: it used to be wood everywhere, on the argument that a
-      // fence dressed the same from end to end tells the player nothing about
-      // where it gives, and the lamp plus the amber panel were the only hint.
-      // Wood standing at every tile you cannot break was the thing that
-      // argument cost, and it read as the one question this board should
-      // never raise - "why can I open this plank and not that one, they are
-      // the same plank." Stone answers it before it is asked: nine tiles of
-      // park wall, and then four tiles that are visibly, unmistakably wood.
+      // THE PERMANENT BOUNDARY runs the WHOLE rest of the row, eleven tiles
+      // west of the barrier and three east of it - all of it MURO (PIECE.wall,
+      // variant 9), the arcade's own cut stone stacked to the fence's exact
+      // height, no prop that could ever look like something you swing at.
+      // It has to run the full width or it argues against itself: a wall
+      // that stops five tiles short of the corner is a wall with a door in
+      // it nobody built, and the one flank on this board with no Riff and no
+      // spotlight watching it is exactly the flank a player will test. The
+      // other three sides never need this - the arcade is a wall AND a line
+      // of Riffs, the false wall is a wall AND the camera never asks you to
+      // doubt it, the cruiser's beam is what stands in for the police on the
+      // fourth - so the one side with nothing guarding it but geometry is the
+      // one side the geometry has to be complete about.
+      // Stone answers before it is asked: fourteen tiles of park wall, and
+      // then four tiles that are visibly, unmistakably wood.
+      { kind: 'conclave', x: 0, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 1, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 2, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 3, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
+      { kind: 'conclave', x: 4, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
       { kind: 'conclave', x: 5, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
       { kind: 'conclave', x: 6, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
       { kind: 'conclave', x: 7, y: 12, w: 1, d: 1, height: 5, turns: 2, variant: 9 },
