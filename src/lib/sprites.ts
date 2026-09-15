@@ -1059,6 +1059,287 @@ const LIZZIE_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   '    OKKKKO OKSSO    ',
 ]);
 
+/**
+ * A Rogue.
+ *
+ * The gang with no costume, and the only one whose design is not having one:
+ * a sleeveless vest over a work shirt, their own hair, nothing on the head. It
+ * is deliberately the dullest silhouette in the game, because all the colour on
+ * this board is spent on one man and the eye has to go to him on its own.
+ *
+ * Drawn for sand rather than for asphalt. Four boards' worth of sprites were
+ * built to read against a dark ground; here the ground is the lightest thing on
+ * screen, so what holds these together is the outline and the fact that every
+ * garment on them is a mid-dark value. Nothing pale, nothing that matches the
+ * beach.
+ */
+const ROGUE_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSESSESHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHKSSSSKHO   ',
+  '    OGKKKKGO    ',
+  '   OAAGGGGAAO   ',
+  '  OGOAAGGAAOGO  ',
+  '  OFOAAGGAAOGO  ',
+  '  OFOAAGGAAOGO  ',
+  '  OSOAAGGAAOSO  ',
+  '   OOAAGGAAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OBBOOBBO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+/** From behind: nothing. No skull, no bull, no name. They never sewed one on. */
+const ROGUE_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHJJJJHHO   ',
+  '    OGJJJJGO    ',
+  '   OAAAAAAAAO   ',
+  '  OGOAAAAAAOGO  ',
+  '  OFOAAAAAAOGO  ',
+  '  OFOAAAAAAOGO  ',
+  '  OSOAAAAAAOSO  ',
+  '   OOAGGGGAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OBBOOBBO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+
+const ROGUE_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHOOSSOOHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHKSOOSKHO   ',
+  '    OGKKKKGO    ',
+  '   OAAGGGGAAO   ',
+  ' OFOAAAGGAAAOGO ',
+  ' OSOAAAGGAAAOSO ',
+  '  OGOAAGGAAOGO  ',
+  '  OGOAAGGAAOGO  ',
+  '   OOAAGGAAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '   OCCOOOOCCO   ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
+
+const ROGUE_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHJJJJHHO   ',
+  '    OGJJJJGO    ',
+  '   OAAAAAAAAO   ',
+  ' OFOAAAAAAAAOGO ',
+  ' OSOAAAAAAAAOSO ',
+  '  OGOAAAAAAOGO  ',
+  '  OGOAAAAAAOGO  ',
+  '   OOAGGGGAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '   OCCOOOOCCO   ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+]);
+
+
+const ROGUE_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '                 OBO',
+  '   OOOOOO       OBBO',
+  '  OHHHHHHO     OCBBO',
+  ' OHHHHHHHHO   OCCCCO',
+  ' OHSSSSSSHO OBBCCCO ',
+  ' OHSSSSSSHOOGAAABBO ',
+  ' OHSOSSOSHOOGAAAAO  ',
+  ' OHKSSSSKHOOFGAAAO  ',
+  '  OKSOOSKOOGGAAO    ',
+  '   OKKKKO OGSSO     ',
+]);
+
+/**
+ * Luther, and the argument for his own templates rather than his own palette.
+ *
+ * Palette was the cheap answer and it does not work: his wine vest and their
+ * khaki come out at the same luminance, and on light sand every figure reads as
+ * a dark hole rather than as an interior, so the two would be the same stain.
+ * Tone shows in a portrait at four times size; it does not show on the board.
+ *
+ * So the difference is silhouette, in the three things that are not dark. He
+ * starts two rows lower than anybody else in the game — feet still on the line,
+ * so he is short rather than sunk, and standing among his own men he is the one
+ * head that does not reach. He is two columns narrower. And he has the largest
+ * face on the board: a head as wide as his shoulders, which is the proportion
+ * of a small man, with none of the stubble his men carry, framed by the darkest
+ * hair here. The biggest island of light on the beach belongs to the smallest
+ * man on it.
+ */
+const LUTHER_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '                ',
+  '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHSESSESHO   ',
+  '   OHSSSSSSHO   ',
+  '    OSSSSSSO    ',
+  '     OKKKKO     ',
+  '    OAAAAAAO    ',
+  '   OWOAAAAOWO   ',
+  '   OWOAAAAOWO   ',
+  '   OSOAAAAOSO   ',
+  '    OOAAAAOO    ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OBBOOBBO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+
+const LUTHER_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '                ',
+  '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHJJJJHHO   ',
+  '    OHJJJJHO    ',
+  '     OKKKKO     ',
+  '    OAAAAAAO    ',
+  '   OWOAAAAOWO   ',
+  '   OWOAAAAOWO   ',
+  '   OSOAAAAOSO   ',
+  '    OOAAAAOO    ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '    OCCOOCCO    ',
+  '    OCCOOCCO    ',
+  '    OBBOOBBO    ',
+  '    OBBOOBBO    ',
+  '   OBBBOOBBBO   ',
+  '   OOOO  OOOO   ',
+]);
+
+
+const LUTHER_HURT_FRONT = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHSSSSSSHO   ',
+  '   OHOOSSOOHO   ',
+  '   OHSSSSSSHO   ',
+  '    OSSOOSSO    ',
+  '     OKKKKO     ',
+  '    OAAAAAAO    ',
+  '  OWOAAAAAAOWO  ',
+  '  OSOAAAAAAOSO  ',
+  '   OOAAAAAAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '   OCCOOOOCCO   ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+  '                ',
+]);
+
+
+const LUTHER_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
+  '                ',
+  '                ',
+  '     OOOOOO     ',
+  '    OHHHHHHO    ',
+  '   OHHHHHHHHO   ',
+  '   OHHHHHHHHO   ',
+  '   OHHJJJJHHO   ',
+  '   OHHJJJJHHO   ',
+  '    OHJJJJHO    ',
+  '     OKKKKO     ',
+  '    OAAAAAAO    ',
+  '  OWOAAAAAAOWO  ',
+  '  OSOAAAAAAOSO  ',
+  '   OOAAAAAAOO   ',
+  '    OBBBBBBO    ',
+  '    OCCCCCCO    ',
+  '   OCCOOOOCCO   ',
+  '   OCCOOOOCCO   ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBOOOOOOBBO  ',
+  '  OBBBOOOOBBBO  ',
+  '  OOOO    OOOO  ',
+  '                ',
+  '                ',
+]);
+
+
+const LUTHER_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
+  '                    ',
+  '                OBO ',
+  '   OOOOOO      OBBO ',
+  '  OHHHHHHO    OCCBO ',
+  ' OHSSSSSSHO OBWCCO  ',
+  ' OHSSSSSSHOOWAAABO  ',
+  ' OHSOSSOSHOOWAAAO   ',
+  ' OHSSSSSSHOOAAAAO   ',
+  '  OSSOOSSOOAAASO    ',
+  '   OKKKKO OKSSO     ',
+]);
+
 const BODIES = {
   plain: {
     front: PLAIN_FRONT,
@@ -1101,6 +1382,20 @@ const BODIES = {
     hurtFront: LIZZIE_HURT_FRONT,
     hurtBack: LIZZIE_HURT_BACK,
     down: LIZZIE_DOWN,
+  },
+  rogue: {
+    front: ROGUE_FRONT,
+    back: ROGUE_BACK,
+    hurtFront: ROGUE_HURT_FRONT,
+    hurtBack: ROGUE_HURT_BACK,
+    down: ROGUE_DOWN,
+  },
+  luther: {
+    front: LUTHER_FRONT,
+    back: LUTHER_BACK,
+    hurtFront: LUTHER_HURT_FRONT,
+    hurtBack: LUTHER_HURT_BACK,
+    down: LUTHER_DOWN,
   },
 } as const;
 

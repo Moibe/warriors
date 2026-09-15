@@ -542,8 +542,80 @@ export function orphans(spots?: Spot[]): Unit[] {
   return placeSquad(ORPHAN_SQUAD(), spots);
 }
 
+// ---------------------------------------------------------------------------
+// The Rogues
+// ---------------------------------------------------------------------------
+//
+// The gang that started the night, and the last one on the way home. Five men
+// around a small one: the threat is not the squad, it is a name, and everything
+// here is arranged so the eye finds him without being told. They are the only
+// gang with nothing shared to wear, so the only warm colour on the beach is
+// Luther's vest.
+
+const ROGUE_SQUAD = () => [
+  // Behind his own car, with the five of them in front. The highest Charge Time
+  // on the board: he is the one who called them out, so he moves first, and the
+  // first thing he does is step out from behind the sheet metal.
+  createUnit({
+    id: 'luther', name: 'Luther', job: 'coward', team: 'enemy',
+    x: 5, y: 7, facing: 'e', ct: 52, brave: 34, faith: 60,
+  }),
+  // Stood on him. The first thing that has to be moved out of the way.
+  createUnit({
+    id: 'ratchet', name: 'Ratchet', job: 'minder', team: 'enemy',
+    x: 6, y: 7, facing: 'e', ct: 20, brave: 78,
+    paletteOverride: { H: '#3a2f26', J: '#241c16', S: '#c99a6e', K: '#a67a52' },
+  }),
+  createUnit({
+    id: 'drano', name: 'Drano', job: 'minder', team: 'enemy',
+    x: 10, y: 6, facing: 'e', ct: 38,
+    paletteOverride: { H: '#5a4a3a', J: '#3a2f24', S: '#e0b489', K: '#b98a63' },
+  }),
+  // Corking the middle gap of the groyne, which is the short way through.
+  createUnit({
+    id: 'crow', name: 'Crow', job: 'minder', team: 'enemy',
+    x: 10, y: 8, facing: 'e', ct: 30,
+    paletteOverride: { H: '#17141f', J: '#0c0a11', S: '#7a5030', K: '#5b3a22' },
+  }),
+  createUnit({
+    id: 'wire', name: 'Wire', job: 'chaser', team: 'enemy',
+    x: 8, y: 3, facing: 'e', ct: 14,
+    paletteOverride: { H: '#8d6a3a', J: '#5e4524', S: '#e8c19b', K: '#c0946d' },
+  }),
+  createUnit({
+    id: 'kero', name: 'Kero', job: 'chaser', team: 'enemy',
+    x: 9, y: 10, facing: 'e', ct: 8,
+    paletteOverride: { H: '#2a211c', J: '#17120f', S: '#a87c58', K: '#835c3d' },
+  }),
+];
+
+/** Luther and the five he hides behind. */
+export function rogues(spots?: Spot[]): Unit[] {
+  return placeSquad(ROGUE_SQUAD(), spots);
+}
+
 /**
- * Some of the nine, in the order you name them.
+ * Mercy, who is not one of them and comes anyway.
+ *
+ * Her falling is not a defeat. Making it one would turn the closing beat of the
+ * game into the most hated mechanic in the genre, and it would be false to the
+ * film besides: nobody on that beach ever threatens her. What she costs you if
+ * she goes down is the rallying, and that is enough.
+ */
+export function mercy(spots?: Spot[]): Unit[] {
+  return placeSquad(
+    [
+      createUnit({
+        id: 'mercy', name: 'Mercy', job: 'tagalong', team: 'ally',
+        x: 16, y: 1, facing: 'w', ct: 8, brave: 88, faith: 70,
+        paletteOverride: { A: '#8e2a3a', H: '#8d3b1e', J: '#5e2412' },
+      }),
+    ],
+    spots
+  );
+}
+
+/** Some of the nine, in the order you name them.
  *
  * `warriors(spots)` hands out positions by index across the whole squad, which
  * is right when all nine turn up and useless when only three do — filtering

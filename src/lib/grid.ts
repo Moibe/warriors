@@ -37,6 +37,8 @@ export type Surface =
   | 'wood' // tarima — the bandstand deck
   | 'metal' // chapa — the roof of something you climbed onto
   | 'carpet' // moqueta — the first indoor floor in the game
+  | 'beach' // arena de playa — lighter than 'sand', which Riverside still uses
+  | 'deck'
   | 'water'; // charco — impassable under the base rules
 
 export type Facing = 'n' | 'e' | 's' | 'w';
@@ -76,6 +78,8 @@ export const SURFACE_NAMES: Record<Surface, string> = {
   wood: 'Tarima',
   metal: 'Chapa',
   carpet: 'Moqueta',
+  beach: 'Arena',
+  deck: 'Tarima de mar',
   water: 'Charco',
 };
 
@@ -102,6 +106,14 @@ export const SURFACE_COLORS: Record<Surface, { top: string; side: string }> = {
   // The oxblood carpet of a living room lit by one red lampshade. Warm where
   // every other surface in the game is cold, which is most of what says indoors.
   carpet: { top: '#4a1f24', side: '#2e1216' },
+  // Beach sand at dawn, and #b59a74 is a ceiling rather than a preference:
+  // any lighter and the Warriors' bone skull stops reading on top of it. It is
+  // its own surface instead of a brighter 'sand' because Riverside's infield
+  // uses that one, and repainting the beach would repaint the park.
+  beach: { top: '#b59a74', side: '#7e6647' },
+  // Boardwalk planks, grey with salt. 'wood' is park-kiosk brown, and a third
+  // brown beside warm sand under warm light is how a board turns to mud.
+  deck: { top: '#6e6459', side: '#45403a' },
   wood: { top: '#5d4126', side: '#3b2a18' },
   water: { top: '#2b4a63', side: '#1a2f40' },
 };
@@ -230,6 +242,8 @@ const SURFACE_CHARS: Record<string, Surface> = {
   m: 'wood',
   x: 'metal',
   c: 'carpet',
+  b: 'beach',
+  p: 'deck',
   w: 'water',
 };
 

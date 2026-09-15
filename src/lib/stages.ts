@@ -11,11 +11,21 @@
 // and never a unit somebody already took the bat off.
 
 import { tileKey, type BattleMap } from './grid';
-import { gunHillRoad, lizziePlace, orphanBlock, riversidePark } from './maps';
-import { furies, lizzies, orphans, turnbull, warriors, warriorsNamed, type Unit } from './units';
+import { coneyIsland, gunHillRoad, lizziePlace, orphanBlock, riversidePark } from './maps';
+import {
+  furies,
+  lizzies,
+  mercy,
+  orphans,
+  rogues,
+  turnbull,
+  warriors,
+  warriorsNamed,
+  type Unit,
+} from './units';
 
 /** Which procedural prop draws it — one key per entry in Scene's PROPS map. */
-export type PropKind = 'comfortStation' | 'bus' | 'parkedCar' | 'furniture';
+export type PropKind = 'comfortStation' | 'bus' | 'parkedCar' | 'furniture' | 'coneyIsland';
 
 /**
  * The way out.
@@ -91,13 +101,51 @@ export type Lighting = {
  * moonlight from the east so the faces the camera sees stay lit and the ledges
  * keep throwing shadows, with a sodium tint in the ambient for the park lamps.
  */
+/**
+ * The only daylight in the game, and it is paid for in the sky rather than in
+ * the rig.
+ *
+ * There are two layers here and only one of them is lit: the ground and the
+ * props take the light, while everything the player reads the rules with — the
+ * overlays, the cursor, the rings, the sprites, the numbers — is deliberately
+ * unlit so it sits on top at night. Turn the rig up for a sunrise and the
+ * terrain overtakes that layer: it does not vanish, it inverts, and stops being
+ * lit glass to become a stain. So the rig stays inside the band the other four
+ * battles use, and the morning happens in the CSS sky behind a transparent
+ * canvas, which costs the renderer nothing.
+ */
+export const DAWN_SKY: Sky = {
+  zenith: '#2b3f6b',
+  upper: '#6d6f9c',
+  lower: '#d59a72',
+  horizon: '#f2c98a',
+  glow: 'rgba(255, 196, 120, 0.42)',
+};
+
+/**
+ * Sunrise over the water, low and from the east — along the beach rather than
+ * into it or behind it, which is what the place actually does. Kept at y 13
+ * even so: the shadow bias is calibrated for high keys, and a literally
+ * grazing light gives back acne and shadows that fall out of the frustum.
+ */
+export const DAWN_RIG: Lighting = {
+  ambient: { color: '#b9a898', intensity: 0.62 },
+  hemisphere: { sky: '#c6b9c8', ground: '#8a6f52', intensity: 0.78 },
+  key: { color: '#ffd9a8', intensity: 1.5, position: [17, 13, 2] },
+};
+
 export const NIGHT_RIG: Lighting = {
   ambient: { color: '#8fa4c8', intensity: 0.5 },
   hemisphere: { sky: '#7f9bd0', ground: '#4a4030', intensity: 0.75 },
   key: { color: '#cfd9f2', intensity: 1.55, position: [11, 15, 4] },
 };
 
-export type StageId = 'riverside-park' | 'gun-hill-road' | 'orphan-block' | 'lizzie-place';
+export type StageId =
+  | 'riverside-park'
+  | 'gun-hill-road'
+  | 'orphan-block'
+  | 'lizzie-place'
+  | 'coney-island';
 
 export type Stage = {
   id: StageId;
@@ -113,6 +161,32 @@ export type Stage = {
   outcome: { victory: string; defeat: string };
   /** Present only on a battle that is won by getting out of it. */
   exit?: Exit;
+  /** Present only on a battle that ends when one man goes down. */
+  head?: Head;
+};
+
+/**
+ * The one who matters.
+ *
+ * Shaped like {@link Exit} and for the same reason: it is a rule of THIS
+ * battle, not a property of a person. Luther decides Coney Island and nothing
+ * else — a flag on the unit would travel with him to boards where dropping him
+ * means nothing, would have to be set inside a squad factory that knows nothing
+ * about stages, and would be one more thing restarting has to remember. An id
+ * named by the stage cannot go stale: the stage that names him is the one that
+ * deals the roster.
+ *
+ * Never point it at somebody the board cannot reach, and never put it on a
+ * stage that also has an `exit` — the door answers first and this would never
+ * fire. There is a check for both in `restart`.
+ */
+export type Head = {
+  /** Unit id on this stage's own roster. */
+  id: string;
+  /** Heading over the HUD window. Player-facing, so Spanish. */
+  label: string;
+  /** What the report prints on the beat he goes down. */
+  line: string;
 };
 
 /** The doorway as tile keys, for the overlay. Empty on a stage without one. */
@@ -317,19 +391,77 @@ export const STAGES: Record<StageId, Stage> = {
       defeat: 'No salisteis los tres. La recompensa de los Riffs se cobra esta noche.',
     },
   },
+
+  'coney-island': {
+    id: 'coney-island',
+    name: 'Coney Island',
+    rival: 'Rogues',
+    map: coneyIsland,
+    // Everything enormous stands off the board, north of the top edge, where
+    // nobody walks and nothing collides. What is inside the field is knee-high
+    // on purpose: the groyne posts, an upturned boat, driftwood, a stump, and
+    // the car they came in — the only real cover on the beach belongs to them.
+    props: [
+      // The horizon hangs off the camera from the origin and lays out its own
+      // rides internally, so it wants the middle of the board rather than a
+      // corner behind it: placed off the north edge it drew itself another nine
+      // tiles further back and walked out of frame.
+      { kind: 'coneyIsland', x: 9, y: 6, w: 1, d: 1, height: 0, variant: 0 },
+      { kind: 'coneyIsland', x: 0, y: 1, w: 20, d: 1, height: 5, variant: 1 },
+      { kind: 'coneyIsland', x: 2, y: 1, w: 1, d: 1, height: 5, variant: 2 },
+      { kind: 'coneyIsland', x: 17, y: 1, w: 1, d: 1, height: 5, variant: 2 },
+      { kind: 'coneyIsland', x: 7, y: 1, w: 2, d: 1, height: 5, variant: 3 },
+      { kind: 'coneyIsland', x: 12, y: 5, w: 1, d: 2, height: 1, variant: 4 },
+      { kind: 'coneyIsland', x: 12, y: 9, w: 1, d: 2, height: 1, variant: 4 },
+      { kind: 'coneyIsland', x: 13, y: 3, w: 1, d: 1, height: 1, variant: 5 },
+      { kind: 'coneyIsland', x: 10, y: 2, w: 1, d: 1, height: 1, variant: 5 },
+      { kind: 'coneyIsland', x: 0, y: 12, w: 20, d: 1, height: 0, variant: 6 },
+      { kind: 'parkedCar', x: 6, y: 5, w: 4, d: 2, height: 1, turns: 1, variant: 2 },
+    ],
+    head: {
+      id: 'luther',
+      label: 'El que cuenta',
+      line: 'Luther cae. Nadie levanta la mano por él.',
+    },
+    // Six of them made it, and they come down the east ramp: two still on the
+    // planks, four already on the sand. It is a deployment of arrival, not of
+    // formation — there is no front line left to form.
+    roster: () => [
+      ...warriorsNamed(
+        ['swan', 'snow', 'cowboy', 'cochise', 'vermin', 'rembrandt'],
+        [
+          { x: 14, y: 8, facing: 'w', ct: 26 },
+          { x: 16, y: 6, facing: 'w', ct: 40 },
+          { x: 16, y: 9, facing: 'w', ct: 34 },
+          { x: 17, y: 8, facing: 'w', ct: 18 },
+          { x: 16, y: 4, facing: 'w', ct: 12 },
+          { x: 16, y: 3, facing: 'w', ct: 0 },
+        ]
+      ),
+      ...mercy(),
+      ...rogues(),
+    ],
+    sky: DAWN_SKY,
+    light: DAWN_RIG,
+    outcome: {
+      victory: 'Luther en la arena y los suyos quietos alrededor. Ya podéis ir a casa.',
+      defeat: 'Amanece en Coney Island y no llegasteis a él. Nadie va a saber nunca la verdad.',
+    },
+  },
 };
 
 /**
  * The order the picker offers them, which is the order they happen on the way
  * home: the Turnbull catch them on Gun Hill Road, the train dumps them on the
  * Orphans' block, the Furies are waiting further south in Riverside Park, and
- * the Lizzies ask them upstairs afterwards.
+ * the Lizzies ask them upstairs afterwards. Coney Island is the morning.
  */
 export const STAGE_LIST: Stage[] = [
   STAGES['gun-hill-road'],
   STAGES['orphan-block'],
   STAGES['riverside-park'],
   STAGES['lizzie-place'],
+  STAGES['coney-island'],
 ];
 
 export const DEFAULT_STAGE: StageId = 'riverside-park';

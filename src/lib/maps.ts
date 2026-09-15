@@ -7,7 +7,8 @@ import { parseMap, type MapSource } from './grid';
 //
 //   heights   '0'-'9','a'-'z' → levels, '.' → void (a hole in the map)
 //   surfaces  g césped · d tierra · s concreto · k asfalto · n tierra batida ·
-//             m tarima · x chapa · c moqueta · w charco
+//             m tarima · x chapa · c moqueta · b arena de playa ·
+//             p tarima de mar · w agua
 //   blocked   '#' → the tile is drawn but nobody can stand on it
 //
 // Every layer must have the same number of rows and columns. Spaces are
@@ -288,3 +289,76 @@ const LIZZIE_PLACE: MapSource = {
 };
 
 export const lizziePlace = parseMap(LIZZIE_PLACE);
+
+/**
+ * "Coney Island" — the morning after, and the last board.
+ *
+ * The biggest and the emptiest, on purpose, right after the smallest and the
+ * most walled-in. The beach faces south, so the boardwalk and everything behind
+ * it run along the top, the sand fills the middle, and the water closes the
+ * bottom — a hard edge that needs no wall.
+ *
+ * The problem this board had to solve is a revolver on open ground, where the
+ * line of fire that saved the player in the Lizzies' flat has nothing to stop
+ * it. The answer is that the cover here is knee-high. Every man on this beach
+ * stands at level 1 and nobody ever climbs, so a blocked tile at level 3 — the
+ * groyne posts, an upturned boat, driftwood, a concrete stump, the Rogues' own
+ * car — is already taller than both ends of any shot and cuts the line dead.
+ * It is the first board whose cover cannot hide a single sprite: spectacular
+ * overhead, nothing at face height. Everything enormous — the Wonder Wheel, the
+ * parachute jump, the Cyclone — stands off the board entirely, behind the
+ * north edge, where it can be as big as it likes.
+ */
+const CONEY_ISLAND: MapSource = {
+  name: 'Coney Island',
+  heights: [
+    '55555555555555555555',
+    '55555555555555555555',
+    '11144111113111144111',
+    '11133111111113133111',
+    '11122111111111122111',
+    '11111145541131111111',
+    '11111145541131111111',
+    '11111111111111331111',
+    '11111111111111111111',
+    '11111111111131111111',
+    '11111111111131111111',
+    '11111111111111111111',
+    '00000000000000000000',
+    '00000000000000000000',
+  ],
+  surfaces: [
+    'pppppppppppppppppppp',
+    'pppppppppppppppppppp',
+    'bbbppbbbbbsbbbbppbbb',
+    'bbbppbbbbbbbbmbppbbb',
+    'bbbppbbbbbbbbbbppbbb',
+    'bbbbbbxxxxbbmbbbbbbb',
+    'bbbbbbxxxxbbmbbbbbbb',
+    'bbbbbbbbbbbbbbmmbbbb',
+    'bbbbbbbbbbbbbbbbbbbb',
+    'bbbbbbbbbbbbmbbbbbbb',
+    'kkkkkkkkkkkkmkkkkkkk',
+    'kkkkkkkkkkkkkkkkkkkk',
+    'wwwwwwwwwwwwwwwwwwww',
+    'wwwwwwwwwwwwwwwwwwww',
+  ],
+  blocked: [
+    '....................',
+    '....................',
+    '..........#.........',
+    '.............#......',
+    '....................',
+    '.......##...#.......',
+    '.......##...#.......',
+    '..............##....',
+    '....................',
+    '............#.......',
+    '............#.......',
+    '....................',
+    '....................',
+    '....................',
+  ],
+};
+
+export const coneyIsland = parseMap(CONEY_ISLAND);

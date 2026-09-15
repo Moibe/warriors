@@ -462,6 +462,22 @@ function checkVictory(): boolean {
   const out = battle.units.filter((u) => u.team === 'ally' && hasLeft(u)).length;
   const enemies = battle.units.some((u) => u.team === 'enemy' && inPlay(u));
 
+  // One man decides it. Checked after the door because a battle has one kind of
+  // ending and the door returns on every path it cares about; checked before
+  // extermination because clearing the beach has to keep ending it too. Nobody
+  // is going to manage that, but a board with nobody left standing must never
+  // be a board where you are still looking for somebody.
+  const head = stage().head;
+  if (head) {
+    const him = unitById(battle.units, head.id);
+    if (import.meta.env.DEV && !him) {
+      // Without this a typo turns the finale into an extermination and nothing
+      // fails: the condition simply never fires.
+      throw new Error(`La escena ${stage().id} nombra a "${head.id}", que no está en su reparto`);
+    }
+    if (him && !isAlive(him)) return decide('ally', head.line);
+  }
+
   if (exit) {
     if (out >= exit.needed) return decide('ally', 'Fuera. La puerta queda atrás.');
     if (out + standing < exit.needed) {
@@ -1054,6 +1070,11 @@ export function restart() {
   // the board that is about to be in play, not the one that just ended.
   map = STAGES[stageId].map;
   battle.units = STAGES[stageId].roster();
+  if (import.meta.env.DEV && STAGES[stageId].exit && STAGES[stageId].head) {
+    // A stage carrying both would silently be a door battle: the door answers
+    // first and the head would never come up.
+    throw new Error(`La escena ${stageId} tiene puerta y cabeza a la vez`);
+  }
   battle.phase = 'clock';
   battle.activeId = null;
   battle.ability = null;

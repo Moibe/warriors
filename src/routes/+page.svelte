@@ -32,7 +32,7 @@
   import { forecast, isValidTarget } from '$lib/combat';
   import { facingTo, tileAt, tileKey, type Coord, type Facing } from '$lib/grid';
   import { tilesInBurst } from '$lib/pathfinding';
-  import { fallenAt, isAlive, unitAt } from '$lib/units';
+  import { fallenAt, isAlive, unitAt, unitById } from '$lib/units';
 
   import BattleLog from '$lib/ui/BattleLog.svelte';
   import CameraControls from '$lib/ui/CameraControls.svelte';
@@ -42,11 +42,12 @@
   import StageSelect from '$lib/ui/StageSelect.svelte';
   import { STAGE_LIST, type StageId } from '$lib/stages';
   import EscapeTally from '$lib/ui/EscapeTally.svelte';
+  import HeadMark from '$lib/ui/HeadMark.svelte';
   import TileInfo from '$lib/ui/TileInfo.svelte';
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '0.18.0';
+  const APP_VERSION = '1.0.0';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -463,6 +464,9 @@
       {#if stage.exit}
         <EscapeTally units={battle.units} needed={stage.exit.needed} label={stage.exit.label} />
       {/if}
+      {#if stage.head}
+        <HeadMark unit={unitById(battle.units, stage.head.id)} label={stage.head.label} />
+      {/if}
     </div>
 
     <div class="corner top-right">
@@ -633,6 +637,14 @@
   .header {
     color: #f3f7ff;
     text-shadow: 0 2px 6px rgba(0, 20, 50, 0.85);
+    /* These two are the only parts of the HUD with no window behind them: they
+       sit straight on the sky. That was safe for four battles of navy night and
+       stops being safe the morning the sky turns gold, so they carry their own
+       ground now rather than trusting a drop shadow picked against dark blue. */
+    background: rgba(6, 12, 32, 0.45);
+    padding: 0.3rem 0.6rem 0.35rem;
+    border-radius: 5px;
+    display: inline-block;
   }
 
   /* A button, but it has to carry the weight the heading used to. The only
@@ -711,8 +723,11 @@
     transform: translateX(-50%);
     margin: 0;
     font-size: 0.6rem;
-    color: rgba(240, 248, 255, 0.62);
+    color: rgba(240, 248, 255, 0.72);
     text-shadow: 0 1px 3px rgba(0, 20, 50, 0.9);
+    background: rgba(6, 12, 32, 0.5);
+    padding: 0.14rem 0.55rem;
+    border-radius: 3px;
     pointer-events: none;
     white-space: nowrap;
   }

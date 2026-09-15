@@ -10,6 +10,7 @@
   import CameraRig from './CameraRig.svelte';
   import Bus from './Bus.svelte';
   import ComfortStation from './ComfortStation.svelte';
+  import ConeyIsland from './ConeyIsland.svelte';
   import Furniture from './Furniture.svelte';
   import ParkedCar from './ParkedCar.svelte';
   import FloatingNumber from './FloatingNumber.svelte';
@@ -35,7 +36,7 @@
   import { LEVEL, TILE, tileToWorld, type Tile } from './grid';
   import { landableTiles, tilesInBurst } from './pathfinding';
   import { exitTiles } from './stages';
-  import { isAlive } from './units';
+  import { hasLeft } from './units';
 
   let {
     yawIndex = 0,
@@ -58,6 +59,8 @@
   const stage = $derived(currentStage());
   /** The way out, if this battle has one. */
   const doorway = $derived(exitTiles(stage));
+  /** The one the battle is decided by, if it is decided by one. */
+  const headId = $derived(stage.head?.id ?? null);
   const map = $derived(stage.map);
   const light = $derived(stage.light);
 
@@ -67,6 +70,7 @@
     bus: Bus,
     parkedCar: ParkedCar,
     furniture: Furniture,
+    coneyIsland: ConeyIsland,
   };
 
   useTask((delta) => {
@@ -159,7 +163,16 @@
   // happened on for the rest of the battle: he is out of the rules — no turn, no
   // target, no vote on who has won — but he is still lying there, and the board
   // carries what the fight has cost so far instead of tidying it away.
-  const shownUnits = $derived(battle.units);
+  // Everybody who is still on this beach, standing or not. A man who goes down
+  // stays down on the square it happened on: he is out of the rules — no turn,
+  // no target, no vote on who has won — but he is still lying there, and the
+  // board carries what the fight has cost instead of tidying it away.
+  //
+  // Somebody who walked out through a door is the other kind of gone, and he
+  // does have to be taken off: the engine already treats his square as free and
+  // lets the next man stand on it, so leaving him drawn put two people on one
+  // tile and a team ring on somebody who had left the building.
+  const shownUnits = $derived(battle.units.filter((u) => !hasLeft(u)));
 </script>
 
 <CameraRig {yawIndex} {pitchHigh} {zoom} target={cameraTarget} bind:yaw />
@@ -229,6 +242,7 @@
     mapWidth={map.width}
     mapDepth={map.depth}
     active={battle.activeId === unit.id}
+    marked={unit.id === headId}
   />
 {/each}
 

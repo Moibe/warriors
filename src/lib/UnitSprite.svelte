@@ -34,6 +34,8 @@
     mapWidth,
     mapDepth,
     active = false,
+    /** The one this battle is decided by. Exactly one unit, or none at all. */
+    marked = false,
   }: {
     unit: Unit;
     pos: { x: number; y: number; height: number };
@@ -41,6 +43,7 @@
     mapWidth: number;
     mapDepth: number;
     active?: boolean;
+    marked?: boolean;
   } = $props();
 
   const world = $derived({
@@ -182,6 +185,22 @@
   const markerGeometry = new ConeGeometry(0.15, 0.28, 4).rotateX(Math.PI);
   const markerMaterial = new MeshBasicMaterial({ color: '#ffe27a', toneMapped: false });
 
+  // The mark on the man the battle is decided by.
+  //
+  // A flat ring over his head rather than another cone: the acting unit already
+  // owns the cone, and two floating arrows on one tile read as a duplicate —
+  // the same reason the tile cursor stopped drawing one. Above the heads, so
+  // eight men standing around him cannot hide it. Flat, so it hides nobody. And
+  // doubled with a near-black under-ring for the same reason every sprite here
+  // is drawn with an outline: gold on a gold dawn sky is nothing at all.
+  //
+  // He is the one unit in the game that can never be hidden. The information is
+  // free; getting to him is not.
+  const haloGeometry = new RingGeometry(0.2, 0.3, 20).rotateX(-Math.PI / 2);
+  const haloUnderGeometry = new RingGeometry(0.17, 0.33, 20).rotateX(-Math.PI / 2);
+  const haloMaterial = new MeshBasicMaterial({ color: '#ffd24a', toneMapped: false, depthWrite: false });
+  const haloUnderMaterial = new MeshBasicMaterial({ color: '#1c1620', toneMapped: false, depthWrite: false });
+
   // A shallow idle bob on whoever is acting — enough motion to draw the eye to
   // the unit whose turn it is without animating the whole board.
   let bob = $state(0);
@@ -281,6 +300,21 @@
     scale={[SPRITE_WORLD_W, SPRITE_WORLD_H, 1]}
     renderOrder={downed ? 2 : 3}
   />
+
+  {#if marked && !fallen}
+    <T.Mesh
+      geometry={haloUnderGeometry}
+      material={haloUnderMaterial}
+      position.y={SPRITE_WORLD_H + 0.20}
+      renderOrder={6}
+    />
+    <T.Mesh
+      geometry={haloGeometry}
+      material={haloMaterial}
+      position.y={SPRITE_WORLD_H + 0.21}
+      renderOrder={7}
+    />
+  {/if}
 
   {#if active && !fallen}
     <T.Mesh bind:ref={markerRef} geometry={markerGeometry} material={markerMaterial} renderOrder={6} />

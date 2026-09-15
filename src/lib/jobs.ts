@@ -113,7 +113,7 @@ export type Job = {
   stats: JobStats;
   abilities: Ability[];
   sprite: {
-    body: 'plain' | 'warrior' | 'fury' | 'turnbull' | 'orphan' | 'lizzie';
+    body: 'plain' | 'warrior' | 'fury' | 'turnbull' | 'orphan' | 'lizzie' | 'rogue' | 'luther';
     hat: HatId;
     face: FaceId;
     /** What this role starts the fight holding. Can be lost, or taken. */
@@ -138,7 +138,11 @@ export type JobId =
   | 'loudmouth'
   | 'gunhand'
   | 'wallflower'
-  | 'hostess';
+  | 'hostess'
+  | 'coward'
+  | 'minder'
+  | 'chaser'
+  | 'tagalong';
 
 // ---------------------------------------------------------------------------
 // Palettes
@@ -843,6 +847,157 @@ const CUSHION_KNIFE: Ability = {
   desc: 'Estaba debajo del sitio donde te sentó. Falla una de cada cuatro.',
 };
 
+/**
+ * The Rogues, who have no colours.
+ *
+ * The other gangs are a garment repeated; these are five men in whatever they
+ * had on, sun-bleached and grey, and the design is that there is nothing to
+ * read. All the warmth on this board is spent on one wine-coloured vest, so the
+ * eye finds Luther without being told to.
+ *
+ * `G` is the slot that bites here, for the third time in this file. In these
+ * templates it is the collar of the shirt under the vest; left out it falls to
+ * the base palette's near-white, and on pale sand at dawn that does not read as
+ * a collar, it reads as a hole with a light behind it.
+ */
+const ROGUE_COLORS: Partial<Palette> = {
+  O: '#16131a',
+  A: '#4a443a',
+  B: '#241f1b',
+  C: '#35405a',
+  G: '#6b6154',
+  W: '#5a3d22',
+  M: '#6e7480',
+  P: '#2b2820',
+  F: '#565046',
+};
+
+/** Luther. The same gang, and the only warm thing standing on the beach. */
+const LUTHER_COLORS: Partial<Palette> = {
+  ...ROGUE_COLORS,
+  A: '#6d2f36',
+  S: '#e9c9a8',
+  K: '#c2a179',
+  H: '#2a211c',
+  J: '#17120f',
+};
+
+// ---------------------------------------------------------------------------
+// Coney Island
+// ---------------------------------------------------------------------------
+//
+// Four gangs taught four geometries — the arc, the angle, the clock, the line.
+// This board takes all four away and does not put a fifth in their place. It
+// puts a name. For the first time the win condition points at a person rather
+// than at an empty board or a door, and for the first time the right thing to
+// do is leave five men standing.
+
+/**
+ * The revolver that killed Cyrus, with what was left in it.
+ *
+ * A dead zone of three tiles is the whole boss. He is the weakest unit in the
+ * game in contact and the most dangerous at six, so everything about him is the
+ * question of where you are willing to stand — which is the question this game
+ * has been asking for four battles and the only one a finale should ask.
+ *
+ * No `accuracy` on purpose: the maths ignores it for shots and pins the rate at
+ * ninety-two plus height, and a number nothing reads would be a lie sitting in
+ * the data. Two of six stamina, and nothing in the engine ever gives stamina
+ * back: two bullets, for the whole battle, and they are Cyrus's leftovers.
+ */
+const CYRUS_REVOLVER: Ability = {
+  id: 'luthershot',
+  name: 'El revólver',
+  kind: 'ranged',
+  range: 6,
+  minRange: 3,
+  aoe: 0,
+  mp: 2,
+  power: 3.6,
+  vertical: Infinity,
+  targets: 'enemy',
+  needsWeapon: true,
+  sight: true,
+  desc: 'El mismo con el que mató a Cyrus, con lo que le sobró. De cerca no se atreve.',
+};
+
+/**
+ * Three empty bottles between the fingers, and the most famous image in the
+ * film. Free, because the shot drops out of his options by itself after two
+ * turns and the planner has to keep having something to score or the last boss
+ * stands still. The minimum range of two is the other half of the dead zone: a
+ * man standing on top of Luther is facing a four-point slap.
+ */
+const COME_OUT_TO_PLAY: Ability = {
+  id: 'bottles',
+  name: 'Salid a jugar',
+  kind: 'ranged',
+  range: 5,
+  minRange: 2,
+  aoe: 0,
+  mp: 0,
+  power: 1.1,
+  vertical: Infinity,
+  targets: 'enemy',
+  projectile: 'bottle',
+  desc: 'Tres botellas vacías entre los dedos. Hacen mucho más ruido que daño.',
+};
+
+/** What is left of the man who started all this, once the cylinder is empty. */
+const FLAIL: Ability = {
+  id: 'flail',
+  name: 'Manotazo',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 0.9,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 70,
+  desc: 'Manotea. Pega menos que cualquiera de los que le hacen de pared.',
+};
+
+/**
+ * They brought nothing, so they take yours. Reach two with no minimum is a
+ * shape this game has not used — the Turnbull chain is two-and-two and dies at
+ * contact; this covers the square beside him as well — and it is what makes
+ * walking past one cost blood on a board with nowhere else to walk. Vertical 1
+ * hands the boardwalk back: up on the deck is the one place nobody frisks you.
+ */
+const GRAB: Ability = {
+  id: 'grab',
+  name: 'Echar mano',
+  kind: 'physical',
+  range: 2,
+  minRange: 0,
+  aoe: 0,
+  mp: 0,
+  power: 1.9,
+  vertical: 1,
+  targets: 'enemy',
+  accuracy: 74,
+  disarm: true,
+  desc: 'Te alcanza desde donde está y se queda con lo que lleves. Ellos no trajeron nada.',
+};
+
+/** They have been behind you since Van Cortlandt Park. This is arriving. */
+const RUN_DOWN: Ability = {
+  id: 'rundown',
+  name: 'Darte alcance',
+  kind: 'physical',
+  range: 1,
+  minRange: 0,
+  aoe: 0,
+  mp: 3,
+  power: 2.7,
+  vertical: 2,
+  targets: 'enemy',
+  accuracy: 66,
+  desc: 'Llevan toda la noche detrás de vosotros. Cuando por fin te pillan, se nota.',
+};
+
 // ---------------------------------------------------------------------------
 // The catalog
 // ---------------------------------------------------------------------------
@@ -935,6 +1090,79 @@ export const JOBS: Record<JobId, Job> = {
       face: null,
       weapon: 'can',
       palette: palette(WARRIOR_COLORS),
+    },
+  },
+
+  // --- The Rogues ----------------------------------------------------------
+  //
+  // Five men with no signature move between them, and that is the design rather
+  // than the shortcut. The Turnbull have their chain, the Orphans their back,
+  // the Furies their bat, the Lizzies their line. The Rogues are the only gang
+  // with no costume and they are the only gang with no trick: a fist and
+  // whatever they took off you. Everything special on this beach belongs to one
+  // man, which is exactly what the film says about them.
+
+  coward: {
+    id: 'coward',
+    name: 'Luther',
+    tag: 'LUT',
+    // The weakest sheet of any enemy in the game, and the fastest man on the
+    // board. Every point of his budget went on not being where you are.
+    stats: { hp: 36, mp: 6, pa: 4, ma: 7, speed: 10, move: 3, jump: 2 },
+    abilities: [CYRUS_REVOLVER, COME_OUT_TO_PLAY, FLAIL],
+    sprite: {
+      body: 'luther',
+      hat: null,
+      face: null,
+      weapon: 'pistol',
+      palette: palette(LUTHER_COLORS),
+    },
+  },
+
+  minder: {
+    id: 'minder',
+    name: 'Parapeto',
+    tag: 'PAR',
+    stats: { hp: 56, mp: 4, pa: 8, ma: 2, speed: 7, move: 2, jump: 2 },
+    abilities: [GRAB, WEAPON_HIT, punch(1.8, 'Está ahí para que no llegues, no para pegarte.')],
+    sprite: {
+      body: 'rogue',
+      hat: null,
+      face: null,
+      weapon: 'none',
+      palette: palette(ROGUE_COLORS),
+    },
+  },
+
+  chaser: {
+    id: 'chaser',
+    name: 'Perseguidor',
+    tag: 'PER',
+    stats: { hp: 46, mp: 6, pa: 8, ma: 2, speed: 10, move: 4, jump: 3 },
+    abilities: [RUN_DOWN, punch(2.0, 'Llevan toda la noche detrás de ti. Ahora ya no corres tú.')],
+    sprite: {
+      body: 'rogue',
+      hat: null,
+      face: null,
+      weapon: 'none',
+      palette: palette(ROGUE_COLORS),
+    },
+  },
+
+  // Mercy. After four battles of hitting people, the last one has a unit whose
+  // only verb is holding the others up.
+  tagalong: {
+    id: 'tagalong',
+    name: 'Mercy',
+    tag: 'MER',
+    stats: { hp: 40, mp: 16, pa: 4, ma: 7, speed: 9, move: 4, jump: 3 },
+    abilities: [RALLY, punch(1.2, 'No ha peleado en su vida y esta noche tampoco piensa empezar.')],
+    sprite: {
+      body: 'lizzie',
+      hat: null,
+      face: null,
+      weapon: 'none',
+      palette: palette(LIZZIE_COLORS),
     },
   },
 
