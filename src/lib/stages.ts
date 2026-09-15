@@ -421,7 +421,38 @@ export const STAGES: Record<StageId, Stage> = {
     rival: 'Baseball Furies',
     map: riversidePark,
     props: [{ kind: 'comfortStation', x: 1, y: 0, w: 3, d: 2, height: 3 }],
-    roster: () => [...warriors(), ...furies()],
+    // FOUR. Not nine, and not the seven who are still alive.
+    //
+    // This is the roster the film states out loud, in a stage direction of its
+    // own transcript: "Ajax, Swan, Snowball and Cowboy run out of the station to
+    // be greeted by The Baseball Furies." The other three living Warriors -
+    // Cochise, Vermin and Rembrandt - got onto a train at the 96th Street raid
+    // and are on their way to the Lizzies. Fox died on those tracks a minute
+    // earlier. So this board and the Lizzies' flat are exact complements: two
+    // halves of one squad, fighting two different gangs at the same hour.
+    //
+    // CAREFUL WITH COWBOY. The 1978 shooting script puts COCHISE in this group
+    // and sends Cowboy down the stairwell instead; the finished film swaps them,
+    // and every roster derived from that draft gets this board wrong. The film
+    // settles it twice over: Cowboy is the one who flags in the chase ("I can't
+    // make it"), Ajax turns and saves him, and that is why Cowboy doubles back
+    // for Ajax after the arrest ("He saved my ass back there, I owe him").
+    //
+    // They are placed tight and low on the infield, because four men against
+    // nine cannot afford a flank. Ajax out front: he is the one who stops
+    // running.
+    roster: () => [
+      ...warriorsNamed(
+        ['swan', 'ajax', 'snow', 'cowboy'],
+        [
+          { x: 4, y: 8, facing: 'e', ct: 20 },
+          { x: 5, y: 8, facing: 'e', ct: 32 },
+          { x: 4, y: 9, facing: 'e', ct: 40 },
+          { x: 5, y: 9, facing: 'e', ct: 44 },
+        ]
+      ),
+      ...furies(),
+    ],
     sky: {
       zenith: '#070c1c',
       upper: '#111a36',
@@ -448,18 +479,27 @@ export const STAGES: Record<StageId, Stage> = {
     props: [{ kind: 'bus', x: 2, y: 3, w: 2, d: 5, height: 0, turns: 1 }],
     // The Warriors come up the road from the east; the Turnbull have just piled
     // out of the bus at the west end.
+    //
+    // EIGHT, not nine. Cleon was lost at the conclave two scenes ago, and the
+    // film counts them out loud shortly after this: "Thirty's a lot more than
+    // eight." Everybody keeps the square and the Charge Time he always had, so
+    // what the missing man looks like is a formation with a hole in the back of
+    // it - except Fox, who moves up into the gap Cleon left. He is the scout,
+    // and in this scene he is the one reading the platform.
     roster: () => [
-      ...warriors([
-        { x: 8, y: 2, facing: 'w', ct: 20 },
-        { x: 8, y: 3, facing: 'w', ct: 32 },
-        { x: 7, y: 4, facing: 'w', ct: 12 },
-        { x: 10, y: 4, facing: 'w', ct: 40 },
-        { x: 8, y: 5, facing: 'w', ct: 44 },
-        { x: 7, y: 6, facing: 'w', ct: 30 },
-        { x: 10, y: 6, facing: 'w', ct: 24 },
-        { x: 8, y: 8, facing: 'w', ct: 10 },
-        { x: 8, y: 9, facing: 'w', ct: 0 },
-      ]),
+      ...warriorsNamed(
+        ['swan', 'ajax', 'fox', 'snow', 'cowboy', 'cochise', 'vermin', 'rembrandt'],
+        [
+          { x: 8, y: 2, facing: 'w', ct: 20 },
+          { x: 8, y: 3, facing: 'w', ct: 32 },
+          { x: 7, y: 4, facing: 'w', ct: 12 },
+          { x: 10, y: 4, facing: 'w', ct: 40 },
+          { x: 8, y: 5, facing: 'w', ct: 44 },
+          { x: 7, y: 6, facing: 'w', ct: 30 },
+          { x: 10, y: 6, facing: 'w', ct: 24 },
+          { x: 8, y: 9, facing: 'w', ct: 0 },
+        ]
+      ),
       ...turnbull(),
     ],
     sky: {
@@ -505,17 +545,27 @@ export const STAGES: Record<StageId, Stage> = {
     // The Warriors come up out of the east end of the block; the Orphans are
     // already in the doorways, on the lot and standing on the subway mouth.
     roster: () => [
-      ...warriors([
-        { x: 13, y: 6, facing: 'w', ct: 20 },
-        { x: 13, y: 5, facing: 'w', ct: 32 },
-        { x: 14, y: 6, facing: 'w', ct: 12 },
-        { x: 13, y: 7, facing: 'w', ct: 40 },
-        { x: 14, y: 7, facing: 'w', ct: 44 },
-        { x: 14, y: 5, facing: 'w', ct: 30 },
-        { x: 14, y: 4, facing: 'w', ct: 24 },
-        { x: 12, y: 7, facing: 'w', ct: 10 },
-        { x: 14, y: 8, facing: 'w', ct: 0 },
-      ]),
+      // EIGHT, and this is the scene that says the number: Vermin, hearing Fox
+      // report thirty Orphans, answers "Thirty's a lot more than eight." The
+      // film states its own roster out loud here, so this board is the one that
+      // could never have been nine.
+      //
+      // Fox stays the furthest forward of the eight. Swan takes him and nobody
+      // else up to the parley - "Fox, you come with me" - while the other six
+      // hold back, which is exactly the shape these squares already had.
+      ...warriorsNamed(
+        ['swan', 'ajax', 'fox', 'snow', 'cowboy', 'cochise', 'vermin', 'rembrandt'],
+        [
+          { x: 13, y: 6, facing: 'w', ct: 20 },
+          { x: 13, y: 5, facing: 'w', ct: 32 },
+          { x: 12, y: 7, facing: 'w', ct: 10 },
+          { x: 13, y: 7, facing: 'w', ct: 40 },
+          { x: 14, y: 7, facing: 'w', ct: 44 },
+          { x: 14, y: 5, facing: 'w', ct: 30 },
+          { x: 14, y: 4, facing: 'w', ct: 24 },
+          { x: 14, y: 8, facing: 'w', ct: 0 },
+        ]
+      ),
       ...orphans(),
     ],
     sky: {

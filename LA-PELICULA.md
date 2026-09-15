@@ -17,21 +17,50 @@ a que alguien lo descubra.
 
 ## Las siete escenas, en orden
 
-| # | Escenario | Rival | Se gana | Lo que enseña |
-|---|-----------|-------|---------|----------------|
-| 1 | Van Cortlandt Park | Gramercy Riffs | Salir (6 de 9) | Andar, la salida, que pelear es opcional |
-| 2 | Gun Hill Road | Turnbull A.C. | Exterminio | Los bordes, y una banda que no salta un bordillo |
-| 3 | La calle de los Orphans | Orphans | Exterminio | La orientación: te rodean |
-| 4 | Riverside Park | Baseball Furies | Exterminio | La altura, en terrazas |
-| 5 | El piso de las Lizzies | Lizzies | Salir (3) | La línea de tiro |
-| 6 | El baño de Union Square | Punks | Exterminio | El callejón sin salida como mejor casilla |
-| 7 | Coney Island | Rogues | Tumbar a Luther | El objetivo es un hombre |
+| # | Escenario | Rival | Warriors | Se gana | Lo que enseña |
+|---|-----------|-------|----------|---------|----------------|
+| 1 | Van Cortlandt Park | Gramercy Riffs | **9** | Salir (6 de 9) | Andar, la salida, que pelear es opcional |
+| 2 | Gun Hill Road | Turnbull A.C. | **8** | Exterminio | Los bordes, y una banda que no salta un bordillo |
+| 3 | La calle de los Orphans | Orphans | **8** | Exterminio | La orientación: te rodean |
+| 4 | Riverside Park | Baseball Furies | **4** | Exterminio | La altura, en terrazas |
+| 5 | El piso de las Lizzies | Lizzies | **3** | Salir (3) | La línea de tiro |
+| 6 | El baño de Union Square | Punks | **6** | Exterminio | El callejón sin salida como mejor casilla |
+| 7 | Coney Island | Rogues | **6** | Tumbar a Luther | El objetivo es un hombre |
+
+## El reparto, hombre por hombre
+
+Nueve salen de Coney Island y **sólo se pierden tres**. Ninguna de las tres
+pérdidas ocurre dentro de una batalla del juego: las tres pasan entre escenas.
+
+| | 1 Cónclave | 2 Turnbull | 3 Orphans | 4 Furies | 5 Lizzies | 6 Punks | 7 Rogues |
+|---|---|---|---|---|---|---|---|
+| **Swan** | ● | ● | ● | ● | ● | ● | ● |
+| **Cleon** | ● | | | | | | |
+| **Fox** | ● | ● | ● | | | | |
+| **Ajax** | ● | ● | ● | ● | | | |
+| **Snow** | ● | ● | ● | ● | | ● | ● |
+| **Cowboy** | ● | ● | ● | ● | | ● | ● |
+| **Cochise** | ● | ● | ● | | ● | ● | ● |
+| **Vermin** | ● | ● | ● | | ● | ● | ● |
+| **Rembrandt** | ● | ● | ● | | ● | ● | ● |
+| **Mercy** | | | ● | | | ● (pelea) | ● |
+
+- **Cleon** se pierde en el cónclave, rodeado por los Riffs.
+- **Fox** muere en la estación de la calle 96, bajo un tren, forcejeando con un
+  policía — **antes** de Riverside Park, no después.
+- **Ajax** cae detenido en un banco de Riverside, **justo después** de la pelea
+  con los Furies. Pelea en ella; es su última escena.
+
+Swan es el único disponible en los siete. Y fíjate en que **los escenarios 4 y 5
+son complementarios exactos**: Snow y Cowboy en uno, Cochise, Vermin y Rembrandt
+en el otro, con Swan y Ajax completando el cuarto. Son las dos mitades de una
+misma escuadra peleando a la misma hora contra dos bandas distintas.
 
 ---
 
 ## Las correcciones que nos han costado trabajo
 
-Seis, y todas empezaron como "esto lo sé de memoria".
+Siete, y todas empezaron como "esto lo sé de memoria".
 
 ### 1. Los Punks NO son la banda de los patines
 
@@ -86,9 +115,41 @@ sol de noche**.
 ### 5. El autobús de los Turnbull no es amarillo
 
 Un autobús escolar amarillo es la imagen que todo el mundo tiene en la cabeza y no
-es la de la película.
+es la de la película: el suyo es un autobús escolar **repintado de verde y cubierto
+de grafiti**. El guion de 1978 lo llama "multicolor". La parte falsa es el amarillo,
+no el autobús escolar — y de ahí viene el malentendido, porque las reseñas sueltas
+dicen sólo "un autobús escolar" y cada uno lo pinta del color que recuerda.
 
-### 6. El Parachute Jump no era rojo
+### 6. En Riverside Park no hay nueve Warriors. Hay cuatro
+
+El error natural es suponer "todos los que siguen vivos", que serían siete. Son
+**cuatro: Swan, Ajax, Snow y Cowboy.** La transcripción de la película lo dice en
+una acotación propia:
+
+> *"[Ajax, Swan, Snowball and Cowboy run out of the station to be greeted by The
+> Baseball Furies]"*
+
+Fox ya ha muerto bajo el tren, y Cochise, Vermin y Rembrandt se han subido a un
+vagón camino de las Lizzies. La aritmética cierra sola: nueve, menos Cleon, menos
+Fox, son siete — y siete es cuatro más tres.
+
+**Y dentro hay una trampa.** El guion de rodaje de junio de 1978 pone a
+**Cochise** en este grupo y manda a **Cowboy** por las escaleras con Vermin y
+Rembrandt. La película los intercambia. Cualquier reparto sacado del guion mete
+al hombre equivocado en el parque — y se nota, porque es Cowboy quien se queda
+sin fuelle (*"I can't make it"*), Ajax quien se vuelve a salvarlo, y por eso
+Cowboy vuelve luego a por Ajax (*"He saved my ass back there, I owe him"*).
+
+**Regla general que sale de aquí: el guion de 1978 no sirve como fuente de
+reparto a partir de la estación de la calle 96.** En ese borrador **Fox no muere**
+— él y Mercy saltan a las vías y escapan por el túnel, y Fox es el interés
+amoroso de Mercy durante toda la película. A Thomas G. Waites lo despidieron
+durante el rodaje tras chocar con Walter Hill; Hill reescribió deprisa, inventó
+la muerte bajo el tren, y le pasó a Swan casi todo el material que le quedaba a
+Fox, Mercy incluida. Waites se quitó del reparto. Para todo lo posterior a esa
+estación: **manda la película, no el guion.**
+
+### 7. El Parachute Jump no era rojo
 
 En 1979 llevaba once años cerrado, **sin pintar, gris de óxido**. La torre roja con
 neón que todo el mundo dibuja es de este siglo.
@@ -185,15 +246,43 @@ warriorsmovie.co.uk tiene el certificado caducado.
 
 ---
 
+## Lo que se corrigió, y lo que costó
+
+Los tres escenarios más antiguos del proyecto —Gun Hill Road, los Orphans y
+Riverside Park— repartían los nueve, porque se escribieron cuando toda batalla
+era nueve contra nueve. Ya reparten a quien de verdad estaba.
+
+En Gun Hill y los Orphans cada hombre conserva la casilla y la Carga que tenía;
+sólo Fox se adelanta al hueco que dejó Cleon, que es donde debe estar el
+explorador — y en los Orphans es Fox quien sube a parlamentar con Swan
+(*"Fox, you come with me"*).
+
+**Riverside costó un reequilibrio**, y conviene saber por qué. Pasar de nueve
+Warriors a cuatro contra nueve Furies no era una pelea difícil: era una derrota.
+Cuatrocientos cincuenta puntos de vida enemigos contra doscientos veinticuatro, y
+más del doble de acciones por vuelta de reloj.
+
+La salida elegida fue **dejar los nueve cuerpos y adelgazar a los hombres**,
+porque nueve bates bajando las terrazas es la imagen de la escena y porque lo que
+pasa en la película es justamente que **pierden**: cuatro hombres se los llevan
+por delante a todos. Vida 50 → 36, Velocidad 8 → 6, bate 2,5 → 2,2. El Movimiento
+se queda en 4: siguen persiguiéndote por el parque, que es toda la escena; lo que
+cambia es cada cuánto pegan.
+
+El recorte del bate es el más pequeño de los tres a propósito. `Batazo` y `Golpe
+ancho` llevan los dos `needsWeapon`, así que un Fury desarmado se queda en un
+puñetazo de 1,5 para el resto de la batalla — y **tres de los cuatro hombres de
+ese tablero llevan `Arrebatar`**. Quitarles los bates es la respuesta real del
+jugador, es la de la película, y sólo compensa si un bate valía algo.
+
+Medido: con el jugador sin hacer nada, los cuatro aguantaban 42 turnos y ahora
+aguantan 56. Eso mide la letalidad del enemigo, no si se puede ganar — para eso
+hace falta jugarlo. Si al jugarlo sigue saliendo cuesta arriba, el siguiente
+tornillo es la Velocidad, no la vida.
+
 ## Lo que sigue sin cuadrar
 
-**Cleon aparece en Gun Hill Road y en Riverside Park.** Esos dos escenarios usan
-`warriors()`, que reparte a los nueve, y en la película Cleon se pierde en el
-cónclave. Cada batalla es una viñeta independiente —no hay campaña ni continuidad
-de escuadra— así que no es un fallo de ejecución, pero sí una incoherencia visible
-ahora que existe el escenario del parque. Se arregla cambiando esos dos repartos a
-`warriorsNamed` sin él.
-
-**El orden del reparto tras Riverside.** A Ajax lo detienen en el parque y Fox
-muere en Union Square antes de eso; los escenarios posteriores ya reparten a los
-que corresponde, pero conviene no tocarlos sin releer esta tabla.
+Mercy aparece en tres escenas de la película y en dos del juego. Le falta **la de
+los Orphans**, donde empieza siendo la chica de Sully, en el bando contrario, y
+es ella quien provoca la pelea — y se pasa a los Warriors cuando la escena
+termina. Eso pide un cambio de bando a mitad de batalla que el motor no tiene.

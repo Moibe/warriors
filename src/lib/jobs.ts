@@ -401,7 +401,7 @@ const BAT_SWING: Ability = {
   minRange: 0,
   aoe: 0,
   mp: 0,
-  power: 2.5,
+  power: 2.2,
   vertical: 2,
   targets: 'enemy',
   accuracy: 76,
@@ -1931,7 +1931,38 @@ export const JOBS: Record<JobId, Job> = {
     id: 'slugger',
     name: 'Bateador',
     tag: 'BAT',
-    stats: { hp: 50, mp: 8, pa: 7, ma: 2, speed: 8, move: 4, jump: 3 },
+    // A WALL THAT FOLDS, and every number here is that sentence.
+    //
+    // This gang is the only one in the game whose board changed underneath it.
+    // Riverside Park used to be nine Warriors against nine Furies; the film has
+    // FOUR - Swan, Ajax, Snow and Cowboy, the others being dead or on a train -
+    // and four against nine with these old numbers was not a hard fight, it was
+    // a loss with extra steps. Measured: 450 enemy points of life against 224,
+    // and more than twice the actions per turn of the clock.
+    //
+    // The answer is not fewer of them. Nine bats coming down the terraces is the
+    // image, and the film spends its whole build-up on how many there are and
+    // how quiet they are. The answer is that they lose, because that is what
+    // happens: four men go through the lot of them. So the count stays and the
+    // men get thinner.
+    //
+    // HP 36 makes a Fury the second-frailest body in the game, between a Lizzie
+    // and a Punk, and it is a costume rather than an excuse: these are lean men
+    // in baseball flannel, not the Turnbull's denim.
+    //
+    // SPEED 6, NOT 8, is the number doing most of the work, because being
+    // outnumbered in this engine is really being out-ACTED. Move stays at 4 -
+    // they still run you down across the park, which is the whole chase - but
+    // they swing on a slower clock, and a gang that arrives together and then
+    // takes turns is exactly how that scene is staged: silent, ritual, in step.
+    //
+    // And the bat came down from 2.5 to 2.2, which is the smallest of the three
+    // cuts on purpose. `Batazo` and `Golpe ancho` both need the weapon, so a
+    // disarmed Fury drops to a 1.5 punch and stays there - and three of the four
+    // men on that board carry `Arrebatar`. Taking the bats off them is the
+    // player's real answer here, it is the film's answer too, and it only pays
+    // if a bat was worth something in the first place.
+    stats: { hp: 36, mp: 8, pa: 7, ma: 2, speed: 6, move: 4, jump: 3 },
     abilities: [BAT_SWING, WIDE_SWING, punch(1.5, 'Sin el bate no son gran cosa.')],
     sprite: {
       body: 'fury',
