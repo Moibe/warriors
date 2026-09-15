@@ -47,7 +47,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.2.0';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -105,24 +105,59 @@
     }
   });
 
-  // ---- Pointer: wheel zoom, drag to pan -----------------------------------
+  // ---- Pointer: wheel zoom, drag to pan, middle drag to turn --------------
   //
-  // Any button drags the view, the left one included — but the left button also
-  // picks a tile, so the two have to be told apart. A press only becomes a drag
-  // once it has travelled DRAG_THRESHOLD pixels; below that it stays a click and
-  // reaches the board untouched.
+  // Left and right drag the view; the left button also picks a tile, so the two
+  // have to be told apart. A press only becomes a drag once it has travelled
+  // DRAG_THRESHOLD pixels; below that it stays a click and reaches the board
+  // untouched.
+  //
+  // THE MIDDLE BUTTON TURNS THE CAMERA, and it turns it in QUARTER TURNS rather
+  // than freely. That is not a shortcut, it is the camera this game has: four
+  // azimuths and two elevations, the FFT vocabulary, and both of those numbers
+  // are load-bearing. `yawIndex` is what the arrow keys are rotated through to
+  // stay pointing the way the player sees, and the sprites choose a pose from
+  // the azimuth. Hand the mouse a continuous yaw and the arrows stop agreeing
+  // with the screen and every man on the board picks his pose off an angle that
+  // is between two of them.
+  //
+  // So the drag accumulates and SPENDS itself: every YAW_STEP pixels sideways
+  // is one quarter turn, every PITCH_STEP up or down is the raised angle on or
+  // off. Keep dragging and it keeps turning, one face at a time. The rig eases
+  // between angles anyway, so a fast sweep reads as the camera swinging round
+  // rather than as a stack of cuts — which is the same thing Q and E already do
+  // and the whole reason the easing is in there.
 
   /** Pixels of travel before a press stops being a click and becomes a drag. */
   const DRAG_THRESHOLD = 5;
+  /** Sideways pixels per quarter turn. A full circle is four of these. */
+  const YAW_STEP = 110;
+  /** Vertical pixels before the raised angle goes on or comes off. */
+  const PITCH_STEP = 90;
 
   let dragging = $state(false);
+  /** A middle-button drag turns the camera instead of sliding it. */
+  let turning = $state(false);
   let pressing = false;
   let startX = 0;
   let startY = 0;
   let lastX = 0;
   let lastY = 0;
+  /** Drag distance banked but not yet spent on a quarter turn / a tilt. */
+  let spinX = 0;
+  let spinY = 0;
   /** Set when a drag ends, so the click the browser fires next is discarded. */
   let swallowClick = false;
+  /**
+   * Which button is down, because only the left one owes us a `click`.
+   *
+   * The middle and right buttons end a drag with `auxclick`, which the capture
+   * handler below never sees — so arming the swallow for them leaves it armed,
+   * and it goes off on the player's next real click on a tile instead. Harmless
+   * while nothing dragged with those buttons; the middle button turning the
+   * camera is exactly the thing that makes it happen every time.
+   */
+  let pressButton = 0;
 
   function onWheel(e: WheelEvent) {
     e.preventDefault();
@@ -135,10 +170,13 @@
     // to the left one would interfere with the click we still want to deliver.
     if (e.button !== 0) e.preventDefault();
     pressing = true;
+    pressButton = e.button;
     dragging = false;
+    turning = e.button === 1;
     swallowClick = false;
     startX = lastX = e.clientX;
     startY = lastY = e.clientY;
+    spinX = spinY = 0;
   }
 
   function onPointerMove(e: PointerEvent) {
@@ -157,6 +195,34 @@
     const dy = e.clientY - lastY;
     lastX = e.clientX;
     lastY = e.clientY;
+
+    if (turning) {
+      // Bank the travel and spend it a quarter turn at a time. `while` rather
+      // than `if` so a flick that crosses two steps in one frame turns twice
+      // instead of dropping one on the floor.
+      spinX += dx;
+      while (spinX >= YAW_STEP) {
+        spinX -= YAW_STEP;
+        rotate(1);
+      }
+      while (spinX <= -YAW_STEP) {
+        spinX += YAW_STEP;
+        rotate(-1);
+      }
+      // Up raises, down lowers — set, never toggled, so the gesture always
+      // means the same thing. Dragging further up once it is already raised
+      // spends nothing and leaves the banked travel where it is.
+      spinY += dy;
+      if (spinY <= -PITCH_STEP) {
+        spinY = 0;
+        pitchHigh = true;
+      } else if (spinY >= PITCH_STEP) {
+        spinY = 0;
+        pitchHigh = false;
+      }
+      return;
+    }
+
     // Orthographic: one world unit is exactly `zoom` pixels, so this drags the
     // ground under the cursor at 1:1 whatever the zoom level.
     pan = { x: pan.x - dx / zoom, y: pan.y + dy / zoom };
@@ -166,10 +232,11 @@
     if (!pressing) return;
     pressing = false;
     if (dragging) {
-      swallowClick = true;
+      swallowClick = pressButton === 0;
       (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
     }
     dragging = false;
+    turning = false;
   }
 
   /**
@@ -430,6 +497,7 @@
 <div
   class="stage"
   class:dragging
+  class:turning
   style="--sky-zenith:{stage.sky.zenith}; --sky-upper:{stage.sky.upper}; --sky-lower:{stage.sky.lower}; --sky-horizon:{stage.sky.horizon}; --sky-glow:{stage.sky.glow}"
   onwheel={onWheel}
   onclickcapture={onClickCapture}
@@ -556,7 +624,8 @@
     <kbd>↑↓</kbd> órdenes · <kbd>flechas</kbd> o <kbd>clic</kbd> elegir casilla ·
     <kbd>Enter</kbd> confirmar · <kbd>1</kbd>…<kbd>0</kbd> órdenes · <kbd>Q</kbd><kbd>E</kbd> girar ·
     <kbd>R</kbd> inclinar · <kbd>C</kbd> centrar · <kbd>M</kbd> batalla · <kbd>rueda</kbd> zoom ·
-    <kbd>arrastrar</kbd> desplazar · <kbd>Esc</kbd> cancelar
+    <kbd>arrastrar</kbd> desplazar · <kbd>botón central</kbd> girar ·
+    <kbd>Esc</kbd> cancelar
   </p>
 </div>
 
@@ -584,6 +653,12 @@
 
   .stage.dragging {
     cursor: grabbing;
+  }
+
+  /* Sideways, because that is the axis that does something: the vertical drag
+     has only two stops and it finds them in one push. */
+  .stage.turning {
+    cursor: ew-resize;
   }
 
   .hud {
