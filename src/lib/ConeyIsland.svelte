@@ -578,11 +578,40 @@
     const a = (i / 12) * Math.PI * 2;
     return { x: Math.cos(a) * (WHEEL_R / 2), y: Math.sin(a) * (WHEEL_R / 2), rot: a };
   });
+  /**
+   * And it turns. One revolution a minute.
+   *
+   * The real one is slower than that and it is also, in 1979 at dawn, shut —
+   * but a backdrop that moves imperceptibly is worse than one that does not
+   * move at all, because the eye reads it as a glitch rather than as a wheel.
+   * A minute a turn is the slowest rate that still says "turning" when you look
+   * straight at it and still says nothing when you are not. That is the whole
+   * specification: this thing lives behind the board, and a board you cannot
+   * plan on is a worse loss than a fairground you cannot believe.
+   *
+   * Twelve spokes means the same picture every thirty degrees, so what you
+   * actually feel is a spoke passing every five seconds. The ten cars break
+   * that symmetry, which is what keeps it from strobing.
+   */
+  const TAU = Math.PI * 2;
+  const WHEEL_RATE = TAU / 60;
+
   // The cabins hang level however far round they have gone. That is the whole
-  // charm of a Ferris wheel and it costs one table.
+  // charm of a Ferris wheel and it costs one table — and it is also the one
+  // reason the cars cannot simply ride inside the spinning group. Put them in
+  // and the hang turns with them: ten boxes tumbling end over end, which is a
+  // thing no wheel on earth does. So they keep their own angle on the rim and
+  // the drop stays pinned to world down.
+  const WHEEL_CAR_R = 1.5;
+  const WHEEL_CAR_DROP = 0.19;
+
   const WHEEL_CABINS = Array.from({ length: 10 }, (_, i) => {
-    const a = (i / 10) * Math.PI * 2 + 0.3;
-    return { x: Math.cos(a) * 1.5, y: Math.sin(a) * 1.5 - 0.19 };
+    const a = (i / 10) * TAU + 0.3;
+    return {
+      a,
+      x: Math.cos(a) * WHEEL_CAR_R,
+      y: Math.sin(a) * WHEEL_CAR_R - WHEEL_CAR_DROP,
+    };
   });
 
   const WHEEL_LEAN = Math.atan(0.85 / WHEEL_HUB_Y);
@@ -830,6 +859,8 @@
   // invalidations of a component with a hundred and fifty meshes in it.
 
   let pivot = $state.raw<Group | undefined>(undefined);
+  let wheel = $state.raw<Group | undefined>(undefined);
+  let cars = $state.raw<Group | undefined>(undefined);
   let tide = $state.raw<Group | undefined>(undefined);
   const { camera } = useThrelte();
   const forward = new Vector3();
@@ -845,6 +876,45 @@
       // out of the lens is the bearing we have to match.
       const yaw = Math.atan2(-forward.x, -forward.z);
       if (Math.abs(yaw - g.rotation.y) > 1e-4) g.rotation.y = yaw;
+    },
+    { running: () => isHorizon }
+  );
+
+  // The Wonder Wheel, going round.
+  //
+  // It spins on its own local Z, and the pivot above is what makes that worth
+  // doing: whatever the camera's yaw, the wheel is already presenting its disc,
+  // so the turn reads as a turn from all four angles instead of collapsing into
+  // an edge-on shimmer at two of them.
+  //
+  // The rim, the inner rim and the spokes are rigid, so they ride the group and
+  // cost one matrix. The cars cannot: they have to orbit and stay level, which
+  // is two different rotations on one object. They get their positions written
+  // straight onto the meshes instead - ten `set` calls a frame, no refs, no
+  // reactivity. `cars.children` is in `#each` order, which is why nothing else
+  // may ever be put inside that group.
+  //
+  // The angle lives on the group rather than in a counter, so there is one copy
+  // of it and the cars cannot drift out of phase with their own spokes. It is
+  // wrapped only to keep the number readable; the trigonometry does not care.
+  useTask(
+    (delta) => {
+      const w = wheel;
+      if (!w) return;
+      w.rotation.z -= delta * WHEEL_RATE;
+      if (w.rotation.z < -TAU) w.rotation.z += TAU;
+
+      const c = cars;
+      if (!c) return;
+      const n = Math.min(c.children.length, WHEEL_CABINS.length);
+      for (let i = 0; i < n; i++) {
+        const a = WHEEL_CABINS[i].a + w.rotation.z;
+        c.children[i].position.set(
+          Math.cos(a) * WHEEL_CAR_R,
+          Math.sin(a) * WHEEL_CAR_R - WHEEL_CAR_DROP,
+          0
+        );
+      }
     },
     { running: () => isHorizon }
   );
@@ -1026,36 +1096,39 @@
         material={wheelShade}
         position={[WHEEL_X, 0.74, wz]}
       />
-      <T.Mesh
-        geometry={wheelRimGeometry}
-        material={wheelSteel}
-        position={[WHEEL_X, WHEEL_HUB_Y, wz]}
-      />
-      <T.Mesh
-        geometry={wheelInnerGeometry}
-        material={wheelShade}
-        position={[WHEEL_X, WHEEL_HUB_Y, wz]}
-      />
-      {#each WHEEL_SPOKES as s, i (i)}
-        <T.Mesh
-          geometry={wheelSpokeGeometry}
-          material={i % 2 === 0 ? wheelSteel : wheelShade}
-          position={[WHEEL_X + s.x, WHEEL_HUB_Y + s.y, wz]}
-          rotation.z={s.rot}
-        />
-      {/each}
+      <!-- Everything rigid, on the axle. -->
+      <T.Group bind:ref={wheel} position={[WHEEL_X, WHEEL_HUB_Y, wz]}>
+        <T.Mesh geometry={wheelRimGeometry} material={wheelSteel} />
+        <T.Mesh geometry={wheelInnerGeometry} material={wheelShade} />
+        {#each WHEEL_SPOKES as s, i (i)}
+          <T.Mesh
+            geometry={wheelSpokeGeometry}
+            material={i % 2 === 0 ? wheelSteel : wheelShade}
+            position={[s.x, s.y, 0]}
+            rotation.z={s.rot}
+          />
+        {/each}
+      </T.Group>
+      <!-- The axle itself is a ten-sided cylinder: turning it would be four
+           bytes of matrix nobody could ever see. It stays where it is. -->
       <T.Mesh
         geometry={wheelHubGeometry}
         material={wheelShade}
         position={[WHEEL_X, WHEEL_HUB_Y, wz]}
       />
-      {#each WHEEL_CABINS as c, i (i)}
-        <T.Mesh
-          geometry={wheelCabinGeometry}
-          material={i % 3 === 0 ? wheelSteel : wheelShade}
-          position={[WHEEL_X + c.x, WHEEL_HUB_Y + c.y, wz + 0.05]}
-        />
-      {/each}
+      <!-- The cars. This group never turns; the task moves each box around the
+           rim by hand so it can stay level. The positions below are only the
+           first frame, before the task has had a delta to work with.
+           NOTHING ELSE GOES IN HERE - the task indexes `children`. -->
+      <T.Group bind:ref={cars} position={[WHEEL_X, WHEEL_HUB_Y, wz + 0.05]}>
+        {#each WHEEL_CABINS as c, i (i)}
+          <T.Mesh
+            geometry={wheelCabinGeometry}
+            material={i % 3 === 0 ? wheelSteel : wheelShade}
+            position={[c.x, c.y, 0]}
+          />
+        {/each}
+      </T.Group>
 
       <!-- ---- Astroland: la aguja y el cohete ---- -->
       {@const az = RIDE_Z(TOWER_X)}
