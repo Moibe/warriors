@@ -1060,6 +1060,22 @@ function resolveHits(actor: Unit, ability: Ability, targets: Unit[]) {
   for (const target of targets) {
     const friendly = target.team === actor.team;
 
+    // A WIDE SWING NEVER CATCHES THE MAN SWINGING IT.
+    //
+    // Three abilities in this game have an area — the Furies' bat, the Orphans'
+    // plank and the Punks' chain — and all three are range 1 with a radius of
+    // 1, so the square the swinger is standing on has always been inside his
+    // own arc. Every one of them has been taking a full hit off its own user
+    // since it was written, and the battle report has been printing lines like
+    // "Furia 3 → Furia 3: 15 de daño" that nobody read as the bug they were.
+    //
+    // You swing a bat AROUND yourself. The cost of swinging wide is your own
+    // PEOPLE, which is what the note below is about and which stays; it was
+    // never meant to be your own ribs. A rally is left alone: shouting a gang
+    // onto its feet can reasonably include your own, and that behaviour is old
+    // and nobody asked for it to change.
+    if (ability.kind !== 'rally' && target.id === actor.id) continue;
+
     // A wide swing catching your own people is a real cost of swinging wide,
     // and it stays. Shouting at your gang picking up the other gang is not a
     // cost, it is nonsense — Sully was rallying Swan back to his feet. A rally
@@ -1149,6 +1165,88 @@ type AiPlan = {
 let aiPlan: AiPlan | null = null;
 
 /**
+ * What one swing is worth to the side throwing it, counting EVERYBODY it would
+ * actually land on.
+ *
+ * The planner used to score the aimed man and nobody else, which was fine while
+ * every enemy move was single-target and quietly wrong the moment one was not.
+ * An area swing in enemy hands was scored as pure profit: the Baseball Furies
+ * have had `Golpe ancho` since Riverside was built and have been clubbing each
+ * other with it, because the two of their own men standing in the arc cost the
+ * plan nothing. This is that bug, and it is the reason the Punks' Cadenero was
+ * given two tiles of reach instead of the sweep he should always have had.
+ *
+ * So: walk the burst exactly the way `resolveHits` will walk it — same cells,
+ * same rule that a rally reaches only its own side — and add up what happens to
+ * each man in it.
+ *
+ * FRIENDLY FIRE IS PRICED ABOVE ITS OWN DAMAGE, at 1.5, and a friendly kill at
+ * three times a kill is worth. That asymmetry is not pessimism, it is the
+ * arithmetic of a fight: damage dealt to the enemy is worth what it says, but
+ * damage dealt to your own man is worth that AND the swings he will not be
+ * throwing, and a man you drop yourself is a man the other side never had to
+ * pay for. A planner that prices them equally will happily trade one of its own
+ * for one of yours, which no gang in this film would do and no player would
+ * read as intelligence.
+ */
+function scoreBurst(
+  actor: Unit,
+  fromHeight: number,
+  ability: Ability,
+  aimX: number,
+  aimY: number
+): number {
+  const cells =
+    ability.aoe > 0 ? tilesInBurst(map, { x: aimX, y: aimY }, ability.aoe) : new Set([tileKey(aimX, aimY)]);
+  let score = 0;
+  for (const other of battle.units) {
+    if (!inPlay(other)) continue;
+    // THE ACTOR IS SCORED WHERE HE WILL BE STANDING, NOT WHERE HE IS.
+    //
+    // `actor` here is a hypothetical already moved onto the square it would
+    // attack from; the copy of him inside `battle.units` is still on his old
+    // tile, so reading the list position for him would score the wrong square.
+    const self = other.id === actor.id;
+    const ox = self ? actor.x : other.x;
+    const oy = self ? actor.y : other.y;
+    if (!cells.has(tileKey(ox, oy))) continue;
+    // Mirrors `resolveHits`: a swing does not catch the man swinging it, so it
+    // is not scored against him either. A rally still reaches him, because it
+    // still reaches him when it resolves.
+    if (ability.kind !== 'rally' && self) continue;
+    const friendly = other.team === actor.team;
+    // Mirrors `resolveHits`: a rally never reaches the other side, so it is not
+    // scored against them either. Everything else catches whoever is standing
+    // in it, which is the price of swinging wide and is exactly what this
+    // function exists to make the planner feel.
+    if (ability.kind === 'rally' && !friendly) continue;
+    const tile = tileAt(map, ox, oy);
+    if (!tile) continue;
+    const f = forecast(actor, fromHeight, other, tile.height, ability);
+
+    if (ability.kind === 'rally') {
+      // Only worth shouting at somebody actually on the floor. A man near full
+      // contributes nothing rather than vetoing the swing, so a burst aimed at
+      // one hurt man is not spoiled by a healthy one standing beside him.
+      const missing = other.hpMax - other.hp;
+      if (missing < other.hpMax * 0.35) continue;
+      score += Math.min(missing, f.max) * 1.1;
+      continue;
+    }
+
+    const expected = ((f.min + f.max) / 2) * (f.hit / 100);
+    if (friendly) {
+      score -= expected * 1.5;
+      if (f.max >= other.hp) score -= 120;
+    } else {
+      score += expected;
+      if (f.max >= other.hp) score += 40; // finish the kill
+    }
+  }
+  return score;
+}
+
+/**
  * Picks a plan for an enemy unit, then hands control back to the animation
  * clock — `runAiStep` walks through the stages with a beat between each so the
  * player can follow what happened.
@@ -1177,21 +1275,17 @@ function planAiTurn(u: Unit) {
       if (!approach) continue;
 
       // Score from the square it would actually attack from, so flanking and
-      // height advantages are part of the decision, not an afterthought.
+      // height advantages are part of the decision, not an afterthought — and
+      // score the WHOLE BURST from there, so a wide swing is judged on the
+      // people it lands on rather than on the one it is pointed at.
       const hypothetical = { ...u, x: approach.x, y: approach.y } as Unit;
       const fromHeight = tileAt(map, approach.x, approach.y)?.height ?? 0;
-      const f = forecast(hypothetical, fromHeight, target, targetTile.height, ability);
+      let score = scoreBurst(hypothetical, fromHeight, ability, target.x, target.y);
 
-      let score: number;
-      if (ability.targets === 'ally') {
-        // Only worth healing someone actually hurt.
-        const missing = target.hpMax - target.hp;
-        if (missing < target.hpMax * 0.35) continue;
-        score = Math.min(missing, f.max) * 1.1;
-      } else {
-        score = ((f.min + f.max) / 2) * (f.hit / 100);
-        if (f.max >= target.hp) score += 40; // finish the kill
-      }
+      // A rally that would put nobody back on their feet is a wasted turn, and
+      // the old code refused it with a `continue`. Keep that: a zero here means
+      // the burst found nobody worth shouting at.
+      if (ability.kind === 'rally' && score <= 0) continue;
       score -= approach.cost * 0.5; // all else equal, don't wander
       score -= ability.mp * 0.4;
 

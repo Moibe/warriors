@@ -213,11 +213,42 @@ unidad no alcanza ni arriba ni abajo. Como los Warriors llevan `vertical: 2` en 
 puñetazo, un Warrior subido pega hacia abajo y Vance no puede responder: subirse es
 terreno alto de verdad, no un escondite.
 
-### La IA no resta el daño a los suyos
+### La IA puntúa el estallido entero, no sólo al objetivo apuntado
 
-`planAiTurn` puntúa **sólo al objetivo principal**. Un ataque en área en manos del
-enemigo lo usaría para machacar a su propia banda. Por eso el Cadenero de los Punks
-tiene alcance 2 y **no** un barrido en área, que era la idea bonita.
+**Fue al revés durante mucho tiempo y era un fallo que ya estaba en el juego.**
+`planAiTurn` puntuaba sólo al hombre al que apuntaba, lo cual daba igual mientras
+todos los golpes enemigos fueran de un solo blanco y era silenciosamente falso en
+cuanto uno no lo era: los Furies llevan `Bateo amplio` desde que existe Riverside y
+**se lo daban entre ellos**, porque los dos de los suyos que quedaban dentro del
+arco no le costaban nada al plan.
+
+Ahora `scoreBurst` recorre el estallido igual que lo recorrerá `resolveHits` —las
+mismas casillas, la misma regla de que una arenga sólo llega a su bando— y suma lo
+que le pasa a cada uno. **El fuego amigo se cobra por encima de su propio daño**, a
+1,5, y una baja propia a el triple de lo que vale una baja enemiga. Esa asimetría
+no es pesimismo, es la aritmética de una pelea: el daño al enemigo vale lo que
+dice, pero el daño a los tuyos vale eso **más los golpes que ése ya no va a dar**.
+
+Medido en Riverside: de cinco líneas de fuego amigo a cero, y los bateos amplios
+pasaron a coger dos y tres Warriors. Los dos casos que quedan alcanzan a un Fury
+**y a dos Warriors** — eso es un canje decidido, no ceguera.
+
+### Un golpe en área nunca alcanza a quien lo da
+
+Los tres golpes en área del juego —el bate de los Furies, el tablón de los Orphans
+y la cadena de los Punks— son alcance 1 con radio 1, así que **la casilla del que
+golpea estaba siempre dentro de su propio arco**. Llevaban desde que se escribieron
+quitándose un golpe entero a sí mismos, y el parte imprimía líneas como
+`Furia 3 → Furia 3: 15 de daño` que nadie leyó como el fallo que eran.
+
+Un bate se gira **alrededor** de uno. El coste de golpear ancho son los tuyos, que
+se queda; nunca fueron tus propias costillas. La arenga se deja como estaba: gritar
+para levantar a los tuyos puede razonablemente incluirte.
+
+Cuidado al puntuar: el atacante del plan es una **copia hipotética ya movida** a la
+casilla desde la que atacaría, mientras que el de `battle.units` sigue en la vieja.
+Leer la posición de la lista para él era justamente no mirar al único hombre que
+seguro está dentro del arco.
 
 Sí respeta el aguante (descarta lo que no puede pagar) y prefiere un poco lo barato.
 

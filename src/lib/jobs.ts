@@ -1250,6 +1250,47 @@ const THE_CHAIN: Ability = {
 };
 
 /**
+ * The chain at knee height, and the idea this gang was owed.
+ *
+ * It was designed on the first pass and cut, for a reason that was about the
+ * engine and not about the Punks: the planner scored only the man it aimed at,
+ * so an area swing in a lavatory with seven Punks in it was a move the enemy
+ * would have used to club its own gang. The planner counts the whole burst now,
+ * and prices a friendly caught in it above the damage it does — so the Cadenero
+ * waits for a clean arc the way a man swinging two metres of chain in a crowded
+ * room actually would.
+ *
+ * IT IS THE ANSWER TO THE ANSWER. That board's lesson is the cubicle: a hole
+ * with a wall behind it and a partition either side, where nobody flanks you
+ * and one man at a time can reach you. The chain's two tiles of reach is what
+ * makes sitting in one cost something. This is what makes LEAVING one cost
+ * something, because six men coming out of six doors into one aisle is a line
+ * of bodies at arm's length from each other, and that is the shape a sweep is
+ * for. Between the two of them the board stops having a safe answer and starts
+ * having a choice.
+ *
+ * `minRange: 1` because you cannot swing a chain through your own square, and
+ * it keeps the burst off the man throwing it. Power 1.6 against the straight
+ * hit's 2.2: it is worth using on two and a waste on one. Four of six stamina,
+ * so ONE of these in a battle and then he is a man with a chain again.
+ */
+const CHAIN_SWEEP: Ability = {
+  id: 'chainsweep',
+  name: 'Barrido',
+  kind: 'physical',
+  range: 2,
+  minRange: 1,
+  aoe: 1,
+  mp: 4,
+  power: 1.6,
+  vertical: 1,
+  targets: 'enemy',
+  accuracy: 66,
+  needsWeapon: true,
+  desc: 'La hace girar a la altura de las rodillas. Coge a todo el que esté cerca, sea de quien sea.',
+};
+
+/**
  * The switchblade, and the only object in this game that outlives its battle.
  *
  * He drops it on that floor and Swan picks it up, and it is the knife Swan puts
@@ -1662,7 +1703,7 @@ export const JOBS: Record<JobId, Job> = {
     // this board is the better trade and the player finds that out the first
     // time he sits in a cubicle thinking he is safe.
     stats: { hp: 42, mp: 6, pa: 7, ma: 3, speed: 8, move: 5, jump: 2 },
-    abilities: [THE_CHAIN, punch(1.7, 'Sin la cadena es uno más, y más flojo.')],
+    abilities: [THE_CHAIN, CHAIN_SWEEP, punch(1.7, 'Sin la cadena es uno más, y más flojo.')],
     sprite: {
       body: 'punk',
       hat: null,
