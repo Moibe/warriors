@@ -35,7 +35,6 @@
     stepAimCursor,
     stepMoveCursor,
     upcomingTurns,
-  hoveredUnit,
 } from '$lib/battle.svelte';
   import { forecast, isValidTarget } from '$lib/combat';
   import { facingTo, tileAt, tileKey, type Coord, type Facing } from '$lib/grid';
@@ -58,7 +57,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.19.1';
+  const APP_VERSION = '1.19.2';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -491,34 +490,26 @@
   /** Whoever the game cursor is on: the aimed target, or the acting unit. */
   const cursorUnit = $derived(cursor ? unitAt(battle.units, cursor.x, cursor.y) : undefined);
   const cursorOccupant = $derived(cursorUnit?.name);
-  /** Whoever the MOUSE is on, which is a different question from the cursor. */
-  const hovered = $derived(hoveredUnit());
   // A body holds its square without standing on it: nothing can finish a move
   // there, so calling the tile clear would be a lie the player then walks into.
   const cursorBody = $derived(
     cursor && !cursorOccupant ? fallenAt(battle.units, cursor.x, cursor.y)?.name : undefined
   );
-  // The unit window follows the pointer, the way FFT's does.
+  // The unit window used to follow the mouse too, on the same reasoning
+  // `HoverCard` carries now: inspecting anybody but the acting unit meant
+  // reading his row in the turn order, or the one word the terrain window
+  // gave you, "Ocupada · Sully", which is not inspecting. That case is
+  // `HoverCard`'s job today - it floats the name, job and bar right where the
+  // mouse already is, which is a better answer than dragging this corner
+  // window along with it. A corner the player has to re-read after every
+  // stray hover is not a fixed point anymore, and the one thing worth keeping
+  // fixed here is "whose turn is this."
   //
-  // It used to stay pinned to the acting unit, and inspecting anybody else meant
-  // reading his row in the turn order, or the one word the terrain window gave
-  // you: "Ocupada · Sully". That is not inspecting, that is being told a name in
-  // the wrong corner of the screen in seven-point type. The moment a board asked
-  // the player to pick ONE enemy out of nine by name - Sully, on the Orphans'
-  // block, whose fall turns Mercy - the pinned window stopped being a
-  // convenience and became the reason you could not play the rule.
-  //
-  // So, in order: whoever is under the MOUSE; failing that whoever the game
-  // cursor is on, which while aiming is the man you are about to hit; failing
-  // that the acting unit. The title says which. Hover your own man and you get
-  // him back, so the pinned readout loses nothing that matters, and an enemy's
-  // portrait, job and bar become readable for the price of moving the mouse -
-  // which is what a mouse is for.
-  //
-  // The terrain window stays on the game cursor on purpose. A keyboard player
-  // choosing a destination needs the height of the square he is about to step
-  // onto, not the height of wherever the mouse was left.
-  const panelUnit = $derived(hovered ?? cursorUnit ?? active);
+  // What the mouse cannot do is stand in for the keyboard: aiming with the
+  // arrows has no hover to lean on, so the game cursor keeps its say. While it
+  // sits on somebody other than the acting unit - the man you are about to
+  // hit - this window follows it; released, it falls back to the turn.
+  const panelUnit = $derived(cursorUnit ?? active);
   const playerTurn = $derived(!!active && active.team === 'ally' && isAlive(active));
 
   const queue = $derived(upcomingTurns(7));
