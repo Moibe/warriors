@@ -18,6 +18,7 @@
   import FloatingNumber from './FloatingNumber.svelte';
   import HoverCard from './HoverCard.svelte';
   import Projectile from './Projectile.svelte';
+  import SpeechMarker from './ui/SpeechMarker.svelte';
   import Terrain from './Terrain.svelte';
   import TileCursor from './TileCursor.svelte';
   import TileOverlays from './TileOverlays.svelte';
@@ -101,6 +102,16 @@
   const headId = $derived(stage.head?.id ?? null);
   /** Whoever the mouse is resting on, for the card that floats over his head. */
   const hoverUnit = $derived(hoveredUnit());
+  /**
+   * Whoever fronts the CURRENT line of the opening dialogue, on the board -
+   * the bar at the bottom already says his name, but it says it a foot and a
+   * half from where he is actually standing. A narrator line has nobody to
+   * point at, so this is null exactly when `IntroDialogue` draws no portrait.
+   */
+  const introSpeaker = $derived.by(() => {
+    const line = battle.intro ? battle.intro.lines[battle.intro.index] : null;
+    return line?.speaker ? battle.units.find((u) => u.id === line.speaker) : undefined;
+  });
   const map = $derived(stage.map);
   const light = $derived(stage.light);
 
@@ -366,6 +377,19 @@
   {@const hw = tileToWorld(map, hoverUnit.x, hoverUnit.y, heightOf(hoverUnit))}
   <HTML position={[hw.x, hw.y + SPRITE_WORLD_H + 0.1, hw.z]} pointerEvents="none">
     <HoverCard unit={hoverUnit} />
+  </HTML>
+{/if}
+
+<!-- Same anchor, same reason, while the opening dialogue is up: the bar at
+     the bottom already names the speaker, but a board can hold ten heads
+     that look alike from across the park, and it never says WHICH one is
+     his. A step higher than the hover card so the two never fight for the
+     same point in space if a stage ever hovers and narrates in the same
+     breath - not a real case today, but the offset is free. -->
+{#if introSpeaker}
+  {@const sw = tileToWorld(map, introSpeaker.x, introSpeaker.y, heightOf(introSpeaker))}
+  <HTML position={[sw.x, sw.y + SPRITE_WORLD_H + 0.3, sw.z]} pointerEvents="none">
+    <SpeechMarker />
   </HTML>
 {/if}
 
