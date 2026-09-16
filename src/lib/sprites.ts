@@ -841,6 +841,15 @@ const ORPHAN_HURT_BACK = template(BODY_AT.ox, BODY_AT.oy, [
 //     which is what will matter the day somebody can be picked back up.
 //   · Eyes shut and mouth open, borrowed from the recoil frames. Without it a
 //     level head reads as resting rather than out.
+//   · THE NECK IS THE JOIN, and it was missing for a long time. The head was a
+//     closed oval with its own outline all the way round and the torso was a
+//     closed shape with its own, so where they met the sprite had TWO columns
+//     of outline stacked against each other - a black wall four rows tall
+//     between a face and a body. Read at board zoom that is not a man lying
+//     down, it is a head lying next to some clothes. Three rows of `K` bridge
+//     them now, the same skin shadow the standing pose already uses for its
+//     neck (`OKKKKO` under the jaw), and the outline is simply gone where the
+//     two masses meet: one silhouette, joined, the way it should have been.
 //
 // The box is wider than it is tall — that proportion is half the message — and
 // flush with the bottom of the cell, so the last row of pixels IS the pavement
@@ -857,9 +866,9 @@ const PLAIN_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   ' OHHHHHHHHO   OCCCCO',
   ' OHSSSSSSHO OBBCCCO ',
   ' OHSSSSSSHOOAAAABBO ',
-  ' OHSOSSOSHOOAAAAAO  ',
-  ' OHSSSSSSHOOAABAAO  ',
-  '  OKSOOSKOOAAAAO    ',
+  ' OHSOSSOSHKKAAAAAO  ',
+  ' OHSSSSSSHKKAABAAO  ',
+  '  OKSOOSKKKAAAAO    ',
   '   OKKKKO OASSO     ',
 ]);
 
@@ -878,9 +887,9 @@ const WARRIOR_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   ' OHHHHHHHHO   OCCCCO',
   ' OHSSSSSSHO OBBCCCO ',
   ' OHSSSSSSHOOABSSBBO ',
-  ' OHSOSSOSHOOBSSBAO  ',
-  ' OHSSSSSSHOOSSBAAO  ',
-  '  OKSOOSKOOSSBAO    ',
+  ' OHSOSSOSHKKBSSBAO  ',
+  ' OHSSSSSSHKKSSBAAO  ',
+  '  OKSOOSKKKSSBAO    ',
   '   OKKKKO OKSSO     ',
 ]);
 
@@ -898,9 +907,9 @@ const FURY_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   ' OHHHHHHHHO   OCCBBO',
   ' OHSSSSSSHO OBBCCCO ',
   ' OHSSSSSSHOOBABABBO ',
-  ' OHSOSSOSHOOBABABO  ',
-  ' OHSSSSSSHOOBABABO  ',
-  '  OKSOOSKOOABABO    ',
+  ' OHSOSSOSHKKBABABO  ',
+  ' OHSSSSSSHKKBABABO  ',
+  '  OKSOOSKKKABABO    ',
   '   OKKKKO OASSO     ',
 ]);
 
@@ -918,9 +927,9 @@ const TURNBULL_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   ' OHHHSSHHHO  OCCCCCO',
   ' OHSSSSSSHO OBWWCCO ',
   ' OHSJSSJSHOOAAAABBO ',
-  ' OHSOSSOSHOOAAABAAO ',
-  ' OJSSSSSSJOOAABAAAO ',
-  '  OJJOOJJOOGGAAAO   ',
+  ' OHSOSSOSHKKAAABAAO ',
+  ' OJSSSSSSJKKAABAAAO ',
+  '  OJJOOJJKKGGAAAO   ',
   '   OJJJJO OKSSO     ',
 ]);
 
@@ -937,9 +946,9 @@ const ORPHAN_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   'OHHHHHHHHHHO  OCCCCO',
   'OHHSSSSSSHHO OBBCCCO',
   'OHHSSSSSSHHOOAAGBBO ',
-  'OHHSOSSOSHHOOAAABAO ',
-  'OHHJKSSKJHHOOAABAO  ',
-  'HOHHKOOKHHOOGAAAO   ',
+  'OHHSOSSOSHHKKAAABAO ',
+  'OHHJKSSKJHHKKAABAO  ',
+  'HOHHKOOKHHKKGAAAO   ',
   'HOHHOKKOHHOGSSO     ',
 ]);
 
@@ -1074,9 +1083,9 @@ const LIZZIE_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   ' OHFFFFFFFFHO OSSBBO',
   ' OHHSSSSSSHHO OSSCO ',
   '  OHSSSSSSHO OACCCO ',
-  '  OHGOSSOGHOOAAAABO ',
-  '  OHSSSSSSHOOAAABAO ',
-  '   OKSOOSKOOFFAAAO  ',
+  '  OHGOSSOGHKKAAAABO ',
+  '  OHSSSSSSHKKAAABAO ',
+  '   OKSOOSKKKFFAAAO  ',
   '    OKKKKO OKSSO    ',
 ]);
 
@@ -1213,9 +1222,9 @@ const ROGUE_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   ' OHHHHHHHHO   OCCCCO',
   ' OHSSSSSSHO OBBCCCO ',
   ' OHSSSSSSHOOGAAABBO ',
-  ' OHSOSSOSHOOGAAAAO  ',
-  ' OHKSSSSKHOOFGAAAO  ',
-  '  OKSOOSKOOGGAAO    ',
+  ' OHSOSSOSHKKGAAAAO  ',
+  ' OHKSSSSKHKKFGAAAO  ',
+  '  OKSOOSKKKGGAAO    ',
   '   OKKKKO OGSSO     ',
 ]);
 
@@ -1355,9 +1364,9 @@ const LUTHER_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   '  OHHHHHHO    OCCBO ',
   ' OHSSSSSSHO OBWCCO  ',
   ' OHSSSSSSHOOWAAABO  ',
-  ' OHSOSSOSHOOWAAAO   ',
-  ' OHSSSSSSHOOAAAAO   ',
-  '  OSSOOSSOOAAASO    ',
+  ' OHSOSSOSHKKWAAAO   ',
+  ' OHSSSSSSHKKAAAAO   ',
+  '  OSSOOSSKKAAASO    ',
   '   OKKKKO OKSSO     ',
 ]);
 
@@ -1555,9 +1564,9 @@ const PUNK_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   ' OHHHHHHHHO   OCCCCO',
   ' OHSSSSSSHO OBBCCCO ',
   ' OHSSSSSSHOOGAAABBO ',
-  ' OHSOSSOSHOOFAAAAO  ',
-  ' OHKSSSSKHOOGFAAAO  ',
-  '  OKSOOSKOOGGAAO    ',
+  ' OHSOSSOSHKKFAAAAO  ',
+  ' OHKSSSSKHKKGFAAAO  ',
+  '  OKSOOSKKKGGAAO    ',
   '   OKKKKO OGSSO     ',
 ]);
 
@@ -1578,9 +1587,9 @@ const SKATER_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   ' OHHHHHHHHO   OCCCCO',
   ' OHSSSSSSHO OBBCCCO ',
   ' OHSSSSSSHOOGAAABBO ',
-  ' OHSOSSOSHOOFAAAAO  ',
-  ' OHKSSSSKHOOGFAAAO  ',
-  '  OKSOOSKOOGGAAO    ',
+  ' OHSOSSOSHKKFAAAAO  ',
+  ' OHKSSSSKHKKGFAAAO  ',
+  '  OKSOOSKKKGGAAO    ',
   '   OKKKKO OGSSO     ',
 ]);
 
@@ -1736,9 +1745,9 @@ const RIFF_DOWN = template(DOWN_AT.ox, DOWN_AT.oy, [
   ' OHHHHHHHHO   OCCCCO',
   ' OHSSSSSSHO OAACCCO ',
   ' OHSSSSSSHOOAAAFBBO ',
-  ' OEEEEEEEEOOAAFAAO  ',
-  ' OHSSSSSSHOOAFAAAO  ',
-  '  OKSOOSKOOAFAAO    ',
+  ' OEEEEEEEEKKAAFAAO  ',
+  ' OHSSSSSSHKKAFAAAO  ',
+  '  OKSOOSKKKAFAAO    ',
   '   OKKKKO OFSSO     ',
 ]);
 
