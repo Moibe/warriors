@@ -1,5 +1,5 @@
 <script module lang="ts">
-  // El piso de las Lizzies — every stick of furniture in it, as one prop.
+  // El departamento de las Lizzies — every stick of furniture in it, as one prop.
   //
   // The other three boards are outdoors, and their props are one object each: a
   // building, a bus, a car. A room is not like that. A room is eight or nine

@@ -108,7 +108,7 @@ no es una salida.
 
 ### El comprobador exige espacio proporcional al reparto
 
-`casillas pisables >= unidades * 8`. Un umbral fijo llamaba pequeño al piso de las
+`casillas pisables >= unidades * 8`. Un umbral fijo llamaba pequeño al departamento de las
 Lizzies, cuando el sentido de esa batalla es precisamente que son tres personas en
 un cuarto donde no pueden separarse.
 
@@ -129,7 +129,7 @@ De ahí sale la regla práctica que se repite en todos los props:
 > **nada ANCHO entre 0,62 y 1,95.** Los cables y los postes pueden cruzar esa banda;
 > las masas no.
 
-Y la lección del piso de las Lizzies: *un cuarto a la altura de la cintura es uno
+Y la lección del departamento de las Lizzies: *un cuarto a la altura de la cintura es uno
 por el que peleas; uno a la altura del hombro es uno donde pierdes gente.*
 
 ### Los decorados de fondo, o pivotan o se quedan bajos
@@ -192,7 +192,7 @@ Está en 0,22.
 
 ### Cada equipo se empuja lejos de sus propias superficies
 
-- El piso de las Lizzies es marrón y va iluminado en frío.
+- El departamento de las Lizzies es marrón y va iluminado en frío.
 - Gun Hill es sodio, *"y sólo un toque: más cálido y el asfalto deja de leerse como
   asfalto"*.
 - El baño es cerámica verde y lleva la clave más pálida del juego.
@@ -307,7 +307,7 @@ por los bucles calientes del pathfinding.
 
 ### Los materiales de ámbito de módulo sólo son seguros si nadie escribe en ellos
 
-Es lo que permite que un piso amueblado comparta un juego de materiales entre diez
+Es lo que permite que un departamento amueblado comparta un juego de materiales entre diez
 props. Hay dos excepciones documentadas y las dos valen **porque se coloca una sola
 instancia**: el coche que arde y la baliza de la patrulla. Si alguien coloca una
 segunda, parpadearán al unísono.

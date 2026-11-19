@@ -801,7 +801,7 @@ export const STAGES: Record<StageId, Stage> = {
 
   'lizzie-place': {
     id: 'lizzie-place',
-    name: 'El piso de las Lizzies',
+    name: 'El departamento de las Lizzies',
     rival: 'Lizzies',
     map: lizziePlace,
     // Furniture indices come from PIECE in Furniture.svelte: 0 sofa, 1 armchair,

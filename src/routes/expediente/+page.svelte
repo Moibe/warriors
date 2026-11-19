@@ -47,7 +47,7 @@
     {
       key: 'lizzies',
       label: 'Lizzies',
-      kicker: 'El piso franco · el único bando sin uniforme común',
+      kicker: 'El departamento · el único bando sin uniforme común',
       accent: '#cf5f95',
       accentDim: 'rgba(207,95,149,.18)',
       roster: lizzies,

@@ -320,7 +320,7 @@ const ORPHAN_BLOCK: MapSource = {
 export const orphanBlock = parseMap(ORPHAN_BLOCK);
 
 /**
- * "El piso de las Lizzies" — the only room in the game.
+ * "El departamento de las Lizzies" — the only room in the game.
  *
  * The other three boards are places you fight across. This one is a place
  * people live in, and it is the first board that is won by leaving rather than
@@ -341,7 +341,7 @@ export const orphanBlock = parseMap(ORPHAN_BLOCK);
  * one to a room, which is not a deployment so much as the trap already sprung.
  */
 const LIZZIE_PLACE: MapSource = {
-  name: 'El piso de las Lizzies',
+  name: 'El departamento de las Lizzies',
   heights: [
     '555511155555',
     '544411111111',

@@ -23,7 +23,7 @@ a que alguien lo descubra.
 | 2 | Gun Hill Road | Turnbull A.C. | **8** | Exterminio | Los bordes, y una banda que no salta un bordillo |
 | 3 | La calle de los Orphans | Orphans | **8** | Exterminio | La orientación: te rodean |
 | 4 | Riverside Park | Baseball Furies | **4** | Exterminio | La altura, en terrazas |
-| 5 | El piso de las Lizzies | Lizzies | **3** | Salir (3) | La línea de tiro |
+| 5 | El departamento de las Lizzies | Lizzies | **3** | Salir (3) | La línea de tiro |
 | 6 | El baño de Union Square | Punks | **6** | Exterminio | El callejón sin salida como mejor casilla |
 | 7 | Coney Island | Rogues | **6** | Tumbar a Luther | El objetivo es un hombre |
 
@@ -209,9 +209,9 @@ quedan atrás, que es la forma que ya tenían esas casillas.
 **Sully** es el único Orphan con nombre en la película, y la banda entera se
 levanta por él. Ver más abajo lo de Mercy.
 
-### 5 · El piso de las Lizzies
+### 5 · El departamento de las Lizzies
 
-Suben tres: **Cochise, Rembrandt y Vermin**. Las armas están escondidas en el piso,
+Suben tres: **Cochise, Rembrandt y Vermin**. Las armas están escondidas en el departamento,
 no encima de ellas — si se les viera el bulto en la calle nadie habría subido.
 
 ### 6 · El baño de Union Square — los Punks
