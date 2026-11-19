@@ -1529,8 +1529,26 @@ export function restart() {
   battle.intro = initIntro(stageId);
   if (battle.intro) {
     battle.phase = 'intro';
-    log(battle.intro.lines[0].text);
+    if (import.meta.env.DEV) {
+      // A speaker who is not on this roster draws no bubble and leaves the
+      // camera on the last one who was - silently. Say so instead.
+      for (const l of battle.intro.lines)
+        if (l.speaker && !unitById(battle.units, l.speaker))
+          throw new Error(`La escena ${stageId} pone a hablar a "${l.speaker}", que no está en su reparto`);
+    }
+    logBrief(battle.intro.lines[0]);
   }
+}
+
+/**
+ * Files one line of the opening dialogue in the report. A line somebody says
+ * goes in under his name: in the bubble the portrait says who it is, but the
+ * report has no portrait, and "Warriors... salgan a jugar" with nobody's name
+ * on it reads as the narrator taunting the player.
+ */
+function logBrief(line: BriefLine) {
+  const who = line.speaker ? unitById(battle.units, line.speaker) : undefined;
+  log(who ? `${who.name}: ${line.text}` : line.text);
 }
 
 /** Steps the opening dialogue forward, or lets go of the clock on the last line. */
@@ -1539,7 +1557,7 @@ export function advanceIntro() {
   if (!intro) return;
   if (intro.index + 1 < intro.lines.length) {
     intro.index += 1;
-    log(intro.lines[intro.index].text);
+    logBrief(intro.lines[intro.index]);
     return;
   }
   battle.intro = null;
@@ -1554,7 +1572,7 @@ export function advanceIntro() {
 export function skipIntro() {
   const intro = battle.intro;
   if (!intro) return;
-  for (let i = intro.index + 1; i < intro.lines.length; i++) log(intro.lines[i].text);
+  for (let i = intro.index + 1; i < intro.lines.length; i++) logBrief(intro.lines[i]);
   battle.intro = null;
   battle.phase = 'clock';
 }
@@ -1574,4 +1592,4 @@ export function startStage(id: StageId) {
 log('Comienza la batalla en ' + map.name + '.');
 // The first battle boots from the state literal above rather than through
 // `restart`, so it files its opening line here, the same way `restart` does.
-if (battle.intro) log(battle.intro.lines[0].text);
+if (battle.intro) logBrief(battle.intro.lines[0]);

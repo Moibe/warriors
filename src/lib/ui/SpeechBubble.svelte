@@ -30,7 +30,7 @@
 </script>
 
 <div class="anchor" aria-live="polite">
-  <div class="bubble">
+  <div class="bubble" class:enemy={unit.team === 'enemy'}>
     <div class="bust">
       <img src={portrait} alt="" />
     </div>
@@ -69,6 +69,20 @@
       0 10px 28px rgba(0, 0, 0, 0.65);
     transform-origin: 50% 100%;
     animation: pop 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Cuando habla el otro bando, el filo y el nombre pasan a rojo: el mismo
+     rojo de los anillos enemigos en el tablero, para saber de qué lado viene
+     la frase antes de leerla. */
+  .bubble.enemy {
+    border-color: rgba(255, 138, 122, 0.92);
+  }
+  .bubble.enemy .who,
+  .bubble.enemy .next {
+    color: #ffb4a8;
+  }
+  .bubble.enemy .tail {
+    border-top-color: rgba(255, 138, 122, 0.92);
   }
 
   @keyframes pop {

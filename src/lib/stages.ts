@@ -311,14 +311,17 @@ export type Turncoat = {
  * One line of the report a battle opens on.
  *
  * `speaker` names a unit on THIS stage's own roster - never an id from
- * another one, and never a face invented for the occasion. The report was
- * written as a field account of what is in front of the player, third person
- * throughout ("Cleon dio su palabra", not "yo di mi palabra"), and that
- * wording stays exactly as written whether or not a face fronts it. A
- * speaker does not turn the sentence into something he says; it turns the
- * dialogue into a beat centred on him - the camera on Fox while the report
- * says what Fox watched happen. Absent is the report speaking for itself:
- * a narrator's line, no portrait, the establishing shot before anyone reacts.
+ * another one, and never a face invented for the occasion (`restart` throws
+ * in development if the id is not on the roster). With a speaker, the line is
+ * something HE SAYS: it hangs over his head in a speech bubble, the camera
+ * goes to him, and the report files it under his name. So write it in his
+ * voice, to his own people ("Quítenselos", "Salimos los tres"), and keep it
+ * true to the board - every line so far teaches the rule of its battle.
+ * Absent is the report speaking for itself: a narrator's line, no portrait,
+ * the establishing shot before anyone reacts.
+ *
+ * Enemies may speak, and the bubble turns red when they do. So far only
+ * Luther does, and only the one line everybody remembers.
  */
 export type BriefLine = {
   text: string;
@@ -514,8 +517,8 @@ export const STAGES: Record<StageId, Stage> = {
     // promise that put the other eight here unarmed. Swan gets the plan,
     // because giving the squad its orders is what a warchief is for.
     brief: [
-      { text: 'Luther ha matado a Cyrus y los ha señalado a ustedes.', speaker: 'fox' },
-      { text: 'Nadie vino armado: Cleon dio su palabra por los nueve.', speaker: 'cleon' },
+      { text: 'Luther mató a Cyrus y nos echó la culpa a nosotros.', speaker: 'fox' },
+      { text: 'Nadie vino armado: yo di mi palabra por los nueve.', speaker: 'cleon' },
       { text: 'La valla está entera: rómpanla y salgan. Con seis basta.', speaker: 'swan' },
     ],
     // The nine, in squad order, and every one of them empty-handed.
@@ -636,6 +639,16 @@ export const STAGES: Record<StageId, Stage> = {
       ),
       ...furies(),
     ],
+    // The narrator sets the scene, then the two lessons of the board go to the
+    // two men they belong to. Ajax gets the bats because he is the one who
+    // talks to the Furies in the film, and because `Arrebatar` is on his sheet
+    // (and Snow's and Cowboy's: three of the four). Swan gets the terraces,
+    // the one thing four men have that nine do not.
+    brief: [
+      { text: 'Al salir de la estación los esperan nueve Furies, con bates y la cara pintada.' },
+      { text: 'Sin bate, un Furia no es más que un puñetazo. Quítenselos.', speaker: 'ajax' },
+      { text: 'Somos cuatro. Peleen desde arriba: el que pega desde lo alto pega más.', speaker: 'swan' },
+    ],
     sky: {
       zenith: '#070c1c',
       upper: '#111a36',
@@ -684,6 +697,14 @@ export const STAGES: Record<StageId, Stage> = {
         ]
       ),
       ...turnbull(),
+    ],
+    // Fox reads the street because he is the scout and starts furthest
+    // forward. What he reads is the board's lesson, and it is true on the
+    // sheet: every Turnbull has Salto 1 or 2 against the Warriors' 3 and 4.
+    brief: [
+      { text: 'El autobús de los Turnbull frena en Gun Hill Road y se vacía.' },
+      { text: 'Son grandes y pesados: lo alto les cuesta. Arriba no nos alcanzan tan fácil.', speaker: 'fox' },
+      { text: 'No hay por dónde rodearlos. Hay que tumbarlos a todos.', speaker: 'swan' },
     ],
     sky: {
       // Almost no sky at all: the elevated line is overhead, so what little
@@ -766,7 +787,7 @@ export const STAGES: Record<StageId, Stage> = {
     // quiet. The read on Sully is left to nobody in particular: it is the one
     // line here that is a rule of the board before it is anyone's opinion.
     brief: [
-      { text: 'Los Orphans no los dejan pasar sin dejarles el chaleco.', speaker: 'fox' },
+      { text: 'Los Orphans no nos dejan pasar si no les dejamos el chaleco.', speaker: 'fox' },
       { text: 'La que se ríe desde el portal es Mercy, la chica de Sully.', speaker: 'vermin' },
       { text: 'Si Sully cae, ya no tiene por qué seguir con ellos.' },
     ],
@@ -839,6 +860,15 @@ export const STAGES: Record<StageId, Stage> = {
         ]
       ),
       ...lizzies(),
+    ],
+    // Rembrandt is in the kitchen, the only one who can see the drawer being
+    // opened (see the roster above), so the gun is his line. Cochise closes on
+    // the rule of the board: the door only counts if all three get through it.
+    // The camera visits three different rooms, which is the trap in one pan.
+    brief: [
+      { text: 'Las Lizzies los invitaron a subir. Las armas estaban escondidas en el departamento.' },
+      { text: '¡Sacó una pistola del cajón! Las paredes la paran: no se queden a tiro.', speaker: 'rembrandt' },
+      { text: 'La puerta está arriba, en el pasillo. Salimos los tres o no sale nadie.', speaker: 'cochise' },
     ],
     sky: {
       // There is no sky: it is a room. What shows past the window is the
@@ -951,6 +981,15 @@ export const STAGES: Record<StageId, Stage> = {
       ...mercy([{ x: 2, y: 1, facing: 's', ct: 12 }]),
       ...punks(),
     ],
+    // Swan's plan is the scene: the ambush walks into one. Mercy points out
+    // Vance the way she does in the film ("that dude over there with the
+    // skates"). The narrator owns the warning, because the second chain is our
+    // own liberty (see LA-PELICULA.md) and the reason no stall is safe.
+    brief: [
+      { text: 'Creen que nos tienen acorralados. Que entren ellos.', speaker: 'swan' },
+      { text: 'El de los patines es el que manda.', speaker: 'mercy' },
+      { text: 'Dos traen cadena, y una cadena alcanza a quien se esconda en un retrete.' },
+    ],
     sky: {
       // The first board in the game with no sky at all, and the gradient says
       // so by having almost no span: four stops crawling from #070a09 to
@@ -1052,6 +1091,15 @@ export const STAGES: Record<StageId, Stage> = {
       ),
       ...mercy(),
       ...rogues(),
+    ],
+    // The one enemy who gets a line in the whole game, and it is the line
+    // everybody remembers. Swan answers with the rule of the board, and the
+    // two bullets are on Luther's sheet, not just in this sentence: four of
+    // stamina and the shot costs two.
+    brief: [
+      { text: 'Amanece en Coney Island. Los Rogues llegaron primero.' },
+      { text: 'Warriors… ¡salgan a jugaaar!', speaker: 'luther' },
+      { text: 'Le quedan dos balas. Tumben a Luther y se acabó.', speaker: 'swan' },
     ],
     sky: DAWN_SKY,
     light: DAWN_RIG,
