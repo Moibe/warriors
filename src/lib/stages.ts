@@ -240,8 +240,8 @@ export type Stage = {
    *
    * It used to be free: a window already printed sentences in Spanish that
    * the player was going to read anyway, so the opening lines cost one
-   * optional field and nothing else. They still print there — `restart` still
-   * logs every line, in order, the instant the stage installs — but a report
+   * optional field and nothing else. They still print there — one at a time,
+   * as each is said, never ahead of the dialogue — but a report
    * sitting under a wall of other lines competes with them for a read that
    * was never guaranteed, and a battle nobody has started is the one moment
    * this game can afford to ask for a player's full attention without

@@ -1519,16 +1519,18 @@ export function restart() {
   resolveTimer = 0;
   clockDelay = TURN_GAP;
   log('Comienza la batalla en ' + map.name + '.');
-  // Backwards, because `log` unshifts: the last line pushed is the one on top,
-  // so a brief written in reading order has to go in tail first to come out
-  // head first. Logged after the opener so the opener ends up underneath it,
-  // which is where the oldest line belongs in a newest-first window. Every
-  // line still lands here regardless of `intro` below — the log is the
-  // written record, the dialogue is only the first read of it.
-  const brief = stage().brief;
-  if (brief) for (let i = brief.length - 1; i >= 0; i--) log(brief[i].text);
+  // The brief reaches the log ONE LINE AT A TIME, as each line is said — never
+  // the whole thing up front. It used to be logged in full the instant the
+  // stage installed, which put every line in the report window while the
+  // speech bubble was still on the first one: the report was finishing the
+  // characters' sentences for them. The log is still the complete written
+  // record by the time the clock runs (`skipIntro` files whatever was not
+  // read), it just never gets ahead of what has been said.
   battle.intro = initIntro(stageId);
-  if (battle.intro) battle.phase = 'intro';
+  if (battle.intro) {
+    battle.phase = 'intro';
+    log(battle.intro.lines[0].text);
+  }
 }
 
 /** Steps the opening dialogue forward, or lets go of the clock on the last line. */
@@ -1537,15 +1539,22 @@ export function advanceIntro() {
   if (!intro) return;
   if (intro.index + 1 < intro.lines.length) {
     intro.index += 1;
+    log(intro.lines[intro.index].text);
     return;
   }
   battle.intro = null;
   battle.phase = 'clock';
 }
 
-/** Drops the whole dialogue in one beat and lets the clock run. */
+/**
+ * Drops the whole dialogue in one beat and lets the clock run. The lines that
+ * were never shown still go into the report, in order, so skipping costs the
+ * player the scene but not the information.
+ */
 export function skipIntro() {
-  if (!battle.intro) return;
+  const intro = battle.intro;
+  if (!intro) return;
+  for (let i = intro.index + 1; i < intro.lines.length; i++) log(intro.lines[i].text);
   battle.intro = null;
   battle.phase = 'clock';
 }
@@ -1563,3 +1572,6 @@ export function startStage(id: StageId) {
 }
 
 log('Comienza la batalla en ' + map.name + '.');
+// The first battle boots from the state literal above rather than through
+// `restart`, so it files its opening line here, the same way `restart` does.
+if (battle.intro) log(battle.intro.lines[0].text);
