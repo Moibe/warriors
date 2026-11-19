@@ -57,7 +57,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.20.1';
+  const APP_VERSION = '1.21.1';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);
@@ -602,7 +602,7 @@
   <!-- The canvas is transparent, so the sky is CSS behind it. -->
   <Canvas toneMapping={NoToneMapping}>
     {#key stage.id}
-      <Scene {yawIndex} {pitchHigh} {zoom} {pan} bind:yaw />
+      <Scene {yawIndex} {pitchHigh} {zoom} {pan} bind:yaw showDialogue={!pickerOpen} />
     {/key}
   </Canvas>
 

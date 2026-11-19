@@ -1,22 +1,20 @@
 <script lang="ts">
-  // La gotita de diálogo: una línea a la vez, con el retrato de quien habla si
-  // lo hay, antes de que el reloj empiece a correr. Estilo Final Fantasy
-  // Tactics — retrato, globo con colita, un clic o Intro para seguir.
+  // La capa del diálogo de apertura: el velo que sostiene el reloj, el clic o
+  // Intro que pasa a la siguiente línea, y el botón de saltar.
   //
-  // Nunca inventa una cara ni una frase: el texto es exactamente el mismo que
-  // ya cae al parte de batalla (`BriefLine.text`, sin tocar), y el retrato es
-  // el de una unidad real del reparto de esta escena, generado por el mismo
-  // motor de sprites que dibuja el tablero.
+  // Lo que dice un personaje YA NO se dibuja aquí: sale en un globo sobre su
+  // cabeza (`SpeechBubble`, colgado del tablero en Scene.svelte), porque una
+  // barra fija abajo quedaba lejos de donde el jugador estaba mirando y se
+  // leía poco. Aquí sólo queda la línea sin nadie que la diga — el parte de
+  // batalla hablando por sí solo — que no tiene cabeza de la que colgar y sale
+  // en un recuadro arriba, centrado.
+  //
+  // Nunca inventa una frase: el texto es exactamente el mismo que ya cae al
+  // parte de batalla (`BriefLine.text`, sin tocar).
   import { battle, advanceIntro, skipIntro } from '../battle.svelte';
-  import { getPortraitUrl } from '../sprites';
-  import { hatOf } from '../units';
 
   const intro = $derived(battle.intro);
   const line = $derived(intro ? intro.lines[intro.index] : null);
-  const speaker = $derived(line?.speaker ? battle.units.find((u) => u.id === line.speaker) : undefined);
-  const portrait = $derived(
-    speaker ? getPortraitUrl(speaker.job, speaker.paletteOverride, 8, hatOf(speaker)) : ''
-  );
   const isLast = $derived(!!intro && intro.index === intro.lines.length - 1);
   const position = $derived(intro ? `${intro.index + 1} / ${intro.lines.length}` : '');
 
@@ -31,39 +29,33 @@
   <div class="veil" onclick={advanceIntro}>
     <button class="skip" onclick={onSkip}>Saltar »</button>
 
-    <div class="bar" class:no-bust={!speaker}>
-      {#if speaker}
-        <div class="bust">
-          <img src={portrait} alt={speaker.name} />
+    {#if !line.speaker}
+      {#key intro?.index}
+        <div class="narrator" aria-live="polite">
+          <p class="who">Parte de batalla</p>
+          <p class="text">{line.text}</p>
+          <div class="foot">
+            <span class="count">{position}</span>
+            <span class="next">{isLast ? 'Empezar ▸' : '▼'}</span>
+          </div>
         </div>
-      {/if}
-
-      <div class="bubble">
-        {#if speaker}
-          <div class="tail"></div>
-          <p class="who">{speaker.name}</p>
-        {:else}
-          <p class="who narrator">Parte de batalla</p>
-        {/if}
-        <p class="text">{line.text}</p>
-        <div class="foot">
-          <span class="count">{position}</span>
-          <span class="next">{isLast ? 'Empezar ▸' : '▼'}</span>
-        </div>
-      </div>
-    </div>
+      {/key}
+    {/if}
   </div>
 {/if}
 
 <style>
+  /* Viñeta, no cortina: oscurece las orillas y deja limpio el centro, que es
+     donde la cámara pone a quien habla. Sigue diciendo "el juego está en
+     pausa" sin apagar al personaje. */
   .veil {
     position: absolute;
     inset: 0;
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: center;
-    padding: 0 2rem 2.4rem;
-    background: linear-gradient(180deg, rgba(2, 5, 16, 0.15) 0%, rgba(2, 5, 16, 0.55) 100%);
+    padding: 16vh 2rem 0;
+    background: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 40%, rgba(2, 5, 16, 0.55) 100%);
     z-index: 25;
     cursor: pointer;
     animation: fade 0.4s ease-out both;
@@ -75,10 +67,13 @@
     }
   }
 
+  /* Abajo a la derecha, sobre el aviso de "Calculando iniciativa…": arriba se
+     encimaba con los controles de cámara, y aquí abajo no hay nada que hacer
+     mientras el reloj está detenido. */
   .skip {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    bottom: 4.6rem;
+    right: 0.9rem;
     font: inherit;
     font-size: 0.72rem;
     letter-spacing: 0.05em;
@@ -95,45 +90,9 @@
     border-color: rgba(214, 228, 255, 0.8);
   }
 
-  .bar {
-    display: flex;
-    align-items: flex-end;
-    gap: 0;
-    max-width: 46rem;
+  .narrator {
+    max-width: 30rem;
     width: 100%;
-    animation: rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  @keyframes rise {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-  }
-
-  .bust {
-    flex: none;
-    width: 74px;
-    height: 82px;
-    margin-right: -1px;
-    display: grid;
-    place-items: center;
-    background: linear-gradient(180deg, #3a5fa0, #16234c);
-    border: 2px solid rgba(214, 228, 255, 0.85);
-    border-radius: 6px;
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.55);
-  }
-
-  .bust img {
-    width: 88%;
-    height: auto;
-    image-rendering: pixelated;
-  }
-
-  .bubble {
-    position: relative;
-    flex: 1 1 auto;
-    min-width: 0;
     background: linear-gradient(180deg, rgba(30, 62, 140, 0.95) 0%, rgba(10, 20, 56, 0.97) 100%);
     border: 2px solid rgba(214, 228, 255, 0.9);
     border-radius: 8px;
@@ -141,50 +100,24 @@
     box-shadow:
       inset 0 0 0 1px rgba(8, 16, 44, 0.85),
       0 10px 30px rgba(0, 0, 0, 0.6);
+    animation: rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  .bar.no-bust .bubble {
-    max-width: 34rem;
-    margin: 0 auto;
-  }
-
-  .tail {
-    position: absolute;
-    left: -9px;
-    bottom: 1.1rem;
-    width: 0;
-    height: 0;
-    border-top: 8px solid transparent;
-    border-bottom: 8px solid transparent;
-    border-right: 9px solid rgba(214, 228, 255, 0.9);
-  }
-
-  .tail::after {
-    content: '';
-    position: absolute;
-    left: 2px;
-    top: -6px;
-    width: 0;
-    height: 0;
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    border-right: 7px solid #17275c;
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
   }
 
   .who {
     margin: 0 0 0.15rem;
     font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    color: #ffe9a8;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
-  }
-
-  .who.narrator {
-    color: #a9c0e6;
     font-weight: 500;
     font-style: italic;
     letter-spacing: 0.04em;
+    color: #a9c0e6;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
   }
 
   .text {
@@ -228,7 +161,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .veil,
-    .bar,
+    .narrator,
     .next {
       animation: none;
     }
@@ -236,14 +169,7 @@
 
   @media (max-width: 480px) {
     .veil {
-      padding: 0 1rem 1.6rem;
-    }
-    .bust {
-      width: 58px;
-      height: 64px;
-    }
-    .who {
-      font-size: 0.74rem;
+      padding: 12vh 1rem 0;
     }
     .text {
       font-size: 0.84rem;

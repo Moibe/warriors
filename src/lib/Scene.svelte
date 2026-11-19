@@ -18,7 +18,7 @@
   import FloatingNumber from './FloatingNumber.svelte';
   import HoverCard from './HoverCard.svelte';
   import Projectile from './Projectile.svelte';
-  import SpeechMarker from './ui/SpeechMarker.svelte';
+  import SpeechBubble from './ui/SpeechBubble.svelte';
   import Terrain from './Terrain.svelte';
   import TileCursor from './TileCursor.svelte';
   import TileOverlays from './TileOverlays.svelte';
@@ -53,12 +53,19 @@
     zoom = 46,
     pan = { x: 0, y: 0 },
     yaw = $bindable(Math.PI / 4),
+    showDialogue = true,
   }: {
     yawIndex?: number;
     pitchHigh?: boolean;
     zoom?: number;
     pan?: { x: number; y: number };
     yaw?: number;
+    /**
+     * False while something else covers the screen (the stage picker), so the
+     * speech bubble - which floats above every HUD layer - does not punch
+     * through it. The rest of the dialogue lives in the page and hides itself.
+     */
+    showDialogue?: boolean;
   } = $props();
 
   interactivity();
@@ -102,15 +109,29 @@
   const headId = $derived(stage.head?.id ?? null);
   /** Whoever the mouse is resting on, for the card that floats over his head. */
   const hoverUnit = $derived(hoveredUnit());
+  /** The line of the opening dialogue that is up right now, if any. */
+  const introLine = $derived(battle.intro ? battle.intro.lines[battle.intro.index] : null);
   /**
-   * Whoever fronts the CURRENT line of the opening dialogue, on the board -
-   * the bar at the bottom already says his name, but it says it a foot and a
-   * half from where he is actually standing. A narrator line has nobody to
-   * point at, so this is null exactly when `IntroDialogue` draws no portrait.
+   * Whoever says the CURRENT line, on the board. The line itself hangs over
+   * his head as a speech bubble. A narrator line has nobody to hang from, so
+   * this is undefined exactly when `IntroDialogue` draws its own box instead.
    */
-  const introSpeaker = $derived.by(() => {
-    const line = battle.intro ? battle.intro.lines[battle.intro.index] : null;
-    return line?.speaker ? battle.units.find((u) => u.id === line.speaker) : undefined;
+  const introSpeaker = $derived(
+    introLine?.speaker ? battle.units.find((u) => u.id === introLine.speaker) : undefined
+  );
+  /**
+   * Where the camera rests while the dialogue is up: on the latest speaker at
+   * or before this line. A narrator line keeps the shot on whoever spoke last
+   * instead of snapping to the middle of the board and back.
+   */
+  const introFocus = $derived.by(() => {
+    const intro = battle.intro;
+    if (!intro) return undefined;
+    for (let i = intro.index; i >= 0; i--) {
+      const id = intro.lines[i].speaker;
+      if (id) return battle.units.find((u) => u.id === id);
+    }
+    return undefined;
   });
   const map = $derived(stage.map);
   const light = $derived(stage.light);
@@ -138,14 +159,19 @@
   // Sits on whoever is acting, offset by the player's pan. Pan is expressed in
   // screen axes and rotated into world space here, so dragging right always
   // moves the view right no matter which way the camera is turned.
+  //
+  // While the opening dialogue is up nobody is acting yet, and the camera goes
+  // to whoever is talking instead: the line now hangs over his head, so he has
+  // to be on screen. Aimed a little higher than for a turn, so the man AND the
+  // bubble above him sit together in the middle of the frame.
   const cameraTarget = $derived.by(() => {
-    const u = activeUnit();
+    const u = introFocus ?? activeUnit();
     const base = u ? tileToWorld(map, u.x, u.y, heightOf(u)) : { x: 0, y: 1, z: 0 };
     const right = { x: Math.cos(yaw), z: -Math.sin(yaw) };
     const fwd = { x: -Math.sin(yaw), z: -Math.cos(yaw) };
     return {
       x: base.x + pan.x * right.x + pan.y * fwd.x,
-      y: base.y + 0.6,
+      y: base.y + (introFocus ? 1.5 : 0.6),
       z: base.z + pan.x * right.z + pan.y * fwd.z,
     };
   });
@@ -380,16 +406,25 @@
   </HTML>
 {/if}
 
-<!-- Same anchor, same reason, while the opening dialogue is up: the bar at
-     the bottom already names the speaker, but a board can hold ten heads
-     that look alike from across the park, and it never says WHICH one is
-     his. A step higher than the hover card so the two never fight for the
-     same point in space if a stage ever hovers and narrates in the same
-     breath - not a real case today, but the offset is free. -->
-{#if introSpeaker}
+<!-- Same anchor, same reason, while the opening dialogue is up: the line
+     itself, in a bubble over the head of whoever says it. It used to sit in a
+     bar along the bottom of the screen, which was the one place the player was
+     not looking, with a small dot marker up here to say WHICH of ten
+     look-alike heads was talking. Now the words are where the man is, and the
+     camera goes to him on every line (`cameraTarget` above). Keyed on the line
+     so each new one pops in instead of just swapping its text. -->
+{#if introSpeaker && introLine && battle.intro && showDialogue}
   {@const sw = tileToWorld(map, introSpeaker.x, introSpeaker.y, heightOf(introSpeaker))}
-  <HTML position={[sw.x, sw.y + SPRITE_WORLD_H + 0.3, sw.z]} pointerEvents="none">
-    <SpeechMarker />
+  {@const intro = battle.intro}
+  <HTML position={[sw.x, sw.y + SPRITE_WORLD_H + 0.15, sw.z]} pointerEvents="none">
+    {#key intro.index}
+      <SpeechBubble
+        unit={introSpeaker}
+        text={introLine.text}
+        position={`${intro.index + 1} / ${intro.lines.length}`}
+        isLast={intro.index === intro.lines.length - 1}
+      />
+    {/key}
   </HTML>
 {/if}
 
