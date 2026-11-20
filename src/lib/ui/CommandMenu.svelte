@@ -158,8 +158,12 @@
         {#each FACINGS as f (f)}
           <!-- focus/blur as well as hover, so the preview also works when the
                buttons are reached with the keyboard. -->
+          <!-- Lit on whichever way he is looking right now: the menu opens on
+               the suggested facing (`bestFacing`), so that is the one lit
+               until the pointer or the arrows try another. -->
           <button
             class="cmd"
+            class:selected={unit.facing === f}
             onclick={() => onFacing(f)}
             onmouseenter={() => onPreviewFacing(f)}
             onmouseleave={() => onPreviewFacing(null)}

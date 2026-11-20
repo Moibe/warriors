@@ -10,7 +10,7 @@
 // 3D scene stays a pure reader: it draws whatever this module says is true and
 // advances the clocks once per frame.
 
-import { forecast, rollAttack, type Angle } from './combat';
+import { angleOf, forecast, rollAttack, type Angle } from './combat';
 import {
   facingTo,
   gridDistance,
@@ -712,31 +712,91 @@ export function commandAbility(ability: Ability) {
  * because facing is a rule (flanking, back attacks), not decoration.
  */
 let facingBeforePreview: Facing | null = null;
+/**
+ * The facing the orientation menu offers by default - see {@link bestFacing}.
+ * It is what a preview falls back to when the pointer leaves a button, so the
+ * suggestion stays on screen; backing out of the menu still restores the
+ * facing from before it opened.
+ */
+let facingSuggested: Facing | null = null;
+
+/**
+ * What it costs to be caught from each side, in the same proportions as the
+ * combat table: a flank adds 10 to hit and 10% damage, a back 25 and 25%.
+ */
+const EXPOSURE: Record<Angle, number> = { front: 0, side: 1, back: 2.5 };
+
+/**
+ * The way a man should end his turn looking: the facing that leaves the least
+ * of him exposed to the enemies who are standing.
+ *
+ * Every standing enemy votes, weighted by how close he is - an enemy next to
+ * you counts fully, one two squares off a quarter, one four squares off a
+ * sixteenth - and each vote says what that enemy would get from where he is
+ * now: nothing from the front, a flank, or a back. The facing with the
+ * smallest total wins.
+ *
+ * Which gives, without writing them as rules: face an enemy who is next to
+ * you; with nobody that close, face where most of them are, the near ones
+ * counting more than the far ones; and, the case two plain rules get wrong,
+ * with ONE ENEMY ON EACH SIDE OF YOU, turn side-on to both. Facing one of them
+ * hands the other your back (2.5); side-on, each gets a flank (1 + 1).
+ *
+ * Ties keep the facing he already has, so the suggestion never flips for
+ * nothing.
+ */
+export function bestFacing(u: Unit): Facing {
+  const enemies = battle.units.filter((o) => o.id !== u.id && o.team !== u.team && inPlay(o));
+  let best = u.facing;
+  let bestCost = Infinity;
+  // The current facing first, so a tie goes to it.
+  const order: Facing[] = [u.facing, ...(['n', 'e', 's', 'w'] as Facing[]).filter((f) => f !== u.facing)];
+  for (const f of order) {
+    const turned = { ...u, facing: f };
+    let cost = 0;
+    for (const e of enemies) {
+      const d = Math.max(1, gridDistance(u, e));
+      cost += EXPOSURE[angleOf(e, turned)] / (d * d);
+    }
+    if (cost < bestCost - 1e-9) {
+      bestCost = cost;
+      best = f;
+    }
+  }
+  return best;
+}
 
 export function commandWait() {
   const u = activeUnit();
   if (!u) return;
   facingBeforePreview = u.facing;
+  // Open on the best facing, already turned on the map: one Enter (or a click
+  // on the highlighted button) takes it, and any other direction is still
+  // one press away.
+  facingSuggested = bestFacing(u);
+  u.facing = facingSuggested;
   battle.phase = 'facing';
 }
 
 /**
- * Live preview while the pointer rests on a direction. Pass `null` to put the
- * unit back the way it was.
+ * Live preview while the pointer rests on a direction. Pass `null` to go back
+ * to the suggested facing the menu opened on.
  */
 export function previewFacing(facing: Facing | null) {
   const u = activeUnit();
   if (!u || battle.phase !== 'facing') return;
-  const next = facing ?? facingBeforePreview;
+  const next = facing ?? facingSuggested ?? facingBeforePreview;
   if (next) u.facing = next;
 }
 
 /** Back out of a submenu without spending anything. */
 export function cancel() {
   if (battle.phase === 'facing') {
-    // Undo whatever the preview left on the unit.
-    previewFacing(null);
+    // Undo whatever the preview - and the suggestion - left on the unit.
+    const u = activeUnit();
+    if (u && facingBeforePreview) u.facing = facingBeforePreview;
     facingBeforePreview = null;
+    facingSuggested = null;
   }
   if (battle.phase === 'move' || battle.phase === 'target' || battle.phase === 'facing') {
     battle.ability = null;
@@ -754,6 +814,7 @@ export function setFacing(facing: Facing) {
 export function confirmFacing(facing: Facing) {
   setFacing(facing);
   facingBeforePreview = null;
+  facingSuggested = null;
   endTurn();
 }
 
@@ -1515,6 +1576,7 @@ export function restart() {
   battle.hover = null;
   battle.hoverUnit = null;
   facingBeforePreview = null;
+  facingSuggested = null;
   aiPlan = null;
   resolveTimer = 0;
   clockDelay = TURN_GAP;
