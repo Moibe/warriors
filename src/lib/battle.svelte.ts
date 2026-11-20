@@ -563,6 +563,20 @@ function beginTurn(u: Unit) {
 }
 
 /**
+ * The AG a unit would get back by ending its turn right now: a third of its
+ * maximum, rounded up, if it has neither moved nor acted — a whole turn spent
+ * catching its breath. Never past the maximum.
+ *
+ * WARRIORS ONLY, and that is a rule, not a balance knob: the enemies' guns are
+ * paid in AG (Luther's 4 AG at 2 a shot ARE his two bullets), so any recovery
+ * on their side would reload them. See REGLAS-DE-LA-CASA, "El aguante".
+ */
+export function breathOf(u: Unit): number {
+  if (u.team !== 'ally' || u.hasMoved || u.hasActed || !inPlay(u)) return 0;
+  return Math.min(Math.ceil(u.mpMax / 3), u.mpMax - u.mp);
+}
+
+/**
  * Ends the active unit's turn.
  *
  * CT bookkeeping is where restraint pays off: a unit that skipped its action
@@ -572,6 +586,12 @@ function beginTurn(u: Unit) {
 export function endTurn() {
   const u = activeUnit();
   if (u) {
+    const breath = breathOf(u);
+    if (breath > 0) {
+      u.mp += breath;
+      pushPopup(u, `+${breath} AG`, '#86c7ff');
+      log(`${u.name} recobra el aliento (+${breath} AG).`);
+    }
     u.ct -= 100;
     if (!u.hasActed) u.ct += 20;
     if (!u.hasMoved) u.ct += 10;

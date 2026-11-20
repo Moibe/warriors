@@ -205,11 +205,22 @@ como una noche se convierte en hojalata.
 
 ## Motor y reglas de juego
 
-### El aguante NO se recupera. Nunca
+### El aguante sólo se recupera recobrando el aliento, y sólo los Warriors
 
-Hay **una sola línea** en todo el motor que toca el aguante después de crear a una
-unidad, y resta. No hay regeneración por turno, ni objetos, ni nada. Los puntos con
-los que entra son todos los que va a tener.
+Hay **dos líneas** en todo el motor que tocan el aguante después de crear a una
+unidad: la que resta al pagar una orden (`actor.mp -= ability.mp`) y la de
+**recobrar el aliento** en `endTurn`. Un Warrior que termina su turno **sin moverse
+ni actuar** recupera un tercio de su AG máximo, redondeado hacia arriba y sin pasarse
+del máximo (`breathOf`). Pierde el turno entero a cambio, y por no haber gastado nada
+le vuelve a tocar antes. No hay regeneración pasiva, ni objetos, ni nada más.
+
+**Los enemigos no recuperan aguante. Nunca.** Sus armas de fuego se pagan en AG: los
+4 AG de Luther a 2 por disparo **son** sus dos balas, y la pistola de las Lizzies
+funciona igual. Darle aliento al bando enemigo sería recargarles el arma. Si algún día
+un enemigo necesita recuperar, que sea con otra regla que deje fuera las armas.
+
+Ideas apuntadas y aún no hechas: que tumbar a un enemigo devuelva 2–3 AG al que lo
+tumbó (adrenalina), y que la Arenga, además, devuelva AG a los aliados que alcanza.
 
 Al llegar a cero no se paraliza: las órdenes de pago salen en gris y le quedan las
 gratis. Mover, Esperar y Golpear son gratis para todo el mundo, así que **nadie se

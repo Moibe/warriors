@@ -16,7 +16,7 @@
   // the fixed panel width and the help slot that is always present and always
   // the same height.
 
-  import type { CommandEntry, Phase } from '../battle.svelte';
+  import { breathOf, type CommandEntry, type Phase } from '../battle.svelte';
   import { FACING_NAMES, type Facing } from '../grid';
   import type { Ability } from '../jobs';
   import type { Unit } from '../units';
@@ -66,12 +66,17 @@
       };
     }
     if (entry.kind === 'wait') {
+      const breath = breathOf(unit);
       return {
         name: 'Esperar',
-        cost: 'fin',
+        cost: breath ? `+${breath} AG` : 'fin',
         short: false,
         head: 'Esperar · termina el turno',
-        desc: 'Cuanto menos gastes en el turno, antes te vuelve a tocar.',
+        desc: breath
+          ? `Sin moverte ni actuar recobras el aliento: +${breath} AG, y te vuelve a tocar antes.`
+          : unit.team === 'ally' && unit.mp < unit.mpMax
+            ? 'Cuanto menos gastes, antes te toca. Sin moverte ni actuar, recobras AG.'
+            : 'Cuanto menos gastes en el turno, antes te vuelve a tocar.',
       };
     }
     const a = entry.ability;
