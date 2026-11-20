@@ -22,7 +22,7 @@
   } from 'three';
   import { DEATH_TIME, HURT_TIME, setHoverUnit } from './battle.svelte';
   import { LEVEL, TILE, facingAngle, facingVector } from './grid';
-  import { getShadowTexture } from './textures';
+  import { getShadowTexture, getSightTexture } from './textures';
   import { SPRITE_WORLD_H, SPRITE_WORLD_W, getUnitTexture, type Pose } from './sprites';
   import { hatOf, type Unit } from './units';
 
@@ -202,19 +202,30 @@
 
   // The mark on the man the battle is decided by.
   //
-  // A flat ring over his head rather than another cone: the acting unit already
-  // owns the cone, and two floating arrows on one tile read as a duplicate —
-  // the same reason the tile cursor stopped drawing one. Above the heads, so
-  // eight men standing around him cannot hide it. Flat, so it hides nobody. And
-  // doubled with a near-black under-ring for the same reason every sprite here
-  // is drawn with an outline: gold on a gold dawn sky is nothing at all.
+  // A gun sight standing over his head, facing the camera. It used to be a
+  // flat gold ring lying over his head, and a flat gold ring over a head is a
+  // HALO - on Luther, the one man in the film who has it least coming. A
+  // sight says "this one" in any language and cannot be read as anything
+  // kinder.
+  //
+  // Not another cone: the acting unit already owns the cone, and two floating
+  // arrows on one tile read as a duplicate. Above the heads and drawn without
+  // a depth test, so eight men standing around him cannot hide it. Red, the
+  // enemy colour, outlined dark so the dawn sky behind it cannot swallow it.
+  // It breathes slowly - slower than the active cone bobs - so it is alive
+  // without competing with whoever is taking a turn.
   //
   // He is the one unit in the game that can never be hidden. The information is
   // free; getting to him is not.
-  const haloGeometry = new RingGeometry(0.2, 0.3, 20).rotateX(-Math.PI / 2);
-  const haloUnderGeometry = new RingGeometry(0.17, 0.33, 20).rotateX(-Math.PI / 2);
-  const haloMaterial = new MeshBasicMaterial({ color: '#ffd24a', toneMapped: false, depthWrite: false });
-  const haloUnderMaterial = new MeshBasicMaterial({ color: '#1c1620', toneMapped: false, depthWrite: false });
+  const sightMaterial = new SpriteMaterial({
+    map: getSightTexture(),
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  const SIGHT_SIZE = 0.5;
+  let sightScale = $state(SIGHT_SIZE);
 
   // A shallow idle bob on whoever is acting — enough motion to draw the eye to
   // the unit whose turn it is without animating the whole board.
@@ -242,6 +253,7 @@
     elapsed += delta;
     bob = active ? Math.sin(elapsed * 5) * 0.04 : 0;
     if (markerRef) markerRef.position.y = SPRITE_WORLD_H + 0.32 + Math.sin(elapsed * 4) * 0.09;
+    if (marked) sightScale = SIGHT_SIZE * (1 + Math.sin(elapsed * 2.4) * 0.08);
 
     // Three signals stacked on one hit, because any one alone gets lost in a
     // busy frame: the recoil frame above, a flash, and a shudder. Both fade out
@@ -319,16 +331,17 @@
   />
 
   {#if marked && !fallen}
-    <T.Mesh
-      geometry={haloUnderGeometry}
-      material={haloUnderMaterial}
-      position.y={SPRITE_WORLD_H + 0.20}
-      renderOrder={6}
-    />
-    <T.Mesh
-      geometry={haloGeometry}
-      material={haloMaterial}
-      position.y={SPRITE_WORLD_H + 0.21}
+    <!-- BELOW the top of the sprite's own frame, on purpose: the frame is
+         taller than the man, and Luther is the shortest man in the game (his
+         body starts two rows lower than anybody's). Hung from the frame like
+         the active cone, it floated a whole head above him and stopped
+         pointing at anyone. Here it sits just over his hair, under the cone
+         when it is his turn and under any card or bubble hung above him. -->
+    <T
+      is={Sprite}
+      material={sightMaterial}
+      position.y={SPRITE_WORLD_H - 0.18}
+      scale={[sightScale, sightScale, 1]}
       renderOrder={7}
     />
   {/if}

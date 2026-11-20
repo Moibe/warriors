@@ -57,7 +57,7 @@
   import TurnOrder from '$lib/ui/TurnOrder.svelte';
   import UnitPanel from '$lib/ui/UnitPanel.svelte';
 
-  const APP_VERSION = '1.22.3';
+  const APP_VERSION = '1.22.4';
 
   const stage = $derived(currentStage());
   const map = $derived(stage.map);

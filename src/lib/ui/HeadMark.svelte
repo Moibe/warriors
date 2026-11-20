@@ -1,8 +1,8 @@
 <script lang="ts">
   // The one the battle is decided by.
   //
-  // The board marks him with a halo; this says his name and how much of him is
-  // left. Without it the halo is decoration — a ring over somebody's head does
+  // The board marks him with a gun sight; this says his name and how much of
+  // him is left. Without it the sight is decoration — a mark over a head does
   // not tell you that dropping him ends the fight, and a win condition nobody
   // can read is a win condition that does not exist.
 
