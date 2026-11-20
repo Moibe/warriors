@@ -55,50 +55,51 @@ export function getCursorTexture(): Texture {
   return cursorTexture;
 }
 
-let sightTexture: Texture | null = null;
+let targetTexture: Texture | null = null;
 
 /**
- * The gun sight over the man a battle is decided by: a circle, four ticks
- * that cross it and run past it, and a dot in the middle. It replaced a flat
- * gold ring that read as a HALO - on Luther, of all people. A ring lying flat
- * over a head is an angel in every visual language there is; a ring with a
- * cross through it, standing up to face you, is a target in all of them.
+ * The red triangle over the man a battle is decided by, pointing down at him.
  *
- * Every stroke is laid twice, dark and wide and then red and narrow, for the
- * same reason every sprite here has an outline: red on a sunrise is nothing.
+ * Third try. A flat gold ring lying over his head read as a HALO - on Luther,
+ * of all people. A gun sight fixed that; a triangle pointing at a man does
+ * it more plainly, and says "him" and nothing else.
+ *
+ * Painted twice, dark and wide and then red, for the same reason every sprite
+ * here has an outline: red on a sunrise is nothing. The tip sits low in the
+ * canvas so the sprite's centre can hang a little above his hair.
  */
-export function getSightTexture(): Texture {
-  if (sightTexture) return sightTexture;
+export function getTargetTexture(): Texture {
+  if (targetTexture) return targetTexture;
   const S = 128;
   const [c, ctx] = canvas2d(S);
-  const m = S / 2;
-  const r = 34;
-
-  const strokes = (color: string, width: number, dot: number) => {
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
-    ctx.lineWidth = width;
-    ctx.lineCap = 'butt';
+  const tri = () => {
     ctx.beginPath();
-    ctx.arc(m, m, r, 0, Math.PI * 2);
-    ctx.stroke();
-    // Four ticks from inside the circle to well past it, with the middle left
-    // open so the dot stands alone.
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-      ctx.beginPath();
-      ctx.moveTo(m + dx * 16, m + dy * 16);
-      ctx.lineTo(m + dx * 56, m + dy * 56);
-      ctx.stroke();
-    }
-    ctx.beginPath();
-    ctx.arc(m, m, dot, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(24, 30);
+    ctx.lineTo(104, 30);
+    ctx.lineTo(64, 102);
+    ctx.closePath();
   };
-  strokes('#1c1014', 16, 9);
-  strokes('#ff5a48', 7, 5);
+  ctx.lineJoin = 'round';
+  tri();
+  ctx.strokeStyle = '#1c1014';
+  ctx.lineWidth = 14;
+  ctx.stroke();
+  tri();
+  ctx.fillStyle = '#ff5a48';
+  ctx.fill();
+  // A lighter top edge, the one bit of modelling: it keeps the shape reading
+  // as a solid marker rather than a flat red hole in the sky.
+  ctx.fillStyle = '#ff9a86';
+  ctx.beginPath();
+  ctx.moveTo(30, 34);
+  ctx.lineTo(98, 34);
+  ctx.lineTo(93, 43);
+  ctx.lineTo(35, 43);
+  ctx.closePath();
+  ctx.fill();
 
-  sightTexture = finish(c);
-  return sightTexture;
+  targetTexture = finish(c);
+  return targetTexture;
 }
 
 let panelTexture: Texture | null = null;
